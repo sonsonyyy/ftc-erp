@@ -1,13 +1,19 @@
 <?php
 
+use App\Enums\ProjectStatus;
 use App\Enums\QuotationStatus;
+use App\Enums\WorkOrderPriority;
+use App\Enums\WorkOrderServiceType;
+use App\Enums\WorkOrderStatus;
 use App\Models\Attachment;
 use App\Models\Customer;
 use App\Models\CustomerSite;
+use App\Models\Project;
 use App\Models\Quotation;
 use App\Models\QuotationStatusLog;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\WorkOrder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -292,6 +298,25 @@ test('users without status permission cannot update quotation status', function 
         ->assertForbidden();
 });
 
+test('converted quotations cannot move away from awarded status', function () {
+    actingAsQuotationRole('Operations Admin');
+
+    $project = Project::factory()->create();
+    $quotation = Quotation::factory()->create([
+        'status' => QuotationStatus::Awarded,
+        'converted_project_id' => $project->getKey(),
+    ]);
+
+    $this->from(route('quotations.show', $quotation))
+        ->post(route('quotations.update-status', $quotation), [
+            'status' => QuotationStatus::Lost->value,
+            'lost_reason' => 'Client changed direction.',
+            'remarks' => 'Attempted invalid downgrade.',
+        ])
+        ->assertRedirect(route('quotations.show', $quotation))
+        ->assertSessionHasErrors(['status']);
+});
+
 test('authorized users can archive quotations', function () {
     actingAsQuotationRole('Sales Admin / Business Development');
 
@@ -301,6 +326,179 @@ test('authorized users can archive quotations', function () {
         ->assertRedirect(route('quotations.index'));
 
     $this->assertSoftDeleted($quotation);
+});
+
+test('awarded quotations can start the project conversion flow', function () {
+    actingAsQuotationRole('Operations Admin');
+
+    $quotation = Quotation::factory()->create([
+        'status' => QuotationStatus::Awarded,
+    ]);
+
+    $this->get(route('quotations.convert-to-project', $quotation))
+        ->assertRedirect(route('projects.create', [
+            'quotation' => $quotation->getKey(),
+        ]));
+});
+
+test('awarded quotations can start the work order conversion flow', function () {
+    actingAsQuotationRole('Operations Admin');
+
+    $quotation = Quotation::factory()->create([
+        'status' => QuotationStatus::Awarded,
+    ]);
+
+    $this->get(route('quotations.convert-to-work-order', $quotation))
+        ->assertRedirect(route('work-orders.create', [
+            'quotation' => $quotation->getKey(),
+        ]));
+});
+
+test('non-awarded quotations cannot start conversion flows', function () {
+    actingAsQuotationRole('Operations Admin');
+
+    $quotation = Quotation::factory()->create([
+        'status' => QuotationStatus::Draft,
+    ]);
+
+    $this->get(route('quotations.convert-to-project', $quotation))
+        ->assertRedirect(route('quotations.show', $quotation));
+
+    $this->get(route('quotations.convert-to-work-order', $quotation))
+        ->assertRedirect(route('quotations.show', $quotation));
+});
+
+test('creating a project from an awarded quotation stores the converted project link', function () {
+    actingAsQuotationRole('Operations Admin');
+
+    $customer = Customer::factory()->create();
+    $site = CustomerSite::factory()->create([
+        'customer_id' => $customer->getKey(),
+    ]);
+    $quotation = Quotation::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+        'status' => QuotationStatus::Awarded,
+    ]);
+
+    $this->post(route('projects.store'), [
+        'project_no' => 'PRJ-CONVERT-001',
+        'quotation_id' => $quotation->getKey(),
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+        'title' => 'Converted awarded quotation',
+        'project_type' => 'Installation',
+        'start_date' => '2026-04-20',
+        'target_end_date' => '2026-05-20',
+        'status' => ProjectStatus::Draft->value,
+        'description' => 'Created from quotation conversion.',
+    ])->assertRedirect();
+
+    $project = Project::query()->firstOrFail();
+
+    expect($quotation->fresh()->converted_project_id)->toBe($project->getKey());
+});
+
+test('creating a work order from an awarded quotation stores the converted work order link', function () {
+    actingAsQuotationRole('Operations Admin');
+
+    $customer = Customer::factory()->create();
+    $site = CustomerSite::factory()->create([
+        'customer_id' => $customer->getKey(),
+    ]);
+    $quotation = Quotation::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+        'status' => QuotationStatus::Awarded,
+    ]);
+
+    $this->post(route('work-orders.store'), [
+        'work_order_no' => 'WO-CONVERT-001',
+        'quotation_id' => $quotation->getKey(),
+        'project_id' => null,
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+        'service_type' => WorkOrderServiceType::OtherServiceJob->value,
+        'scheduled_date' => '2026-04-20',
+        'priority' => WorkOrderPriority::Normal->value,
+        'status' => WorkOrderStatus::Draft->value,
+        'summary' => 'Converted quotation work order',
+        'findings' => 'Created from quotation conversion.',
+    ])->assertRedirect();
+
+    $workOrder = WorkOrder::query()->firstOrFail();
+
+    expect($quotation->fresh()->converted_work_order_id)->toBe($workOrder->getKey());
+});
+
+test('quotations already linked to a project cannot be linked to another project', function () {
+    actingAsQuotationRole('Operations Admin');
+
+    $customer = Customer::factory()->create();
+    $site = CustomerSite::factory()->create([
+        'customer_id' => $customer->getKey(),
+    ]);
+    $existingProject = Project::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+    ]);
+    $quotation = Quotation::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+        'status' => QuotationStatus::Awarded,
+        'converted_project_id' => $existingProject->getKey(),
+    ]);
+
+    $this->from(route('projects.create'))
+        ->post(route('projects.store'), [
+            'project_no' => 'PRJ-CONVERT-002',
+            'quotation_id' => $quotation->getKey(),
+            'customer_id' => $customer->getKey(),
+            'customer_site_id' => $site->getKey(),
+            'title' => 'Duplicate conversion',
+            'project_type' => 'Installation',
+            'start_date' => '2026-04-20',
+            'target_end_date' => '2026-05-20',
+            'status' => ProjectStatus::Draft->value,
+        ])
+        ->assertRedirect(route('projects.create'))
+        ->assertSessionHasErrors(['quotation_id']);
+});
+
+test('quotations already linked to a work order cannot be linked to another work order', function () {
+    actingAsQuotationRole('Operations Admin');
+
+    $customer = Customer::factory()->create();
+    $site = CustomerSite::factory()->create([
+        'customer_id' => $customer->getKey(),
+    ]);
+    $existingWorkOrder = WorkOrder::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+    ]);
+    $quotation = Quotation::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+        'status' => QuotationStatus::Awarded,
+        'converted_work_order_id' => $existingWorkOrder->getKey(),
+    ]);
+
+    $this->from(route('work-orders.create'))
+        ->post(route('work-orders.store'), [
+            'work_order_no' => 'WO-CONVERT-002',
+            'quotation_id' => $quotation->getKey(),
+            'project_id' => null,
+            'customer_id' => $customer->getKey(),
+            'customer_site_id' => $site->getKey(),
+            'service_type' => WorkOrderServiceType::OtherServiceJob->value,
+            'scheduled_date' => '2026-04-20',
+            'priority' => WorkOrderPriority::Normal->value,
+            'status' => WorkOrderStatus::Draft->value,
+            'summary' => 'Duplicate conversion',
+            'findings' => null,
+        ])
+        ->assertRedirect(route('work-orders.create'))
+        ->assertSessionHasErrors(['quotation_id']);
 });
 
 test('attachments can be uploaded downloaded and unlinked from quotations', function () {

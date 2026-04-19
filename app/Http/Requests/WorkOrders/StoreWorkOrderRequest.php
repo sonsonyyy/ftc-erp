@@ -94,6 +94,10 @@ class StoreWorkOrderRequest extends FormRequest
                             $validator->errors()->add('quotation_id', 'Only awarded quotations may be linked to work orders.');
                         }
 
+                        if ($quotation->converted_work_order_id !== null) {
+                            $validator->errors()->add('quotation_id', 'The selected quotation is already linked to a work order.');
+                        }
+
                         if ($quotation->customer_id !== $this->integer('customer_id')) {
                             $validator->errors()->add('customer_id', 'The selected quotation belongs to a different customer.');
                         }

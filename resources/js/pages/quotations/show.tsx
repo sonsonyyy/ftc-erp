@@ -2,12 +2,14 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import QuotationController from '@/actions/App/Http/Controllers/Quotations/QuotationController';
 import { dashboard } from '@/routes';
 import { show as customersShow } from '@/routes/customers';
+import { show as projectsShow } from '@/routes/projects';
 import {
     edit as quotationsEdit,
     index as quotationsIndex,
     kpi as quotationsKpi,
 } from '@/routes/quotations';
 import { show as sitesShow } from '@/routes/sites';
+import { show as workOrdersShow } from '@/routes/work-orders';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -142,6 +144,22 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                             <Button asChild>
                                 <Link href={quotationsEdit(quotation.id)}>
                                     Edit quotation
+                                </Link>
+                            </Button>
+                        )}
+
+                        {quotation.can.convert_to_project && (
+                            <Button variant="secondary" asChild>
+                                <Link href={QuotationController.convertToProject(quotation.id)}>
+                                    Convert to project
+                                </Link>
+                            </Button>
+                        )}
+
+                        {quotation.can.convert_to_work_order && (
+                            <Button variant="secondary" asChild>
+                                <Link href={QuotationController.convertToWorkOrder(quotation.id)}>
+                                    Convert to work order
                                 </Link>
                             </Button>
                         )}
@@ -295,6 +313,38 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                         {quotation.remarks ?? 'No remarks'}
                                     </p>
                                 </div>
+
+                                <div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Converted project
+                                    </p>
+                                    {quotation.converted_project.id ? (
+                                        <Link
+                                            href={projectsShow(quotation.converted_project.id)}
+                                            className="mt-1 inline-flex font-medium hover:underline"
+                                        >
+                                            {quotation.converted_project.project_no}
+                                        </Link>
+                                    ) : (
+                                        <p className="mt-1 font-medium">Not converted</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Converted work order
+                                    </p>
+                                    {quotation.converted_work_order.id ? (
+                                        <Link
+                                            href={workOrdersShow(quotation.converted_work_order.id)}
+                                            className="mt-1 inline-flex font-medium hover:underline"
+                                        >
+                                            {quotation.converted_work_order.work_order_no}
+                                        </Link>
+                                    ) : (
+                                        <p className="mt-1 font-medium">Not converted</p>
+                                    )}
+                                </div>
                             </CardContent>
                         </Card>
 
@@ -356,6 +406,58 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                     </div>
 
                     <div className="space-y-6">
+                        {(quotation.can.convert_to_project ||
+                            quotation.can.convert_to_work_order ||
+                            quotation.converted_project.id ||
+                            quotation.converted_work_order.id) && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Conversion handoff</CardTitle>
+                                    <CardDescription>
+                                        Move awarded quotations into execution records and keep the cross-links intact.
+                                    </CardDescription>
+                                </CardHeader>
+
+                                <CardContent className="space-y-3">
+                                    {quotation.can.convert_to_project && (
+                                        <Button className="w-full" asChild>
+                                            <Link href={QuotationController.convertToProject(quotation.id)}>
+                                                Create project from quotation
+                                            </Link>
+                                        </Button>
+                                    )}
+
+                                    {quotation.converted_project.id && (
+                                        <Button variant="outline" className="w-full" asChild>
+                                            <Link href={projectsShow(quotation.converted_project.id)}>
+                                                View linked project
+                                            </Link>
+                                        </Button>
+                                    )}
+
+                                    {quotation.can.convert_to_work_order && (
+                                        <Button
+                                            variant={quotation.can.convert_to_project ? 'outline' : 'default'}
+                                            className="w-full"
+                                            asChild
+                                        >
+                                            <Link href={QuotationController.convertToWorkOrder(quotation.id)}>
+                                                Create work order from quotation
+                                            </Link>
+                                        </Button>
+                                    )}
+
+                                    {quotation.converted_work_order.id && (
+                                        <Button variant="outline" className="w-full" asChild>
+                                            <Link href={workOrdersShow(quotation.converted_work_order.id)}>
+                                                View linked work order
+                                            </Link>
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {quotation.can.change_status && (
                             <Card>
                                 <CardHeader>

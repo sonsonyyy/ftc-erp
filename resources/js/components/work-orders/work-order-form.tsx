@@ -62,8 +62,8 @@ export function WorkOrderForm({
         scheduled_date: workOrder?.scheduled_date ?? defaults?.scheduled_date ?? '',
         priority: workOrder?.priority ?? defaults?.priority ?? 'normal',
         status: workOrder?.status ?? defaults?.status ?? 'draft',
-        summary: workOrder?.summary ?? '',
-        findings: workOrder?.findings ?? '',
+        summary: workOrder?.summary ?? defaults?.summary ?? '',
+        findings: workOrder?.findings ?? defaults?.findings ?? '',
     });
 
     const isCreate = workOrder === undefined;
@@ -79,6 +79,18 @@ export function WorkOrderForm({
         form.data.customer_id === ''
             ? projectOptions
             : projectOptions.filter((option) => option.customer_id === Number(form.data.customer_id));
+    const selectedCustomer = customerOptions.find(
+        (option) => String(option.value) === form.data.customer_id,
+    );
+    const selectedSite = siteOptions.find(
+        (option) => String(option.value) === form.data.customer_site_id,
+    );
+    const selectedQuotation = quotationOptions.find(
+        (option) => String(option.value) === form.data.quotation_id,
+    );
+    const selectedProject = projectOptions.find(
+        (option) => String(option.value) === form.data.project_id,
+    );
 
     function handleCustomerChange(customerId: string) {
         form.setData('customer_id', customerId);
@@ -248,6 +260,9 @@ export function WorkOrderForm({
                                     </option>
                                 ))}
                             </select>
+                            <p className="text-sm text-muted-foreground">
+                                Selecting a project pulls in its customer, site, and linked quotation when one exists.
+                            </p>
                             <InputError message={form.errors.project_id} />
                         </div>
 
@@ -266,6 +281,9 @@ export function WorkOrderForm({
                                     </option>
                                 ))}
                             </select>
+                            <p className="text-sm text-muted-foreground">
+                                Choose the quotation first when this work order comes straight from an awarded sales handoff.
+                            </p>
                             <InputError message={form.errors.quotation_id} />
                         </div>
 
@@ -284,6 +302,9 @@ export function WorkOrderForm({
                                     </option>
                                 ))}
                             </select>
+                            <p className="text-sm text-muted-foreground">
+                                Changing the customer narrows the site, project, and quotation choices to that account.
+                            </p>
                             <InputError message={form.errors.customer_id} />
                         </div>
 
@@ -305,6 +326,9 @@ export function WorkOrderForm({
                                     </option>
                                 ))}
                             </select>
+                            <p className="text-sm text-muted-foreground">
+                                Keep the site in sync with the selected project or quotation so field work lands on the right record.
+                            </p>
                             <InputError message={form.errors.customer_site_id} />
                         </div>
 
@@ -376,6 +400,60 @@ export function WorkOrderForm({
                             />
                             <InputError message={form.errors.findings} />
                         </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Linkage summary</CardTitle>
+                        <CardDescription>
+                            Confirm the execution record is being created under the right upstream context.
+                        </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="space-y-3">
+                        <div className="rounded-lg border border-dashed px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Project
+                            </p>
+                            <p className="mt-1 font-medium">
+                                {selectedProject?.label ?? 'No project linked'}
+                            </p>
+                        </div>
+
+                        <div className="rounded-lg border border-dashed px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Awarded quotation
+                            </p>
+                            <p className="mt-1 font-medium">
+                                {selectedQuotation?.label ?? 'No quotation linked'}
+                            </p>
+                        </div>
+
+                        <div className="rounded-lg border border-dashed px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Customer
+                            </p>
+                            <p className="mt-1 font-medium">
+                                {selectedCustomer?.label ?? 'Select a customer'}
+                            </p>
+                        </div>
+
+                        <div className="rounded-lg border border-dashed px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Site
+                            </p>
+                            <p className="mt-1 font-medium">
+                                {selectedSite?.label ??
+                                    (form.data.customer_id === ''
+                                        ? 'Select a customer first'
+                                        : 'Select a site')}
+                            </p>
+                        </div>
+
+                        <p className="text-sm text-muted-foreground">
+                            Start from the project when execution belongs to an active project, or use the quotation when the work order needs to bypass project setup.
+                        </p>
                     </CardContent>
                 </Card>
 

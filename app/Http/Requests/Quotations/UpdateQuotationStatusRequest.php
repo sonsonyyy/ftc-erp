@@ -53,6 +53,16 @@ class UpdateQuotationStatusRequest extends FormRequest
                     $validator->errors()->add('status', 'Choose a different status to record a new status transition.');
                 }
 
+                if (
+                    ($quotation->converted_project_id !== null || $quotation->converted_work_order_id !== null)
+                    && $status !== QuotationStatus::Awarded
+                ) {
+                    $validator->errors()->add(
+                        'status',
+                        'Converted quotations must remain awarded while linked to projects or work orders.',
+                    );
+                }
+
                 if ($status->requiresLostReason() && blank($this->string('lost_reason')->toString())) {
                     $validator->errors()->add('lost_reason', 'A lost reason is required when the quotation is marked as lost.');
                 }

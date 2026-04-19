@@ -78,6 +78,8 @@ class UpdateWorkOrderRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
+                $workOrderId = $this->route('work_order')?->getKey();
+
                 $siteBelongsToCustomer = CustomerSite::query()
                     ->whereKey($this->integer('customer_site_id'))
                     ->where('customer_id', $this->integer('customer_id'))
@@ -93,6 +95,13 @@ class UpdateWorkOrderRequest extends FormRequest
                     if ($quotation !== null) {
                         if ($quotation->status !== QuotationStatus::Awarded) {
                             $validator->errors()->add('quotation_id', 'Only awarded quotations may be linked to work orders.');
+                        }
+
+                        if (
+                            $quotation->converted_work_order_id !== null
+                            && $quotation->converted_work_order_id !== $workOrderId
+                        ) {
+                            $validator->errors()->add('quotation_id', 'The selected quotation is already linked to a work order.');
                         }
 
                         if ($quotation->customer_id !== $this->integer('customer_id')) {

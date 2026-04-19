@@ -150,6 +150,8 @@ export type WorkOrderDetail = {
         manage_assignments: boolean;
         manage_logs: boolean;
         manage_materials: boolean;
+        create_stock_issuance: boolean;
+        create_stock_return: boolean;
         upload_attachments: boolean;
         remove_attachments: boolean;
     };
@@ -160,6 +162,8 @@ export type WorkOrderFormDefaults = {
     customer_site_id: number | null;
     quotation_id: number | null;
     project_id: number | null;
+    summary?: string | null;
+    findings?: string | null;
     priority: string;
     status: string;
     scheduled_date: string;

@@ -1,5 +1,6 @@
 export type * from './auth';
 export type * from './customers';
+export type * from './inventory';
 export type * from './navigation';
 export type * from './projects';
 export type * from './quotations';

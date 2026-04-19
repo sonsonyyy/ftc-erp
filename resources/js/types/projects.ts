@@ -127,6 +127,8 @@ export type ProjectDetail = {
         delete: boolean;
         manage_assignments: boolean;
         create_work_order: boolean;
+        create_stock_issuance: boolean;
+        create_stock_return: boolean;
         upload_attachments: boolean;
         remove_attachments: boolean;
     };
@@ -136,6 +138,8 @@ export type ProjectFormDefaults = {
     customer_id: number | null;
     customer_site_id: number | null;
     quotation_id: number | null;
+    title?: string | null;
+    description?: string | null;
     status: string;
     start_date: string;
 };

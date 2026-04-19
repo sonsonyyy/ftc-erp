@@ -84,12 +84,28 @@ export type QuotationDetail = {
         id: number | null;
         name: string | null;
     };
+    converted_project: {
+        id: number | null;
+        project_no: string | null;
+        title: string | null;
+        status: string | null;
+        status_label: string | null;
+    };
+    converted_work_order: {
+        id: number | null;
+        work_order_no: string | null;
+        summary: string | null;
+        status: string | null;
+        status_label: string | null;
+    };
     attachments?: AttachmentItem[];
     status_history?: QuotationStatusHistoryItem[];
     can: {
         update: boolean;
         change_status: boolean;
         delete: boolean;
+        convert_to_project: boolean;
+        convert_to_work_order: boolean;
         upload_attachments: boolean;
         remove_attachments: boolean;
     };

@@ -5,6 +5,8 @@ import { show as customersShow } from '@/routes/customers';
 import { index as projectsIndex, edit as projectsEdit } from '@/routes/projects';
 import { show as quotationsShow } from '@/routes/quotations';
 import { show as sitesShow } from '@/routes/sites';
+import { create as stockIssuancesCreate } from '@/routes/stock-issuances';
+import { create as stockReturnsCreate } from '@/routes/stock-returns';
 import { create as workOrdersCreate, show as workOrdersShow } from '@/routes/work-orders';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Badge } from '@/components/ui/badge';
@@ -132,6 +134,18 @@ export default function ProjectsShow({ project, statusOptions, userOptions }: Pr
                             </Button>
                         )}
 
+                        {project.site.id && (
+                            <Button variant="outline" asChild>
+                                <Link href={sitesShow(project.site.id)}>View site</Link>
+                            </Button>
+                        )}
+
+                        {project.quotation.id && (
+                            <Button variant="outline" asChild>
+                                <Link href={quotationsShow(project.quotation.id)}>View quotation</Link>
+                            </Button>
+                        )}
+
                         {project.can.create_work_order && (
                             <Button variant="outline" asChild>
                                 <Link
@@ -145,6 +159,34 @@ export default function ProjectsShow({ project, statusOptions, userOptions }: Pr
                                     })}
                                 >
                                     New work order
+                                </Link>
+                            </Button>
+                        )}
+
+                        {project.can.create_stock_issuance && (
+                            <Button variant="outline" asChild>
+                                <Link
+                                    href={stockIssuancesCreate({
+                                        query: {
+                                            project: project.id,
+                                        },
+                                    })}
+                                >
+                                    Stock issuance
+                                </Link>
+                            </Button>
+                        )}
+
+                        {project.can.create_stock_return && (
+                            <Button variant="outline" asChild>
+                                <Link
+                                    href={stockReturnsCreate({
+                                        query: {
+                                            project: project.id,
+                                        },
+                                    })}
+                                >
+                                    Stock return
                                 </Link>
                             </Button>
                         )}

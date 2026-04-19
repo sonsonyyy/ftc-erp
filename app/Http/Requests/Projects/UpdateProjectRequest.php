@@ -70,6 +70,8 @@ class UpdateProjectRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
+                $projectId = $this->route('project')?->getKey();
+
                 $siteBelongsToCustomer = CustomerSite::query()
                     ->whereKey($this->integer('customer_site_id'))
                     ->where('customer_id', $this->integer('customer_id'))
@@ -91,6 +93,13 @@ class UpdateProjectRequest extends FormRequest
 
                 if ($quotation->status !== QuotationStatus::Awarded) {
                     $validator->errors()->add('quotation_id', 'Only awarded quotations may be linked to projects.');
+                }
+
+                if (
+                    $quotation->converted_project_id !== null
+                    && $quotation->converted_project_id !== $projectId
+                ) {
+                    $validator->errors()->add('quotation_id', 'The selected quotation is already linked to a project.');
                 }
 
                 if ($quotation->customer_id !== $this->integer('customer_id')) {

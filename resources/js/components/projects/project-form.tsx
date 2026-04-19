@@ -50,12 +50,12 @@ export function ProjectForm({
         quotation_id: project?.quotation_id ? String(project.quotation_id) : defaults?.quotation_id ? String(defaults.quotation_id) : '',
         customer_id: project?.customer_id ? String(project.customer_id) : defaults?.customer_id ? String(defaults.customer_id) : '',
         customer_site_id: project?.customer_site_id ? String(project.customer_site_id) : defaults?.customer_site_id ? String(defaults.customer_site_id) : '',
-        title: project?.title ?? '',
+        title: project?.title ?? defaults?.title ?? '',
         project_type: project?.project_type ?? '',
         start_date: project?.start_date ?? defaults?.start_date ?? '',
         target_end_date: project?.target_end_date ?? '',
         status: project?.status ?? defaults?.status ?? 'draft',
-        description: project?.description ?? '',
+        description: project?.description ?? defaults?.description ?? '',
     });
 
     const isCreate = project === undefined;
@@ -67,6 +67,15 @@ export function ProjectForm({
         form.data.customer_id === ''
             ? quotationOptions
             : quotationOptions.filter((option) => option.customer_id === Number(form.data.customer_id));
+    const selectedCustomer = customerOptions.find(
+        (option) => String(option.value) === form.data.customer_id,
+    );
+    const selectedSite = siteOptions.find(
+        (option) => String(option.value) === form.data.customer_site_id,
+    );
+    const selectedQuotation = quotationOptions.find(
+        (option) => String(option.value) === form.data.quotation_id,
+    );
 
     function handleCustomerChange(customerId: string) {
         form.setData('customer_id', customerId);
@@ -206,6 +215,9 @@ export function ProjectForm({
                                     </option>
                                 ))}
                             </select>
+                            <p className="text-sm text-muted-foreground">
+                                Selecting an awarded quotation auto-fills the customer and site to match the handoff.
+                            </p>
                             <InputError message={form.errors.quotation_id} />
                         </div>
 
@@ -224,6 +236,9 @@ export function ProjectForm({
                                     </option>
                                 ))}
                             </select>
+                            <p className="text-sm text-muted-foreground">
+                                Changing the customer filters the available sites and quotation choices.
+                            </p>
                             <InputError message={form.errors.customer_id} />
                         </div>
 
@@ -245,6 +260,9 @@ export function ProjectForm({
                                     </option>
                                 ))}
                             </select>
+                            <p className="text-sm text-muted-foreground">
+                                Keep the site aligned with the awarded quotation when this project comes from sales handoff.
+                            </p>
                             <InputError message={form.errors.customer_site_id} />
                         </div>
 
@@ -303,6 +321,51 @@ export function ProjectForm({
                             />
                             <InputError message={form.errors.description} />
                         </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Linkage summary</CardTitle>
+                        <CardDescription>
+                            Double-check the operational context before you save the project record.
+                        </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="space-y-3">
+                        <div className="rounded-lg border border-dashed px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Awarded quotation
+                            </p>
+                            <p className="mt-1 font-medium">
+                                {selectedQuotation?.label ?? 'No quotation linked'}
+                            </p>
+                        </div>
+
+                        <div className="rounded-lg border border-dashed px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Customer
+                            </p>
+                            <p className="mt-1 font-medium">
+                                {selectedCustomer?.label ?? 'Select a customer'}
+                            </p>
+                        </div>
+
+                        <div className="rounded-lg border border-dashed px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                Site
+                            </p>
+                            <p className="mt-1 font-medium">
+                                {selectedSite?.label ??
+                                    (form.data.customer_id === ''
+                                        ? 'Select a customer first'
+                                        : 'Select a site')}
+                            </p>
+                        </div>
+
+                        <p className="text-sm text-muted-foreground">
+                            Use the quotation first when this project starts from an awarded sale so the customer and site stay consistent across modules.
+                        </p>
                     </CardContent>
                 </Card>
 

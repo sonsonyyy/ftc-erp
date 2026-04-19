@@ -17,6 +17,8 @@ use App\Models\Project;
 use App\Models\ProjectAssignment;
 use App\Models\ProjectStatusLog;
 use App\Models\Quotation;
+use App\Models\StockIssuance;
+use App\Models\StockReturn;
 use App\Models\User;
 use App\Models\WorkOrder;
 use Illuminate\Http\RedirectResponse;
@@ -78,15 +80,19 @@ class ProjectController extends Controller
     {
         $this->authorize('create', Project::class);
 
+        $quotation = $this->quotationForCreatePrefill($request->integer('quotation') ?: null);
+
         return Inertia::render('projects/create', [
             'customerOptions' => $this->customerOptions(),
             'siteOptions' => $this->siteOptions(),
             'quotationOptions' => $this->quotationOptions(),
             'statusOptions' => $this->statusOptions(),
             'defaults' => [
-                'customer_id' => $request->integer('customer') ?: null,
-                'customer_site_id' => $request->integer('site') ?: null,
-                'quotation_id' => $request->integer('quotation') ?: null,
+                'customer_id' => $quotation?->customer_id ?? ($request->integer('customer') ?: null),
+                'customer_site_id' => $quotation?->customer_site_id ?? ($request->integer('site') ?: null),
+                'quotation_id' => $quotation?->getKey(),
+                'title' => $quotation?->subject,
+                'description' => $quotation?->remarks,
                 'status' => ProjectStatus::Draft->value,
                 'start_date' => now()->toDateString(),
             ],
@@ -113,6 +119,7 @@ class ProjectController extends Controller
             /** @var Project $project */
             $project = Project::query()->create($validated);
             $updateProjectStatusAction->recordInitialStatus($project, $request->user());
+            $this->syncQuotationConversion($project, null, $project->quotation_id);
 
             return $project;
         });
@@ -166,7 +173,7 @@ class ProjectController extends Controller
             'project' => $this->projectDetail($request, $project, includeRelations: false),
             'customerOptions' => $this->customerOptions(),
             'siteOptions' => $this->siteOptions(),
-            'quotationOptions' => $this->quotationOptions(),
+            'quotationOptions' => $this->quotationOptions($project->quotation_id),
         ]);
     }
 
@@ -177,7 +184,12 @@ class ProjectController extends Controller
     {
         $this->authorize('update', $project);
 
-        $project->update($request->validated());
+        DB::transaction(function () use ($request, $project): void {
+            $originalQuotationId = $project->quotation_id;
+
+            $project->update($request->validated());
+            $this->syncQuotationConversion($project, $originalQuotationId, $project->quotation_id);
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -378,6 +390,8 @@ class ProjectController extends Controller
                 'delete' => $request->user()?->can('delete', $project) ?? false,
                 'manage_assignments' => $request->user()?->can('update', $project) ?? false,
                 'create_work_order' => $request->user()?->can('create', WorkOrder::class) ?? false,
+                'create_stock_issuance' => $request->user()?->can('create', StockIssuance::class) ?? false,
+                'create_stock_return' => $request->user()?->can('create', StockReturn::class) ?? false,
                 'upload_attachments' => ($request->user()?->hasPermissionTo('attachments.create') ?? false)
                     && ($request->user()?->can('update', $project) ?? false),
                 'remove_attachments' => ($request->user()?->hasPermissionTo('attachments.delete') ?? false)
@@ -469,10 +483,17 @@ class ProjectController extends Controller
      *
      * @return array<int, array<string, int|string|null>>
      */
-    private function quotationOptions(): array
+    private function quotationOptions(?int $selectedQuotationId = null): array
     {
         return Quotation::query()
             ->where('status', QuotationStatus::Awarded->value)
+            ->where(function ($query) use ($selectedQuotationId): void {
+                $query->whereNull('converted_project_id');
+
+                if (filled($selectedQuotationId)) {
+                    $query->orWhereKey($selectedQuotationId);
+                }
+            })
             ->orderByDesc('quotation_date')
             ->orderByDesc('id')
             ->get(['id', 'customer_id', 'customer_site_id', 'quotation_no', 'subject'])
@@ -531,5 +552,51 @@ class ProjectController extends Controller
             'uploaded_by' => $attachment->uploadedBy?->name,
             'download_url' => route('attachments.download', $attachment),
         ];
+    }
+
+    /**
+     * Resolve an awarded quotation that may prefill the project create form.
+     */
+    private function quotationForCreatePrefill(?int $quotationId): ?Quotation
+    {
+        if (! filled($quotationId)) {
+            return null;
+        }
+
+        return Quotation::query()
+            ->whereKey($quotationId)
+            ->where('status', QuotationStatus::Awarded->value)
+            ->whereNull('converted_project_id')
+            ->first([
+                'id',
+                'customer_id',
+                'customer_site_id',
+                'subject',
+                'remarks',
+            ]);
+    }
+
+    /**
+     * Keep the quotation conversion link synchronized with the project record.
+     */
+    private function syncQuotationConversion(
+        Project $project,
+        ?int $originalQuotationId,
+        ?int $currentQuotationId,
+    ): void {
+        if ($originalQuotationId !== null && $originalQuotationId !== $currentQuotationId) {
+            Quotation::query()
+                ->whereKey($originalQuotationId)
+                ->where('converted_project_id', $project->getKey())
+                ->update(['converted_project_id' => null]);
+        }
+
+        if ($currentQuotationId === null) {
+            return;
+        }
+
+        Quotation::query()
+            ->whereKey($currentQuotationId)
+            ->update(['converted_project_id' => $project->getKey()]);
     }
 }

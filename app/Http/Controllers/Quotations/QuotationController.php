@@ -11,9 +11,11 @@ use App\Http\Requests\Quotations\UpdateQuotationStatusRequest;
 use App\Models\Attachment;
 use App\Models\Customer;
 use App\Models\CustomerSite;
+use App\Models\Project;
 use App\Models\Quotation;
 use App\Models\QuotationStatusLog;
 use App\Models\User;
+use App\Models\WorkOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -140,6 +142,8 @@ class QuotationController extends Controller
             'customerSite:id,customer_id,site_code,site_name,address,city,province',
             'preparedBy:id,name',
             'assignedSalesUser:id,name',
+            'convertedProject:id,project_no,title,status',
+            'convertedWorkOrder:id,work_order_no,summary,status',
             'attachments.uploadedBy',
             'statusLogs.changedBy:id,name',
         ])->loadCount('attachments');
@@ -216,6 +220,60 @@ class QuotationController extends Controller
         ]);
 
         return back();
+    }
+
+    /**
+     * Start the project conversion flow for an awarded quotation.
+     */
+    public function convertToProject(Quotation $quotation): RedirectResponse
+    {
+        $this->authorize('view', $quotation);
+        $this->authorize('create', Project::class);
+
+        if ($quotation->status !== QuotationStatus::Awarded) {
+            return $this->conversionWarningRedirect(
+                $quotation,
+                __('Only awarded quotations can be converted to projects.'),
+            );
+        }
+
+        if ($quotation->converted_project_id !== null) {
+            return $this->conversionWarningRedirect(
+                $quotation,
+                __('This quotation is already linked to a project.'),
+            );
+        }
+
+        return to_route('projects.create', [
+            'quotation' => $quotation->getKey(),
+        ]);
+    }
+
+    /**
+     * Start the work order conversion flow for an awarded quotation.
+     */
+    public function convertToWorkOrder(Quotation $quotation): RedirectResponse
+    {
+        $this->authorize('view', $quotation);
+        $this->authorize('create', WorkOrder::class);
+
+        if ($quotation->status !== QuotationStatus::Awarded) {
+            return $this->conversionWarningRedirect(
+                $quotation,
+                __('Only awarded quotations can be converted to work orders.'),
+            );
+        }
+
+        if ($quotation->converted_work_order_id !== null) {
+            return $this->conversionWarningRedirect(
+                $quotation,
+                __('This quotation is already linked to a work order.'),
+            );
+        }
+
+        return to_route('work-orders.create', [
+            'quotation' => $quotation->getKey(),
+        ]);
     }
 
     /**
@@ -464,10 +522,30 @@ class QuotationController extends Controller
                 'id' => $quotation->assignedSalesUser?->getKey(),
                 'name' => $quotation->assignedSalesUser?->name,
             ],
+            'converted_project' => [
+                'id' => $quotation->convertedProject?->getKey(),
+                'project_no' => $quotation->convertedProject?->project_no,
+                'title' => $quotation->convertedProject?->title,
+                'status' => $quotation->convertedProject?->status?->value,
+                'status_label' => $quotation->convertedProject?->status?->label(),
+            ],
+            'converted_work_order' => [
+                'id' => $quotation->convertedWorkOrder?->getKey(),
+                'work_order_no' => $quotation->convertedWorkOrder?->work_order_no,
+                'summary' => $quotation->convertedWorkOrder?->summary,
+                'status' => $quotation->convertedWorkOrder?->status?->value,
+                'status_label' => $quotation->convertedWorkOrder?->status?->label(),
+            ],
             'can' => [
                 'update' => $request->user()?->can('update', $quotation) ?? false,
                 'change_status' => $request->user()?->can('changeStatus', $quotation) ?? false,
                 'delete' => $request->user()?->can('delete', $quotation) ?? false,
+                'convert_to_project' => ($request->user()?->can('create', Project::class) ?? false)
+                    && $quotation->status === QuotationStatus::Awarded
+                    && $quotation->converted_project_id === null,
+                'convert_to_work_order' => ($request->user()?->can('create', WorkOrder::class) ?? false)
+                    && $quotation->status === QuotationStatus::Awarded
+                    && $quotation->converted_work_order_id === null,
                 'upload_attachments' => ($request->user()?->hasPermissionTo('attachments.create') ?? false)
                     && ($request->user()?->can('update', $quotation) ?? false),
                 'remove_attachments' => ($request->user()?->hasPermissionTo('attachments.delete') ?? false)
@@ -682,5 +760,20 @@ class QuotationController extends Controller
             QuotationStatus::Submitted->value,
             QuotationStatus::UnderReview->value,
         ];
+    }
+
+    /**
+     * Redirect back to the quotation detail page with a conversion warning.
+     */
+    private function conversionWarningRedirect(
+        Quotation $quotation,
+        string $message,
+    ): RedirectResponse {
+        Inertia::flash('toast', [
+            'type' => 'warning',
+            'message' => $message,
+        ]);
+
+        return to_route('quotations.show', $quotation);
     }
 }

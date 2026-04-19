@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             DemoQuotationsSeeder::class,
             DemoProjectsSeeder::class,
             DemoWorkOrdersSeeder::class,
+            DemoInventorySeeder::class,
         ]);
     }
 }

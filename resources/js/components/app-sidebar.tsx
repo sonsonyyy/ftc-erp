@@ -6,7 +6,10 @@ import {
     FolderKanban,
     LayoutGrid,
     MapPinned,
+    Package,
+    ScrollText,
     Users,
+    Warehouse,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -22,10 +25,15 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as customersIndex } from '@/routes/customers';
+import { index as inventoryIndex } from '@/routes/inventory';
 import { index as projectsIndex } from '@/routes/projects';
 import { index as quotationsIndex } from '@/routes/quotations';
 import { index as sitesIndex } from '@/routes/sites';
+import { index as stockIssuancesIndex } from '@/routes/stock-issuances';
+import { index as stockMovementsIndex } from '@/routes/stock-movements';
+import { index as stockReturnsIndex } from '@/routes/stock-returns';
 import { index as usersIndex } from '@/routes/users';
+import { index as warehousesIndex } from '@/routes/warehouses';
 import { index as workOrdersIndex } from '@/routes/work-orders';
 import type { Auth, NavItem } from '@/types';
 
@@ -71,6 +79,36 @@ const mainNavItems: NavItem[] = [
         href: workOrdersIndex(),
         icon: ClipboardCheck,
         permission: 'work_orders.view',
+    },
+    {
+        title: 'Inventory',
+        href: inventoryIndex(),
+        icon: Package,
+        permission: 'inventory.view',
+    },
+    {
+        title: 'Warehouses',
+        href: warehousesIndex(),
+        icon: Warehouse,
+        permission: 'warehouses.view',
+    },
+    {
+        title: 'Stock Movements',
+        href: stockMovementsIndex(),
+        icon: ScrollText,
+        permission: 'stock.view',
+    },
+    {
+        title: 'Stock Issuances',
+        href: stockIssuancesIndex(),
+        icon: ScrollText,
+        permission: 'stock.view',
+    },
+    {
+        title: 'Stock Returns',
+        href: stockReturnsIndex(),
+        icon: ScrollText,
+        permission: 'stock.view',
     },
 ];
 

@@ -20,6 +20,8 @@ use App\Models\Customer;
 use App\Models\CustomerSite;
 use App\Models\Project;
 use App\Models\Quotation;
+use App\Models\StockIssuance;
+use App\Models\StockReturn;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderAssignment;
@@ -97,6 +99,8 @@ class WorkOrderController extends Controller
     {
         $this->authorize('create', WorkOrder::class);
 
+        $quotation = $this->quotationForCreatePrefill($request->integer('quotation') ?: null);
+
         return Inertia::render('work-orders/create', [
             'customerOptions' => $this->customerOptions(),
             'siteOptions' => $this->siteOptions(),
@@ -106,10 +110,12 @@ class WorkOrderController extends Controller
             'serviceTypeOptions' => $this->serviceTypeOptions(),
             'statusOptions' => $this->statusOptions(),
             'defaults' => [
-                'customer_id' => $request->integer('customer') ?: null,
-                'customer_site_id' => $request->integer('site') ?: null,
-                'quotation_id' => $request->integer('quotation') ?: null,
+                'customer_id' => $quotation?->customer_id ?? ($request->integer('customer') ?: null),
+                'customer_site_id' => $quotation?->customer_site_id ?? ($request->integer('site') ?: null),
+                'quotation_id' => $quotation?->getKey(),
                 'project_id' => $request->integer('project') ?: null,
+                'summary' => $quotation?->subject,
+                'findings' => $quotation?->remarks,
                 'priority' => WorkOrderPriority::Normal->value,
                 'status' => WorkOrderStatus::Draft->value,
                 'scheduled_date' => now()->toDateString(),
@@ -137,6 +143,7 @@ class WorkOrderController extends Controller
             /** @var WorkOrder $workOrder */
             $workOrder = WorkOrder::query()->create($validated);
             $updateWorkOrderStatusAction->recordInitialLog($workOrder, $request->user());
+            $this->syncQuotationConversion($workOrder, null, $workOrder->quotation_id);
 
             return $workOrder;
         });
@@ -192,7 +199,7 @@ class WorkOrderController extends Controller
             'workOrder' => $this->workOrderDetail($request, $workOrder, includeRelations: false),
             'customerOptions' => $this->customerOptions(),
             'siteOptions' => $this->siteOptions(),
-            'quotationOptions' => $this->quotationOptions(),
+            'quotationOptions' => $this->quotationOptions($workOrder->quotation_id),
             'projectOptions' => $this->projectOptions(),
             'priorityOptions' => $this->priorityOptions(),
             'serviceTypeOptions' => $this->serviceTypeOptions(),
@@ -208,7 +215,12 @@ class WorkOrderController extends Controller
     ): RedirectResponse {
         $this->authorize('update', $workOrder);
 
-        $workOrder->update($request->validated());
+        DB::transaction(function () use ($request, $workOrder): void {
+            $originalQuotationId = $workOrder->quotation_id;
+
+            $workOrder->update($request->validated());
+            $this->syncQuotationConversion($workOrder, $originalQuotationId, $workOrder->quotation_id);
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -490,6 +502,8 @@ class WorkOrderController extends Controller
                 'manage_assignments' => $request->user()?->can('update', $workOrder) ?? false,
                 'manage_logs' => $request->user()?->can('update', $workOrder) ?? false,
                 'manage_materials' => $request->user()?->can('update', $workOrder) ?? false,
+                'create_stock_issuance' => $request->user()?->can('create', StockIssuance::class) ?? false,
+                'create_stock_return' => $request->user()?->can('create', StockReturn::class) ?? false,
                 'upload_attachments' => ($request->user()?->hasPermissionTo('attachments.create') ?? false)
                     && ($request->user()?->can('update', $workOrder) ?? false),
                 'remove_attachments' => ($request->user()?->hasPermissionTo('attachments.delete') ?? false)
@@ -580,10 +594,17 @@ class WorkOrderController extends Controller
      *
      * @return array<int, array<string, int|string|null>>
      */
-    private function quotationOptions(): array
+    private function quotationOptions(?int $selectedQuotationId = null): array
     {
         return Quotation::query()
             ->where('status', QuotationStatus::Awarded->value)
+            ->where(function ($query) use ($selectedQuotationId): void {
+                $query->whereNull('converted_work_order_id');
+
+                if (filled($selectedQuotationId)) {
+                    $query->orWhereKey($selectedQuotationId);
+                }
+            })
             ->orderByDesc('quotation_date')
             ->orderByDesc('id')
             ->get(['id', 'customer_id', 'customer_site_id', 'quotation_no', 'subject'])
@@ -690,5 +711,51 @@ class WorkOrderController extends Controller
             'uploaded_by' => $attachment->uploadedBy?->name,
             'download_url' => route('attachments.download', $attachment),
         ];
+    }
+
+    /**
+     * Resolve an awarded quotation that may prefill the work order create form.
+     */
+    private function quotationForCreatePrefill(?int $quotationId): ?Quotation
+    {
+        if (! filled($quotationId)) {
+            return null;
+        }
+
+        return Quotation::query()
+            ->whereKey($quotationId)
+            ->where('status', QuotationStatus::Awarded->value)
+            ->whereNull('converted_work_order_id')
+            ->first([
+                'id',
+                'customer_id',
+                'customer_site_id',
+                'subject',
+                'remarks',
+            ]);
+    }
+
+    /**
+     * Keep the quotation conversion link synchronized with the work order record.
+     */
+    private function syncQuotationConversion(
+        WorkOrder $workOrder,
+        ?int $originalQuotationId,
+        ?int $currentQuotationId,
+    ): void {
+        if ($originalQuotationId !== null && $originalQuotationId !== $currentQuotationId) {
+            Quotation::query()
+                ->whereKey($originalQuotationId)
+                ->where('converted_work_order_id', $workOrder->getKey())
+                ->update(['converted_work_order_id' => null]);
+        }
+
+        if ($currentQuotationId === null) {
+            return;
+        }
+
+        Quotation::query()
+            ->whereKey($currentQuotationId)
+            ->update(['converted_work_order_id' => $workOrder->getKey()]);
     }
 }

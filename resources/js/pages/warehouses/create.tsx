@@ -1,0 +1,28 @@
+import { Head } from '@inertiajs/react';
+import { dashboard } from '@/routes';
+import { index as warehousesIndex } from '@/routes/warehouses';
+import { WarehouseForm } from '@/components/inventory/warehouse-form';
+
+export default function WarehousesCreate() {
+    return (
+        <>
+            <Head title="New Warehouse" />
+
+            <div className="flex flex-1 flex-col gap-6 p-4">
+                <WarehouseForm
+                    title="New warehouse"
+                    description="Register a warehouse or stock room before recording balances, issuances, returns, or stock movements."
+                    cancelHref={warehousesIndex()}
+                />
+            </div>
+        </>
+    );
+}
+
+WarehousesCreate.layout = {
+    breadcrumbs: [
+        { title: 'Dashboard', href: dashboard() },
+        { title: 'Warehouses', href: warehousesIndex() },
+        { title: 'New warehouse', href: warehousesIndex() },
+    ],
+};

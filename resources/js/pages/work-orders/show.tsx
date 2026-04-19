@@ -5,6 +5,8 @@ import { show as customersShow } from '@/routes/customers';
 import { show as projectsShow } from '@/routes/projects';
 import { show as quotationsShow } from '@/routes/quotations';
 import { show as sitesShow } from '@/routes/sites';
+import { create as stockIssuancesCreate } from '@/routes/stock-issuances';
+import { create as stockReturnsCreate } from '@/routes/stock-returns';
 import { edit as workOrdersEdit, index as workOrdersIndex } from '@/routes/work-orders';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Badge } from '@/components/ui/badge';
@@ -198,6 +200,54 @@ export default function WorkOrdersShow({ workOrder, statusOptions, userOptions }
                             </Button>
                         )}
 
+                        {workOrder.site.id && (
+                            <Button variant="outline" asChild>
+                                <Link href={sitesShow(workOrder.site.id)}>View site</Link>
+                            </Button>
+                        )}
+
+                        {workOrder.project.id && (
+                            <Button variant="outline" asChild>
+                                <Link href={projectsShow(workOrder.project.id)}>View project</Link>
+                            </Button>
+                        )}
+
+                        {workOrder.quotation.id && (
+                            <Button variant="outline" asChild>
+                                <Link href={quotationsShow(workOrder.quotation.id)}>View quotation</Link>
+                            </Button>
+                        )}
+
+                        {workOrder.can.create_stock_issuance && (
+                            <Button variant="outline" asChild>
+                                <Link
+                                    href={stockIssuancesCreate({
+                                        query: {
+                                            project: workOrder.project.id ?? undefined,
+                                            work_order: workOrder.id,
+                                        },
+                                    })}
+                                >
+                                    Stock issuance
+                                </Link>
+                            </Button>
+                        )}
+
+                        {workOrder.can.create_stock_return && (
+                            <Button variant="outline" asChild>
+                                <Link
+                                    href={stockReturnsCreate({
+                                        query: {
+                                            project: workOrder.project.id ?? undefined,
+                                            work_order: workOrder.id,
+                                        },
+                                    })}
+                                >
+                                    Stock return
+                                </Link>
+                            </Button>
+                        )}
+
                         {workOrder.can.update && (
                             <Button asChild>
                                 <Link href={workOrdersEdit(workOrder.id)}>Edit work order</Link>
@@ -310,6 +360,20 @@ export default function WorkOrdersShow({ workOrder, statusOptions, userOptions }
                                     ) : (
                                         <p className="mt-1 font-medium">No quotation linked</p>
                                     )}
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Project status</p>
+                                    <p className="mt-1 font-medium">
+                                        {workOrder.project.status_label ?? 'Not applicable'}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Quotation status</p>
+                                    <p className="mt-1 font-medium">
+                                        {workOrder.quotation.status_label ?? 'Not applicable'}
+                                    </p>
                                 </div>
 
                                 <div className="md:col-span-2">

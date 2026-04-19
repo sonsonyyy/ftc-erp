@@ -85,6 +85,26 @@ class Quotation extends Model
     }
 
     /**
+     * Get the converted project linked from this quotation.
+     *
+     * @return BelongsTo<Project, $this>
+     */
+    public function convertedProject(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'converted_project_id');
+    }
+
+    /**
+     * Get the converted work order linked from this quotation.
+     *
+     * @return BelongsTo<WorkOrder, $this>
+     */
+    public function convertedWorkOrder(): BelongsTo
+    {
+        return $this->belongsTo(WorkOrder::class, 'converted_work_order_id');
+    }
+
+    /**
      * Get the status history entries for the quotation.
      *
      * @return HasMany<QuotationStatusLog, $this>
