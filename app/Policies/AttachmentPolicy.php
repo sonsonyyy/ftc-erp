@@ -6,7 +6,11 @@ use App\Models\Attachment;
 use App\Models\Customer;
 use App\Models\CustomerSite;
 use App\Models\Project;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseReceipt;
+use App\Models\PurchaseRequest;
 use App\Models\Quotation;
+use App\Models\Supplier;
 use App\Models\User;
 use App\Models\WorkOrder;
 
@@ -37,7 +41,17 @@ class AttachmentPolicy
             return false;
         }
 
-        $attachment->loadMissing('customers', 'customerSites', 'quotations', 'projects', 'workOrders');
+        $attachment->loadMissing(
+            'customers',
+            'customerSites',
+            'quotations',
+            'projects',
+            'workOrders',
+            'suppliers',
+            'purchaseRequests',
+            'purchaseOrders',
+            'purchaseReceipts',
+        );
 
         return $attachment->customers->contains(
             fn (Customer $customer) => $user->can('view', $customer),
@@ -49,6 +63,14 @@ class AttachmentPolicy
             fn (Project $project) => $user->can('view', $project),
         ) || $attachment->workOrders->contains(
             fn (WorkOrder $workOrder) => $user->can('view', $workOrder),
+        ) || $attachment->suppliers->contains(
+            fn (Supplier $supplier) => $user->can('view', $supplier),
+        ) || $attachment->purchaseRequests->contains(
+            fn (PurchaseRequest $purchaseRequest) => $user->can('view', $purchaseRequest),
+        ) || $attachment->purchaseOrders->contains(
+            fn (PurchaseOrder $purchaseOrder) => $user->can('view', $purchaseOrder),
+        ) || $attachment->purchaseReceipts->contains(
+            fn (PurchaseReceipt $purchaseReceipt) => $user->can('view', $purchaseReceipt),
         );
     }
 

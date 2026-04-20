@@ -21,4 +21,5 @@ require __DIR__.'/quotations.php';
 require __DIR__.'/projects.php';
 require __DIR__.'/work-orders.php';
 require __DIR__.'/inventory.php';
+require __DIR__.'/purchasing.php';
 require __DIR__.'/settings.php';

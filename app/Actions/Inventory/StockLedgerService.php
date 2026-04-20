@@ -170,6 +170,39 @@ class StockLedgerService
     }
 
     /**
+     * Record an inbound stock movement from purchase receiving.
+     */
+    public function recordPurchaseReceiptMovement(
+        int $warehouseId,
+        int $inventoryItemId,
+        float|int|string $quantity,
+        ?User $user,
+        string $movementDate,
+        int $purchaseReceiptId,
+        string $receiptNo,
+        ?string $remarks,
+        float|int|string|null $unitCost,
+        string $validationKey,
+    ): StockMovement {
+        return $this->applyMovement(
+            warehouseId: $warehouseId,
+            inventoryItemId: $inventoryItemId,
+            movementType: StockMovementType::StockIn,
+            quantity: $quantity,
+            user: $user,
+            movementDate: $movementDate,
+            referenceType: 'purchase_receipt',
+            referenceId: $purchaseReceiptId,
+            referenceNumber: $receiptNo,
+            remarks: $remarks,
+            projectId: null,
+            workOrderId: null,
+            unitCost: $unitCost,
+            validationKey: $validationKey,
+        );
+    }
+
+    /**
      * Apply a stock movement and persist the resulting balance.
      */
     private function applyMovement(

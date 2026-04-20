@@ -93,4 +93,44 @@ class Attachment extends Model
     {
         return $this->morphedByMany(WorkOrder::class, 'attachable', 'attachment_links')->withTimestamps();
     }
+
+    /**
+     * Suppliers linked to this attachment.
+     *
+     * @return MorphToMany<Supplier, $this>
+     */
+    public function suppliers(): MorphToMany
+    {
+        return $this->morphedByMany(Supplier::class, 'attachable', 'attachment_links')->withTimestamps();
+    }
+
+    /**
+     * Purchase requests linked to this attachment.
+     *
+     * @return MorphToMany<PurchaseRequest, $this>
+     */
+    public function purchaseRequests(): MorphToMany
+    {
+        return $this->morphedByMany(PurchaseRequest::class, 'attachable', 'attachment_links')->withTimestamps();
+    }
+
+    /**
+     * Purchase orders linked to this attachment.
+     *
+     * @return MorphToMany<PurchaseOrder, $this>
+     */
+    public function purchaseOrders(): MorphToMany
+    {
+        return $this->morphedByMany(PurchaseOrder::class, 'attachable', 'attachment_links')->withTimestamps();
+    }
+
+    /**
+     * Purchase receipts linked to this attachment.
+     *
+     * @return MorphToMany<PurchaseReceipt, $this>
+     */
+    public function purchaseReceipts(): MorphToMany
+    {
+        return $this->morphedByMany(PurchaseReceipt::class, 'attachable', 'attachment_links')->withTimestamps();
+    }
 }

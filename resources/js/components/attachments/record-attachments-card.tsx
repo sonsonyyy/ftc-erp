@@ -15,7 +15,16 @@ import type { AttachmentItem } from '@/types';
 
 type Props = {
     attachments: AttachmentItem[];
-    attachableType: 'customer' | 'site' | 'quotation' | 'project' | 'work_order';
+    attachableType:
+        | 'customer'
+        | 'site'
+        | 'quotation'
+        | 'project'
+        | 'work_order'
+        | 'supplier'
+        | 'purchase_request'
+        | 'purchase_order'
+        | 'purchase_receipt';
     attachableId: number;
     canUpload: boolean;
     canUnlink: boolean;

@@ -1,8 +1,10 @@
 export type * from './auth';
 export type * from './customers';
+export type * from './dashboard';
 export type * from './inventory';
 export type * from './navigation';
 export type * from './projects';
+export type * from './purchasing';
 export type * from './quotations';
 export type * from './ui';
 export type * from './users';

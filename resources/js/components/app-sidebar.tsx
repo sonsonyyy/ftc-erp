@@ -8,6 +8,8 @@ import {
     MapPinned,
     Package,
     ScrollText,
+    ShoppingCart,
+    Truck,
     Users,
     Warehouse,
 } from 'lucide-react';
@@ -26,12 +28,16 @@ import {
 import { dashboard } from '@/routes';
 import { index as customersIndex } from '@/routes/customers';
 import { index as inventoryIndex } from '@/routes/inventory';
+import { index as purchaseOrdersIndex } from '@/routes/purchase-orders';
+import { index as purchaseReceiptsIndex } from '@/routes/purchase-receipts';
+import { index as purchaseRequestsIndex } from '@/routes/purchase-requests';
 import { index as projectsIndex } from '@/routes/projects';
 import { index as quotationsIndex } from '@/routes/quotations';
 import { index as sitesIndex } from '@/routes/sites';
 import { index as stockIssuancesIndex } from '@/routes/stock-issuances';
 import { index as stockMovementsIndex } from '@/routes/stock-movements';
 import { index as stockReturnsIndex } from '@/routes/stock-returns';
+import { index as suppliersIndex } from '@/routes/suppliers';
 import { index as usersIndex } from '@/routes/users';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import { index as workOrdersIndex } from '@/routes/work-orders';
@@ -109,6 +115,30 @@ const mainNavItems: NavItem[] = [
         href: stockReturnsIndex(),
         icon: ScrollText,
         permission: 'stock.view',
+    },
+    {
+        title: 'Suppliers',
+        href: suppliersIndex(),
+        icon: Truck,
+        permission: 'suppliers.view',
+    },
+    {
+        title: 'Purchase Requests',
+        href: purchaseRequestsIndex(),
+        icon: ClipboardList,
+        permission: 'purchase_requests.view',
+    },
+    {
+        title: 'Purchase Orders',
+        href: purchaseOrdersIndex(),
+        icon: ShoppingCart,
+        permission: 'purchase_orders.view',
+    },
+    {
+        title: 'Purchase Receipts',
+        href: purchaseReceiptsIndex(),
+        icon: Package,
+        permission: 'purchase_receipts.view',
     },
 ];
 

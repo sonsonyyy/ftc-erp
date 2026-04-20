@@ -52,6 +52,12 @@ class DemoUsersSeeder extends Seeder
                 'roles' => ['Warehouse / Inventory Officer'],
             ],
             [
+                'name' => 'Lara Villanueva',
+                'email' => 'purchasing@example.com',
+                'is_active' => true,
+                'roles' => ['Purchasing Officer'],
+            ],
+            [
                 'name' => 'Bea Navarro',
                 'email' => 'billing@example.com',
                 'is_active' => true,
