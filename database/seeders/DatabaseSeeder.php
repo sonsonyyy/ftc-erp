@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             DemoInventorySeeder::class,
             DemoPurchasingSeeder::class,
             DemoBillingSeeder::class,
+            DemoPayrollSeeder::class,
+            DemoTaxStatutorySeeder::class,
         ]);
     }
 }

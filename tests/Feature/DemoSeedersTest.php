@@ -1,16 +1,29 @@
 <?php
 
+use App\Enums\PayrollRunStatus;
 use App\Enums\ProjectStatus;
 use App\Enums\QuotationStatus;
+use App\Enums\TaxReportType;
+use App\Enums\VatRecordType;
+use App\Enums\WithholdingRecordType;
 use App\Enums\WorkOrderStatus;
 use App\Models\Customer;
 use App\Models\CustomerSite;
+use App\Models\Department;
+use App\Models\Employee;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\PayrollDeduction;
+use App\Models\PayrollEntry;
+use App\Models\PayrollRun;
+use App\Models\Position;
 use App\Models\Project;
 use App\Models\Quotation;
 use App\Models\Role;
+use App\Models\TaxReportRun;
 use App\Models\User;
+use App\Models\VatRecord;
+use App\Models\WithholdingRecord;
 use App\Models\WorkOrder;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,9 +47,10 @@ test('database seeder provisions core ERP demo data', function () {
         'operations@example.com',
         'coordinator@example.com',
         'warehouse@example.com',
+        'hr@example.com',
         'billing@example.com',
         'ceo@example.com',
-    ])->count())->toBe(7);
+    ])->count())->toBe(8);
 
     expect(Customer::query()->whereIn('customer_code', [
         'CUST-10001',
@@ -55,6 +69,48 @@ test('database seeder provisions core ERP demo data', function () {
         'SITE-10006',
         'SITE-10007',
     ])->count())->toBe(7);
+
+    expect(Department::query()->count())->toBe(4);
+    expect(Position::query()->count())->toBe(5);
+    expect(Employee::query()->count())->toBe(6);
+    expect(Employee::query()->where('is_active', false)->count())->toBe(1);
+
+    expect(PayrollRun::query()->count())->toBe(2);
+    expect(PayrollRun::query()->where('status', PayrollRunStatus::Processed)->count())->toBe(1);
+    expect(PayrollRun::query()->where('status', PayrollRunStatus::Draft)->count())->toBe(1);
+    expect(PayrollEntry::query()->count())->toBe(5);
+    expect(PayrollDeduction::query()->count())->toBe(3);
+
+    expect(WithholdingRecord::query()->count())->toBe(12);
+    expect(WithholdingRecord::query()
+        ->where('record_type', WithholdingRecordType::CompensationWithholding)
+        ->count())->toBe(3);
+    expect(WithholdingRecord::query()
+        ->where('record_type', WithholdingRecordType::SssContribution)
+        ->count())->toBe(3);
+    expect(WithholdingRecord::query()
+        ->where('record_type', WithholdingRecordType::PagibigContribution)
+        ->count())->toBe(3);
+    expect(WithholdingRecord::query()
+        ->where('record_type', WithholdingRecordType::PhilhealthContribution)
+        ->count())->toBe(3);
+
+    expect(VatRecord::query()->count())->toBe(5);
+    expect(VatRecord::query()->where('record_type', VatRecordType::OutputVat)->count())->toBe(5);
+
+    $withholdingReportRun = TaxReportRun::query()
+        ->where('report_type', TaxReportType::Form1601C)
+        ->firstOrFail();
+
+    expect($withholdingReportRun->item_count)->toBe(3);
+    expect($withholdingReportRun->generatedBy?->email)->toBe('hr@example.com');
+
+    $vatSummaryRun = TaxReportRun::query()
+        ->where('report_type', TaxReportType::VatSummary)
+        ->firstOrFail();
+
+    expect($vatSummaryRun->item_count)->toBe(5);
+    expect($vatSummaryRun->generatedBy?->email)->toBe('billing@example.com');
 
     $awardedQuotation = Quotation::query()
         ->where('quotation_no', 'QTN-2026-0001')

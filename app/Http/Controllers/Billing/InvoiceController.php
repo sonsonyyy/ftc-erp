@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Billing;
 
 use App\Actions\Billing\RecalculateInvoiceTotalsAction;
+use App\Actions\Tax\SyncInvoiceVatRecordsAction;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Billing\StoreInvoiceRequest;
@@ -121,10 +122,15 @@ class InvoiceController extends Controller
     public function store(
         StoreInvoiceRequest $request,
         RecalculateInvoiceTotalsAction $recalculateInvoiceTotalsAction,
+        SyncInvoiceVatRecordsAction $syncInvoiceVatRecordsAction,
     ): RedirectResponse {
         $this->authorize('create', Invoice::class);
 
-        $invoice = DB::transaction(function () use ($request, $recalculateInvoiceTotalsAction): Invoice {
+        $invoice = DB::transaction(function () use (
+            $request,
+            $recalculateInvoiceTotalsAction,
+            $syncInvoiceVatRecordsAction,
+        ): Invoice {
             $validated = $request->validated();
 
             /** @var Invoice $invoice */
@@ -144,7 +150,17 @@ class InvoiceController extends Controller
 
             $this->syncItems($invoice, $validated['items']);
 
-            return $recalculateInvoiceTotalsAction->handle($invoice);
+            $invoice = $recalculateInvoiceTotalsAction->handle($invoice);
+            $invoice->loadMissing([
+                'customer:id,customer_code,company_name,tin',
+                'quotation:id',
+                'project:id',
+                'workOrder:id',
+            ]);
+
+            $syncInvoiceVatRecordsAction->handle($invoice);
+
+            return $invoice;
         });
 
         Inertia::flash('toast', [
@@ -217,12 +233,18 @@ class InvoiceController extends Controller
         UpdateInvoiceRequest $request,
         Invoice $invoice,
         RecalculateInvoiceTotalsAction $recalculateInvoiceTotalsAction,
+        SyncInvoiceVatRecordsAction $syncInvoiceVatRecordsAction,
     ): RedirectResponse {
         $this->authorize('update', $invoice);
 
         abort_if($invoice->paymentAllocations()->exists(), 403);
 
-        DB::transaction(function () use ($request, $invoice, $recalculateInvoiceTotalsAction): void {
+        DB::transaction(function () use (
+            $request,
+            $invoice,
+            $recalculateInvoiceTotalsAction,
+            $syncInvoiceVatRecordsAction,
+        ): void {
             $validated = $request->validated();
 
             $invoice->update([
@@ -239,7 +261,15 @@ class InvoiceController extends Controller
             ]);
 
             $this->syncItems($invoice, $validated['items']);
-            $recalculateInvoiceTotalsAction->handle($invoice);
+            $invoice = $recalculateInvoiceTotalsAction->handle($invoice);
+            $invoice->loadMissing([
+                'customer:id,customer_code,company_name,tin',
+                'quotation:id',
+                'project:id',
+                'workOrder:id',
+            ]);
+
+            $syncInvoiceVatRecordsAction->handle($invoice);
         });
 
         Inertia::flash('toast', [
@@ -253,10 +283,13 @@ class InvoiceController extends Controller
     /**
      * Archive the selected invoice.
      */
-    public function destroy(Invoice $invoice): RedirectResponse
-    {
+    public function destroy(
+        Invoice $invoice,
+        SyncInvoiceVatRecordsAction $syncInvoiceVatRecordsAction,
+    ): RedirectResponse {
         $this->authorize('delete', $invoice);
 
+        $syncInvoiceVatRecordsAction->deleteForInvoice($invoice);
         $invoice->delete();
 
         Inertia::flash('toast', [

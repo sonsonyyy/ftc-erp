@@ -7,6 +7,8 @@ export type * from './navigation';
 export type * from './projects';
 export type * from './purchasing';
 export type * from './quotations';
+export type * from './payroll';
+export type * from './tax';
 export type * from './ui';
 export type * from './users';
 export type * from './work-orders';

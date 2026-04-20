@@ -77,8 +77,8 @@ class DemoUsersSeeder extends Seeder
             ],
             [
                 'name' => 'Nina Garcia',
-                'email' => 'inactive.hr@example.com',
-                'is_active' => false,
+                'email' => 'hr@example.com',
+                'is_active' => true,
                 'roles' => ['HR / Payroll Officer'],
             ],
         ];

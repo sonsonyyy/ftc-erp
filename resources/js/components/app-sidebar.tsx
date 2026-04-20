@@ -31,8 +31,12 @@ import {
 import { dashboard } from '@/routes';
 import { index as accountsReceivableIndex } from '@/routes/accounts-receivable';
 import { index as customersIndex } from '@/routes/customers';
+import { index as departmentsIndex } from '@/routes/departments';
+import { index as employeesIndex } from '@/routes/employees';
 import { index as inventoryIndex } from '@/routes/inventory';
 import { index as invoicesIndex } from '@/routes/invoices';
+import { index as payrollRunsIndex } from '@/routes/payroll-runs';
+import { index as positionsIndex } from '@/routes/positions';
 import { index as purchaseOrdersIndex } from '@/routes/purchase-orders';
 import { index as purchaseReceiptsIndex } from '@/routes/purchase-receipts';
 import { index as purchaseRequestsIndex } from '@/routes/purchase-requests';
@@ -44,6 +48,7 @@ import { index as stockIssuancesIndex } from '@/routes/stock-issuances';
 import { index as stockMovementsIndex } from '@/routes/stock-movements';
 import { index as stockReturnsIndex } from '@/routes/stock-returns';
 import { index as suppliersIndex } from '@/routes/suppliers';
+import { index as taxReportRunsIndex } from '@/routes/tax-report-runs';
 import { index as usersIndex } from '@/routes/users';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import { index as workOrdersIndex } from '@/routes/work-orders';
@@ -61,6 +66,36 @@ const mainNavItems: NavItem[] = [
         href: usersIndex(),
         icon: Users,
         permission: 'users.view',
+    },
+    {
+        title: 'Departments',
+        href: departmentsIndex(),
+        icon: Building2,
+        permission: 'departments.view',
+    },
+    {
+        title: 'Positions',
+        href: positionsIndex(),
+        icon: ClipboardList,
+        permission: 'positions.view',
+    },
+    {
+        title: 'Employees',
+        href: employeesIndex(),
+        icon: Users,
+        permission: 'employees.view',
+    },
+    {
+        title: 'Payroll Runs',
+        href: payrollRunsIndex(),
+        icon: ScrollText,
+        permission: 'payroll_runs.view',
+    },
+    {
+        title: 'Tax Reports',
+        href: taxReportRunsIndex(),
+        icon: FileText,
+        permission: 'tax_report_runs.view',
     },
     {
         title: 'Customers',
