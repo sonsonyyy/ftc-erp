@@ -4,6 +4,7 @@ namespace App\Enums;
 
 use App\Models\Customer;
 use App\Models\CustomerSite;
+use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseReceipt;
@@ -24,6 +25,7 @@ enum AttachmentTargetType: string
     case PurchaseRequest = 'purchase_request';
     case PurchaseOrder = 'purchase_order';
     case PurchaseReceipt = 'purchase_receipt';
+    case Invoice = 'invoice';
 
     /**
      * Resolve the model class handled by the attachment target.
@@ -42,6 +44,7 @@ enum AttachmentTargetType: string
             self::PurchaseRequest => PurchaseRequest::class,
             self::PurchaseOrder => PurchaseOrder::class,
             self::PurchaseReceipt => PurchaseReceipt::class,
+            self::Invoice => Invoice::class,
         };
     }
 

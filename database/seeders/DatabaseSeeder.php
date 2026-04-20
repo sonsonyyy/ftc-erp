@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             DemoWorkOrdersSeeder::class,
             DemoInventorySeeder::class,
             DemoPurchasingSeeder::class,
+            DemoBillingSeeder::class,
         ]);
     }
 }

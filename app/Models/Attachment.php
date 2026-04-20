@@ -133,4 +133,14 @@ class Attachment extends Model
     {
         return $this->morphedByMany(PurchaseReceipt::class, 'attachable', 'attachment_links')->withTimestamps();
     }
+
+    /**
+     * Invoices linked to this attachment.
+     *
+     * @return MorphToMany<Invoice, $this>
+     */
+    public function invoices(): MorphToMany
+    {
+        return $this->morphedByMany(Invoice::class, 'attachable', 'attachment_links')->withTimestamps();
+    }
 }

@@ -5,6 +5,8 @@ use App\Enums\QuotationStatus;
 use App\Enums\WorkOrderStatus;
 use App\Models\Customer;
 use App\Models\CustomerSite;
+use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Project;
 use App\Models\Quotation;
 use App\Models\Role;
@@ -93,4 +95,23 @@ test('database seeder provisions core ERP demo data', function () {
     expect($projectWorkOrder->project_id)->toBe($project->getKey());
     expect($projectWorkOrder->assignments()->count())->toBe(2);
     expect($projectWorkOrder->logs()->count())->toBe(4);
+
+    $paidInvoice = Invoice::query()
+        ->where('invoice_no', 'INV-2026-0001')
+        ->firstOrFail();
+
+    expect((float) $paidInvoice->total_amount)->toBe(120000.0);
+    expect((float) $paidInvoice->balance_amount)->toBe(0.0);
+    expect($paidInvoice->payments()->count())->toBe(1);
+
+    $partiallyPaidInvoice = Invoice::query()
+        ->where('invoice_no', 'INV-2026-0002')
+        ->firstOrFail();
+
+    expect((float) $partiallyPaidInvoice->total_amount)->toBe(120000.0);
+    expect((float) $partiallyPaidInvoice->balance_amount)->toBe(80000.0);
+    expect($partiallyPaidInvoice->payments()->count())->toBe(1);
+
+    expect(Invoice::query()->count())->toBe(5);
+    expect(Payment::query()->count())->toBe(2);
 });

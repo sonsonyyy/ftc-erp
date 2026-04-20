@@ -1,8 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    BarChart3,
     Building2,
     ClipboardCheck,
     ClipboardList,
+    CreditCard,
+    FileText,
     FolderKanban,
     LayoutGrid,
     MapPinned,
@@ -26,11 +29,14 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as accountsReceivableIndex } from '@/routes/accounts-receivable';
 import { index as customersIndex } from '@/routes/customers';
 import { index as inventoryIndex } from '@/routes/inventory';
+import { index as invoicesIndex } from '@/routes/invoices';
 import { index as purchaseOrdersIndex } from '@/routes/purchase-orders';
 import { index as purchaseReceiptsIndex } from '@/routes/purchase-receipts';
 import { index as purchaseRequestsIndex } from '@/routes/purchase-requests';
+import { index as paymentsIndex } from '@/routes/payments';
 import { index as projectsIndex } from '@/routes/projects';
 import { index as quotationsIndex } from '@/routes/quotations';
 import { index as sitesIndex } from '@/routes/sites';
@@ -139,6 +145,24 @@ const mainNavItems: NavItem[] = [
         href: purchaseReceiptsIndex(),
         icon: Package,
         permission: 'purchase_receipts.view',
+    },
+    {
+        title: 'Invoices',
+        href: invoicesIndex(),
+        icon: FileText,
+        permission: 'invoices.view',
+    },
+    {
+        title: 'Payments',
+        href: paymentsIndex(),
+        icon: CreditCard,
+        permission: 'payments.view',
+    },
+    {
+        title: 'AR Aging',
+        href: accountsReceivableIndex(),
+        icon: BarChart3,
+        permission: 'invoices.view',
     },
 ];
 

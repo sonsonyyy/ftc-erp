@@ -24,7 +24,8 @@ type Props = {
         | 'supplier'
         | 'purchase_request'
         | 'purchase_order'
-        | 'purchase_receipt';
+        | 'purchase_receipt'
+        | 'invoice';
     attachableId: number;
     canUpload: boolean;
     canUnlink: boolean;
