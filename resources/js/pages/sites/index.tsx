@@ -1,7 +1,14 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { create as sitesCreate, index as sitesIndex, show as sitesShow, edit as sitesEdit } from '@/routes/sites';
+import {
+    create as sitesCreate,
+    index as sitesIndex,
+    show as sitesShow,
+    edit as sitesEdit,
+} from '@/routes/sites';
 import { show as customersShow } from '@/routes/customers';
+import { FilterSelect } from '@/components/filter-select';
+import { IndexFiltersCard } from '@/components/index-filters-card';
 import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +20,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { countActiveFilters } from '@/lib/utils';
 import type { PaginatedData, SelectOption, SiteListItem } from '@/types';
 
 type Props = {
@@ -36,6 +44,8 @@ export default function SitesIndex({
     activityOptions,
     can,
 }: Props) {
+    const activeFilterCount = countActiveFilters(filters);
+
     return (
         <>
             <Head title="Sites" />
@@ -47,7 +57,8 @@ export default function SitesIndex({
                             Sites
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Track project and service locations under each customer account.
+                            Track project and service locations under each
+                            customer account.
                         </p>
                     </div>
 
@@ -58,77 +69,68 @@ export default function SitesIndex({
                     )}
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filters</CardTitle>
-                        <CardDescription>
-                            Search by site code, site name, location, contact details, or customer.
-                        </CardDescription>
-                    </CardHeader>
+                <IndexFiltersCard
+                    action={sitesIndex()}
+                    resetHref={sitesIndex()}
+                    description="Search by site code, site name, location, contact details, or customer."
+                    activeFilterCount={activeFilterCount}
+                    fieldsClassName="md:grid-cols-[2fr_1.2fr_1fr]"
+                >
+                    <Input
+                        name="search"
+                        defaultValue={filters.search}
+                        placeholder="Search sites"
+                    />
 
-                    <CardContent>
-                        <Form
-                            action={sitesIndex()}
-                            method="get"
-                            options={{ preserveState: true, replace: true }}
-                            className="grid gap-3 md:grid-cols-[2fr_1.2fr_1fr_auto_auto]"
-                        >
-                            <Input
-                                name="search"
-                                defaultValue={filters.search}
-                                placeholder="Search sites"
-                            />
+                    <FilterSelect
+                        name="customer"
+                        defaultValue={
+                            filters.customer ? String(filters.customer) : ''
+                        }
+                    >
+                        <option value="">All customers</option>
+                        {customerOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </FilterSelect>
 
-                            <select
-                                name="customer"
-                                defaultValue={filters.customer ? String(filters.customer) : ''}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
-                            >
-                                <option value="">All customers</option>
-                                {customerOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <select
-                                name="active"
-                                defaultValue={filters.active}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
-                            >
-                                <option value="">All activity</option>
-                                {activityOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <Button type="submit">Apply</Button>
-
-                            <Button variant="outline" asChild>
-                                <Link href={sitesIndex()}>Reset</Link>
-                            </Button>
-                        </Form>
-                    </CardContent>
-                </Card>
+                    <FilterSelect name="active" defaultValue={filters.active}>
+                        <option value="">All activity</option>
+                        {activityOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </FilterSelect>
+                </IndexFiltersCard>
 
                 <Card>
                     <CardHeader>
                         <CardTitle>Site list</CardTitle>
-                        <CardDescription>{sites.total} total site records</CardDescription>
+                        <CardDescription>
+                            {sites.total} total site records
+                        </CardDescription>
                     </CardHeader>
 
                     <CardContent className="overflow-x-auto px-0">
                         <table className="min-w-full text-sm">
                             <thead>
                                 <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">Site</th>
-                                    <th className="px-6 py-3 font-medium">Customer</th>
-                                    <th className="px-6 py-3 font-medium">Location</th>
-                                    <th className="px-6 py-3 font-medium">Status</th>
-                                    <th className="px-6 py-3 font-medium text-right">
+                                    <th className="px-6 py-3 font-medium">
+                                        Site
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Customer
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Location
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-3 text-right font-medium">
                                         Actions
                                     </th>
                                 </tr>
@@ -141,7 +143,8 @@ export default function SitesIndex({
                                             colSpan={5}
                                             className="px-6 py-10 text-center text-muted-foreground"
                                         >
-                                            No sites matched the current filters.
+                                            No sites matched the current
+                                            filters.
                                         </td>
                                     </tr>
                                 )}
@@ -157,7 +160,8 @@ export default function SitesIndex({
                                                     {site.site_name}
                                                 </p>
                                                 <p className="text-muted-foreground">
-                                                    {site.site_code ?? 'No site code'}
+                                                    {site.site_code ??
+                                                        'No site code'}
                                                     {site.contact_person &&
                                                         ` • ${site.contact_person}`}
                                                 </p>
@@ -180,7 +184,8 @@ export default function SitesIndex({
                                                 </span>
                                             )}
                                             <p className="text-sm text-muted-foreground">
-                                                {site.customer.customer_code ?? ''}
+                                                {site.customer.customer_code ??
+                                                    ''}
                                             </p>
                                         </td>
 
@@ -199,7 +204,9 @@ export default function SitesIndex({
                                                         : 'border-slate-200 bg-slate-100 text-slate-700'
                                                 }
                                             >
-                                                {site.is_active ? 'Active' : 'Inactive'}
+                                                {site.is_active
+                                                    ? 'Active'
+                                                    : 'Inactive'}
                                             </Badge>
                                         </td>
 
@@ -211,7 +218,11 @@ export default function SitesIndex({
                                                         size="sm"
                                                         asChild
                                                     >
-                                                        <Link href={sitesShow(site.id)}>
+                                                        <Link
+                                                            href={sitesShow(
+                                                                site.id,
+                                                            )}
+                                                        >
                                                             Open
                                                         </Link>
                                                     </Button>
@@ -219,7 +230,11 @@ export default function SitesIndex({
 
                                                 {site.can.update && (
                                                     <Button size="sm" asChild>
-                                                        <Link href={sitesEdit(site.id)}>
+                                                        <Link
+                                                            href={sitesEdit(
+                                                                site.id,
+                                                            )}
+                                                        >
                                                             Edit
                                                         </Link>
                                                     </Button>

@@ -7,6 +7,7 @@ use App\Enums\ComplianceTaskStatus;
 use App\Models\Attachment;
 use App\Models\ComplianceAlert;
 use App\Models\ComplianceRecord;
+use App\Models\ComplianceSubmission;
 use App\Models\ComplianceTask;
 use App\Models\ComplianceTemplate;
 use App\Models\Role;
@@ -85,6 +86,44 @@ test('authorized users can browse paginated compliance records with filters', fu
             ->where('complianceRecords.data.0.record_no', $matchingRecord->record_no)
             ->where('can.create', true),
         );
+});
+
+test('compliance export respects the active filters', function () {
+    Carbon::setTestNow('2026-04-20 09:00:00');
+
+    $assignee = actingAsComplianceRole('Compliance Officer / Corporate Admin');
+
+    ComplianceRecord::factory()->create([
+        'record_no' => 'CMP-ALPHA-001',
+        'title' => 'Alpha GIS Filing',
+        'agency' => 'SEC',
+        'assigned_user_id' => $assignee->getKey(),
+        'due_date' => '2026-05-05',
+        'status' => ComplianceRecordStatus::Active,
+    ]);
+
+    ComplianceRecord::factory()->create([
+        'record_no' => 'CMP-BETA-001',
+        'title' => 'Beta Mayor Permit',
+        'agency' => 'LGU',
+        'due_date' => '2026-08-15',
+        'status' => ComplianceRecordStatus::Draft,
+    ]);
+
+    $response = $this->get(route('compliance-records.index', [
+        'search' => 'Alpha',
+        'status' => ComplianceRecordStatus::DueSoon->value,
+        'agency' => 'SEC',
+        'assigned' => $assignee->getKey(),
+        'export' => 'csv',
+    ]));
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    expect($response->streamedContent())
+        ->toContain('CMP-ALPHA-001')
+        ->not->toContain('CMP-BETA-001');
 });
 
 test('authorized users can create compliance records', function () {
@@ -168,7 +207,7 @@ test('users without permissions cannot create compliance records', function () {
         ->assertForbidden();
 });
 
-test('authorized users can update records add submissions and manage tasks', function () {
+test('authorized users can update records add submissions approve them and manage tasks', function () {
     $assignee = User::factory()->create();
 
     actingAsComplianceRole('Compliance Officer / Corporate Admin');
@@ -202,6 +241,8 @@ test('authorized users can update records add submissions and manage tasks', fun
         'remarks' => 'Filed successfully',
     ])->assertRedirect();
 
+    $submission = ComplianceSubmission::query()->firstOrFail();
+
     $this->post(route('compliance-records.tasks.store', $record), [
         'title' => 'Prepare next renewal pack',
         'due_date' => '2026-07-15',
@@ -220,18 +261,78 @@ test('authorized users can update records add submissions and manage tasks', fun
         ->assertRedirect();
 
     expect($record->refresh()->title)->toBe('Updated compliance title');
-    expect($record->due_date?->toDateString())->toBe('2026-08-01');
+    expect($record->due_date?->toDateString())->toBe('2026-05-10');
     expect($record->latest_submission_reference)->toBe('SUB-CMP-1001');
+    expect($record->status)->toBe(ComplianceRecordStatus::Submitted);
+
+    $this->patch(route('compliance-records.submissions.approve', [$record, $submission]), [
+        'approval_notes' => 'Renewal accepted.',
+    ])->assertRedirect();
+
+    $record->refresh();
+    $submission->refresh();
+
+    expect($record->due_date?->toDateString())->toBe('2026-08-01');
     expect($record->status)->toBe(ComplianceRecordStatus::Renewed);
+    expect($submission->approved_at)->not->toBeNull();
+    expect($submission->approval_notes)->toBe('Renewal accepted.');
 
     $this->assertDatabaseHas('compliance_submissions', [
         'compliance_record_id' => $record->getKey(),
         'reference_no' => 'SUB-CMP-1001',
+        'approval_notes' => 'Renewal accepted.',
     ]);
 
     $this->assertDatabaseMissing('compliance_tasks', [
         'id' => $task->getKey(),
     ]);
+});
+
+test('compliance does not allow a second pending submission until the first is approved', function () {
+    actingAsComplianceRole('Compliance Officer / Corporate Admin');
+
+    $record = ComplianceRecord::factory()->create([
+        'status' => ComplianceRecordStatus::Active,
+        'due_date' => '2026-05-15',
+    ]);
+
+    $this->post(route('compliance-records.submissions.store', $record), [
+        'reference_no' => 'SUB-CMP-2001',
+        'submitted_at' => '2026-05-01',
+        'next_due_date' => '2026-08-01',
+        'next_expiry_date' => null,
+        'remarks' => 'Initial filing',
+    ])->assertRedirect();
+
+    $this->from(route('compliance-records.show', $record))
+        ->post(route('compliance-records.submissions.store', $record), [
+            'reference_no' => 'SUB-CMP-2002',
+            'submitted_at' => '2026-05-02',
+            'next_due_date' => '2026-09-01',
+            'next_expiry_date' => null,
+            'remarks' => 'Duplicate pending filing',
+        ])
+        ->assertRedirect(route('compliance-records.show', $record))
+        ->assertSessionHasErrors('reference_no');
+
+    expect(ComplianceSubmission::query()->count())->toBe(1);
+});
+
+test('users without approval permission cannot approve compliance submissions', function () {
+    $record = ComplianceRecord::factory()->create([
+        'status' => ComplianceRecordStatus::Submitted,
+    ]);
+
+    $submission = ComplianceSubmission::factory()->create([
+        'compliance_record_id' => $record->getKey(),
+        'approved_at' => null,
+    ]);
+
+    $this->actingAs(User::factory()->create())
+        ->patch(route('compliance-records.submissions.approve', [$record, $submission]), [
+            'approval_notes' => 'Unauthorized review',
+        ])
+        ->assertForbidden();
 });
 
 test('attachments can be uploaded downloaded and unlinked from compliance records', function () {
@@ -353,7 +454,8 @@ test('compliance calendar shows windowed events and overdue items', function () 
             ->component('compliance-records/calendar')
             ->where('filters.from', '2026-04-01')
             ->where('filters.to', '2026-04-30')
-            ->where('events.0.record_no', 'CMP-CAL-001')
+            ->where('events.0.record_no', 'CMP-CAL-002')
+            ->where('events.1.record_no', 'CMP-CAL-001')
             ->where('overdueItems.0.record_no', 'CMP-CAL-002'),
         );
 });

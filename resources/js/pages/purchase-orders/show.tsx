@@ -14,6 +14,20 @@ type Props = {
     purchaseOrder: PurchaseOrderDetail;
 };
 
+function formatDateTime(date: string | null): string {
+    if (!date) {
+        return 'Not recorded';
+    }
+
+    return new Intl.DateTimeFormat('en-PH', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    }).format(new Date(date));
+}
+
 function statusBadgeClass(status: string): string {
     return {
         draft: 'border-slate-200 bg-slate-100 text-slate-700',
@@ -23,6 +37,13 @@ function statusBadgeClass(status: string): string {
         fully_received: 'border-teal-200 bg-teal-50 text-teal-700',
         cancelled: 'border-rose-200 bg-rose-50 text-rose-700',
     }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700';
+}
+
+function approvalBadgeClass(state: string): string {
+    return {
+        pending: 'border-amber-200 bg-amber-50 text-amber-700',
+        approved: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    }[state] ?? 'border-slate-200 bg-slate-100 text-slate-700';
 }
 
 export default function PurchaseOrdersShow({ purchaseOrder }: Props) {
@@ -42,6 +63,11 @@ export default function PurchaseOrdersShow({ purchaseOrder }: Props) {
                             <Badge variant="outline" className={statusBadgeClass(purchaseOrder.status)}>
                                 {purchaseOrder.status_label}
                             </Badge>
+                            {purchaseOrder.approval_state !== 'not_requested' && (
+                                <Badge variant="outline" className={approvalBadgeClass(purchaseOrder.approval_state)}>
+                                    {purchaseOrder.approval_state_label}
+                                </Badge>
+                            )}
                         </div>
 
                         <p className="text-sm text-muted-foreground">
@@ -52,6 +78,22 @@ export default function PurchaseOrdersShow({ purchaseOrder }: Props) {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
+                        {purchaseOrder.can.submit && (
+                            <Button variant="outline" asChild>
+                                <Link href={PurchaseOrderController.submit(purchaseOrder.id)} method="patch" as="button">
+                                    Submit for approval
+                                </Link>
+                            </Button>
+                        )}
+
+                        {purchaseOrder.can.approve && (
+                            <Button asChild>
+                                <Link href={PurchaseOrderController.approve(purchaseOrder.id)} method="patch" as="button">
+                                    Approve purchase order
+                                </Link>
+                            </Button>
+                        )}
+
                         {purchaseOrder.can.receive && (
                             <Button variant="outline" asChild>
                                 <Link href={PurchaseReceiptController.create(purchaseOrder.id)}>
@@ -61,7 +103,7 @@ export default function PurchaseOrdersShow({ purchaseOrder }: Props) {
                         )}
 
                         {purchaseOrder.can.update && (
-                            <Button asChild>
+                            <Button variant="outline" asChild>
                                 <Link href={purchaseOrdersEdit(purchaseOrder.id)}>Edit purchase order</Link>
                             </Button>
                         )}
@@ -76,7 +118,7 @@ export default function PurchaseOrdersShow({ purchaseOrder }: Props) {
                     </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-5">
                     <Card>
                         <CardHeader>
                             <CardDescription>Receipts</CardDescription>
@@ -95,6 +137,20 @@ export default function PurchaseOrdersShow({ purchaseOrder }: Props) {
                         <CardHeader>
                             <CardDescription>Ordered by</CardDescription>
                             <CardTitle className="text-base">{purchaseOrder.ordered_by ?? 'Not recorded'}</CardTitle>
+                        </CardHeader>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardDescription>Approval</CardDescription>
+                            <CardTitle className="text-base">{purchaseOrder.approval_state_label}</CardTitle>
+                            <p className="text-xs text-muted-foreground">
+                                {purchaseOrder.approved_at
+                                    ? `Approved by ${purchaseOrder.approved_by ?? 'Unknown'}`
+                                    : purchaseOrder.approval_requested_at
+                                      ? `Submitted by ${purchaseOrder.approval_requested_by ?? 'Unknown'}`
+                                      : 'Submit when the order is ready for review.'}
+                            </p>
                         </CardHeader>
                     </Card>
 
@@ -152,6 +208,37 @@ export default function PurchaseOrdersShow({ purchaseOrder }: Props) {
                                 <p className="text-sm text-muted-foreground">Remarks</p>
                                 <p className="mt-1 whitespace-pre-line font-medium">
                                     {purchaseOrder.remarks ?? 'No remarks'}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-sm text-muted-foreground">Submitted for approval</p>
+                                <p className="mt-1 font-medium">
+                                    {purchaseOrder.approval_requested_at
+                                        ? formatDateTime(purchaseOrder.approval_requested_at)
+                                        : 'Not submitted'}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    {purchaseOrder.approval_requested_by ?? 'No requester'}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-sm text-muted-foreground">Approved</p>
+                                <p className="mt-1 font-medium">
+                                    {purchaseOrder.approved_at
+                                        ? formatDateTime(purchaseOrder.approved_at)
+                                        : 'Not approved'}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    {purchaseOrder.approved_by ?? 'No approver'}
+                                </p>
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <p className="text-sm text-muted-foreground">Approval notes</p>
+                                <p className="mt-1 whitespace-pre-line font-medium">
+                                    {purchaseOrder.approval_notes ?? 'No approval notes'}
                                 </p>
                             </div>
                         </CardContent>

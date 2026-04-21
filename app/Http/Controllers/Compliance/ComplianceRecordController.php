@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Compliance;
 
+use App\Actions\Exports\StreamCsvExportAction;
 use App\Enums\ComplianceRecordStatus;
 use App\Enums\ComplianceRecurrenceUnit;
 use App\Enums\ComplianceTaskStatus;
@@ -17,8 +18,10 @@ use App\Models\ComplianceTemplate;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\LazyCollection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ComplianceRecordController extends Controller
 {
@@ -27,8 +30,10 @@ class ComplianceRecordController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): Response|StreamedResponse {
         $this->authorize('viewAny', ComplianceRecord::class);
 
         $search = $request->string('search')->toString();
@@ -38,7 +43,7 @@ class ComplianceRecordController extends Controller
         $today = now();
         $canViewAlerts = $request->user()?->can('viewAny', ComplianceAlert::class) ?? false;
 
-        $complianceRecords = ComplianceRecord::query()
+        $query = ComplianceRecord::query()
             ->with([
                 'assignedUser:id,name',
                 'complianceTemplate:id,name',
@@ -53,7 +58,13 @@ class ComplianceRecordController extends Controller
             ->agency($agency)
             ->assignedTo($assigned > 0 ? $assigned : null)
             ->orderByRaw('COALESCE(due_date, expiry_date) asc nulls last')
-            ->orderBy('id')
+            ->orderBy('id');
+
+        if ($request->string('export')->toString() === 'csv') {
+            return $this->exportIndex($request, $query->lazy(), $streamCsvExportAction);
+        }
+
+        $complianceRecords = (clone $query)
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (ComplianceRecord $complianceRecord) => $this->recordListItem($request, $complianceRecord));
@@ -92,6 +103,53 @@ class ComplianceRecordController extends Controller
                 'view_alerts' => $canViewAlerts,
             ],
         ]);
+    }
+
+    /**
+     * Stream the filtered compliance registry as CSV.
+     */
+    private function exportIndex(
+        Request $request,
+        LazyCollection $complianceRecords,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): StreamedResponse {
+        return $streamCsvExportAction->handle(
+            'compliance-records-'.now()->format('Ymd-His').'.csv',
+            [
+                'Record No',
+                'Title',
+                'Agency',
+                'Category',
+                'Assigned User',
+                'Due Date',
+                'Expiry Date',
+                'Next Deadline Type',
+                'Next Deadline Date',
+                'Display Status',
+                'Submissions',
+                'Open Alerts',
+                'Attachments',
+            ],
+            $complianceRecords->map(function (ComplianceRecord $complianceRecord) use ($request): array {
+                $row = $this->recordListItem($request, $complianceRecord);
+
+                return [
+                    $row['record_no'],
+                    $row['title'],
+                    $row['agency'],
+                    $row['category'],
+                    $row['assigned_user'],
+                    $row['due_date'],
+                    $row['expiry_date'],
+                    $row['next_deadline_type'],
+                    $row['next_deadline_date'],
+                    $row['status_label'],
+                    $row['submission_count'],
+                    $row['open_alert_count'],
+                    $row['attachment_count'],
+                ];
+            }),
+        );
     }
 
     /**
@@ -157,6 +215,7 @@ class ComplianceRecordController extends Controller
             'assignedUser:id,name',
             'tasks.assignedUser:id,name',
             'submissions.submittedBy:id,name',
+            'submissions.approvedBy:id,name',
             'alerts' => fn ($query) => $query
                 ->with('acknowledgedBy:id,name')
                 ->orderByDesc('scheduled_for')
@@ -302,6 +361,9 @@ class ComplianceRecordController extends Controller
     private function recordDetail(Request $request, ComplianceRecord $complianceRecord): array
     {
         $displayStatus = $complianceRecord->displayStatus();
+        $hasPendingSubmission = $complianceRecord->submissions->contains(
+            fn (ComplianceSubmission $submission): bool => $submission->approved_at === null,
+        );
 
         return [
             'id' => $complianceRecord->getKey(),
@@ -362,6 +424,15 @@ class ComplianceRecordController extends Controller
                     'next_expiry_date' => optional($submission->next_expiry_date)?->toDateString(),
                     'remarks' => $submission->remarks,
                     'submitted_by' => $submission->submittedBy?->name,
+                    'approved_at' => optional($submission->approved_at)?->toIso8601String(),
+                    'approved_by' => $submission->approvedBy?->name,
+                    'approval_notes' => $submission->approval_notes,
+                    'approval_state' => $submission->approved_at === null ? 'pending' : 'approved',
+                    'approval_state_label' => $submission->approved_at === null ? 'Pending Approval' : 'Approved',
+                    'can' => [
+                        'approve' => $submission->approved_at === null
+                            && ($request->user()?->can('approveSubmission', $complianceRecord) ?? false),
+                    ],
                 ])->all(),
             'alerts' => $complianceRecord->alerts
                 ->map(fn (ComplianceAlert $alert) => [
@@ -388,8 +459,10 @@ class ComplianceRecordController extends Controller
                     && ($request->user()?->can('update', $complianceRecord) ?? false),
                 'remove_attachments' => ($request->user()?->hasPermissionTo('attachments.delete') ?? false)
                     && ($request->user()?->can('update', $complianceRecord) ?? false),
-                'create_submission' => $request->user()?->can('update', $complianceRecord) ?? false,
+                'create_submission' => ! $hasPendingSubmission
+                    && ($request->user()?->can('update', $complianceRecord) ?? false),
                 'create_task' => $request->user()?->can('update', $complianceRecord) ?? false,
+                'approve_submission' => $request->user()?->can('approveSubmission', $complianceRecord) ?? false,
             ],
         ];
     }

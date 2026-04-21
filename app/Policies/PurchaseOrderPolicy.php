@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\PurchaseOrderStatus;
 use App\Models\PurchaseOrder;
 use App\Models\User;
 
@@ -45,6 +46,26 @@ class PurchaseOrderPolicy
     public function update(User $user, PurchaseOrder $purchaseOrder): bool
     {
         return $user->hasPermissionTo('purchase_orders.update');
+    }
+
+    /**
+     * Determine whether the user can submit the purchase order for approval.
+     */
+    public function submit(User $user, PurchaseOrder $purchaseOrder): bool
+    {
+        return $user->hasPermissionTo('purchase_orders.update')
+            && ! $purchaseOrder->receipts()->exists()
+            && $purchaseOrder->status === PurchaseOrderStatus::Draft;
+    }
+
+    /**
+     * Determine whether the user can approve the purchase order.
+     */
+    public function approve(User $user, PurchaseOrder $purchaseOrder): bool
+    {
+        return $user->hasPermissionTo('purchase_orders.approve')
+            && ! $purchaseOrder->receipts()->exists()
+            && $purchaseOrder->status === PurchaseOrderStatus::Submitted;
     }
 
     /**

@@ -1,5 +1,7 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
+import { FilterSelect } from '@/components/filter-select';
+import { IndexFiltersCard } from '@/components/index-filters-card';
 import {
     create as quotationsCreate,
     edit as quotationsEdit,
@@ -18,6 +20,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { cleanQueryParams, countActiveFilters } from '@/lib/utils';
 import type {
     PaginatedData,
     QuotationFilters,
@@ -57,15 +60,17 @@ function formatDate(date: string | null): string {
 }
 
 function statusBadgeClass(status: string): string {
-    return {
-        draft: 'border-slate-200 bg-slate-100 text-slate-700',
-        submitted: 'border-sky-200 bg-sky-50 text-sky-700',
-        under_review: 'border-amber-200 bg-amber-50 text-amber-700',
-        awarded: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        lost: 'border-rose-200 bg-rose-50 text-rose-700',
-        cancelled: 'border-stone-200 bg-stone-100 text-stone-700',
-        expired: 'border-orange-200 bg-orange-50 text-orange-700',
-    }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700';
+    return (
+        {
+            draft: 'border-slate-200 bg-slate-100 text-slate-700',
+            submitted: 'border-sky-200 bg-sky-50 text-sky-700',
+            under_review: 'border-amber-200 bg-amber-50 text-amber-700',
+            awarded: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+            lost: 'border-rose-200 bg-rose-50 text-rose-700',
+            cancelled: 'border-stone-200 bg-stone-100 text-stone-700',
+            expired: 'border-orange-200 bg-orange-50 text-orange-700',
+        }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700'
+    );
 }
 
 export default function QuotationsIndex({
@@ -75,6 +80,14 @@ export default function QuotationsIndex({
     statusOptions,
     can,
 }: Props) {
+    const activeFilterCount = countActiveFilters(filters);
+    const exportHref = quotationsIndex({
+        query: cleanQueryParams({
+            ...filters,
+            export: 'csv',
+        }),
+    });
+
     return (
         <>
             <Head title="Quotations" />
@@ -86,7 +99,9 @@ export default function QuotationsIndex({
                             Quotations
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Track externally prepared quotations, monitor status movement, and keep sales reporting tied to the source records.
+                            Track externally prepared quotations, monitor status
+                            movement, and keep sales reporting tied to the
+                            source records.
                         </p>
                     </div>
 
@@ -99,79 +114,61 @@ export default function QuotationsIndex({
 
                         {can.create && (
                             <Button asChild>
-                                <Link href={quotationsCreate()}>New quotation</Link>
+                                <Link href={quotationsCreate()}>
+                                    New quotation
+                                </Link>
                             </Button>
                         )}
                     </div>
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filters</CardTitle>
-                        <CardDescription>
-                            Search by quotation number, subject, customer, site, or lost reason.
-                        </CardDescription>
-                    </CardHeader>
+                <IndexFiltersCard
+                    action={quotationsIndex()}
+                    resetHref={quotationsIndex()}
+                    exportHref={exportHref}
+                    description="Search by quotation number, subject, customer, site, or lost reason."
+                    activeFilterCount={activeFilterCount}
+                    fieldsClassName="xl:grid-cols-[2fr_1.3fr_1fr_1fr_1fr]"
+                >
+                    <Input
+                        name="search"
+                        defaultValue={filters.search}
+                        placeholder="Search quotations"
+                    />
 
-                    <CardContent>
-                        <Form
-                            action={quotationsIndex()}
-                            method="get"
-                            options={{ preserveState: true, replace: true }}
-                            className="grid gap-3 xl:grid-cols-[2fr_1.3fr_1fr_1fr_1fr_auto_auto]"
-                        >
-                            <Input
-                                name="search"
-                                defaultValue={filters.search}
-                                placeholder="Search quotations"
-                            />
+                    <FilterSelect
+                        name="customer"
+                        defaultValue={filters.customer ?? ''}
+                    >
+                        <option value="">All customers</option>
+                        {customerOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </FilterSelect>
 
-                            <select
-                                name="customer"
-                                defaultValue={filters.customer ?? ''}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
-                            >
-                                <option value="">All customers</option>
-                                {customerOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
+                    <FilterSelect name="status" defaultValue={filters.status}>
+                        <option value="">All statuses</option>
+                        {statusOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </FilterSelect>
 
-                            <select
-                                name="status"
-                                defaultValue={filters.status}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
-                            >
-                                <option value="">All statuses</option>
-                                {statusOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
+                    <Input
+                        name="from"
+                        type="date"
+                        defaultValue={filters.from ?? ''}
+                    />
 
-                            <Input
-                                name="from"
-                                type="date"
-                                defaultValue={filters.from ?? ''}
-                            />
-
-                            <Input
-                                name="to"
-                                type="date"
-                                defaultValue={filters.to ?? ''}
-                            />
-
-                            <Button type="submit">Apply</Button>
-
-                            <Button variant="outline" asChild>
-                                <Link href={quotationsIndex()}>Reset</Link>
-                            </Button>
-                        </Form>
-                    </CardContent>
-                </Card>
+                    <Input
+                        name="to"
+                        type="date"
+                        defaultValue={filters.to ?? ''}
+                    />
+                </IndexFiltersCard>
 
                 <Card>
                     <CardHeader>
@@ -185,13 +182,25 @@ export default function QuotationsIndex({
                         <table className="min-w-full text-sm">
                             <thead>
                                 <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">Quotation</th>
-                                    <th className="px-6 py-3 font-medium">Customer / site</th>
-                                    <th className="px-6 py-3 font-medium">Dates</th>
-                                    <th className="px-6 py-3 font-medium">Amount</th>
-                                    <th className="px-6 py-3 font-medium">Status</th>
-                                    <th className="px-6 py-3 font-medium">Attachments</th>
-                                    <th className="px-6 py-3 font-medium text-right">
+                                    <th className="px-6 py-3 font-medium">
+                                        Quotation
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Customer / site
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Dates
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Amount
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Attachments
+                                    </th>
+                                    <th className="px-6 py-3 text-right font-medium">
                                         Actions
                                     </th>
                                 </tr>
@@ -204,7 +213,8 @@ export default function QuotationsIndex({
                                             colSpan={7}
                                             className="px-6 py-10 text-center text-muted-foreground"
                                         >
-                                            No quotations matched the current filters.
+                                            No quotations matched the current
+                                            filters.
                                         </td>
                                     </tr>
                                 )}
@@ -224,7 +234,10 @@ export default function QuotationsIndex({
                                                 </p>
                                                 {quotation.assigned_sales_user && (
                                                     <p className="text-xs text-muted-foreground">
-                                                        Sales owner: {quotation.assigned_sales_user}
+                                                        Sales owner:{' '}
+                                                        {
+                                                            quotation.assigned_sales_user
+                                                        }
                                                     </p>
                                                 )}
                                             </div>
@@ -233,8 +246,15 @@ export default function QuotationsIndex({
                                         <td className="px-6 py-4 text-muted-foreground">
                                             <div className="space-y-1">
                                                 <p>
-                                                    {quotation.customer.customer_code} -{' '}
-                                                    {quotation.customer.company_name}
+                                                    {
+                                                        quotation.customer
+                                                            .customer_code
+                                                    }{' '}
+                                                    -{' '}
+                                                    {
+                                                        quotation.customer
+                                                            .company_name
+                                                    }
                                                 </p>
                                                 <p>
                                                     {quotation.site.site_name ??
@@ -246,17 +266,24 @@ export default function QuotationsIndex({
                                         <td className="px-6 py-4 text-muted-foreground">
                                             <div className="space-y-1">
                                                 <p>
-                                                    Quote: {formatDate(quotation.quotation_date)}
+                                                    Quote:{' '}
+                                                    {formatDate(
+                                                        quotation.quotation_date,
+                                                    )}
                                                 </p>
                                                 <p>
                                                     Valid until:{' '}
-                                                    {formatDate(quotation.valid_until)}
+                                                    {formatDate(
+                                                        quotation.valid_until,
+                                                    )}
                                                 </p>
                                             </div>
                                         </td>
 
                                         <td className="px-6 py-4 font-medium">
-                                            {formatCurrency(quotation.quotation_amount)}
+                                            {formatCurrency(
+                                                quotation.quotation_amount,
+                                            )}
                                         </td>
 
                                         <td className="px-6 py-4">

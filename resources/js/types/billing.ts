@@ -61,6 +61,8 @@ export type InvoiceListItem = {
     paid_amount: number;
     status: string;
     status_label: string;
+    approval_state: string;
+    approval_state_label: string;
     attachment_count: number;
     payment_count: number;
     customer: {
@@ -88,6 +90,8 @@ export type InvoiceListItem = {
         update: boolean;
         delete: boolean;
         record_payment: boolean;
+        submit: boolean;
+        approve: boolean;
     };
 };
 
@@ -131,6 +135,13 @@ export type InvoiceDetail = {
     status_label: string;
     stored_status: string;
     stored_status_label: string;
+    approval_requested_at: string | null;
+    approval_requested_by: string | null;
+    approved_at: string | null;
+    approved_by: string | null;
+    approval_notes: string | null;
+    approval_state: string;
+    approval_state_label: string;
     remarks: string | null;
     issued_by: string | null;
     attachment_count: number;
@@ -162,6 +173,8 @@ export type InvoiceDetail = {
         update: boolean;
         delete: boolean;
         record_payment: boolean;
+        submit: boolean;
+        approve: boolean;
         upload_attachments: boolean;
         remove_attachments: boolean;
     };

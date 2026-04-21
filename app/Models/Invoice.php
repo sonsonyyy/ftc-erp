@@ -29,6 +29,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'balance_amount',
     'status',
     'remarks',
+    'submitted_at',
+    'submitted_by_user_id',
+    'approved_at',
+    'approved_by_user_id',
+    'approval_notes',
 ])]
 class Invoice extends Model
 {
@@ -96,6 +101,26 @@ class Invoice extends Model
     public function issuedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'issued_by_user_id');
+    }
+
+    /**
+     * Get the user who submitted the invoice for approval.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function submittedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_by_user_id')->withTrashed();
+    }
+
+    /**
+     * Get the user who approved and issued the invoice.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id')->withTrashed();
     }
 
     /**
@@ -304,6 +329,8 @@ class Invoice extends Model
             'tax_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'balance_amount' => 'decimal:2',
+            'submitted_at' => 'datetime',
+            'approved_at' => 'datetime',
             'status' => InvoiceStatus::class,
         ];
     }

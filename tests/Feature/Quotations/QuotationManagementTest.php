@@ -104,6 +104,52 @@ test('quotation list can be filtered by search customer status and date range', 
         );
 });
 
+test('quotation export respects the active filters', function () {
+    actingAsQuotationRole('Sales Admin / Business Development');
+
+    $alphaCustomer = Customer::factory()->create([
+        'customer_code' => 'CUST-ALPHA',
+        'company_name' => 'Alpha Fire Systems',
+    ]);
+
+    $betaCustomer = Customer::factory()->create([
+        'customer_code' => 'CUST-BETA',
+        'company_name' => 'Beta Safety Corp',
+    ]);
+
+    Quotation::factory()->create([
+        'customer_id' => $alphaCustomer->getKey(),
+        'quotation_no' => 'QTN-ALPHA-001',
+        'subject' => 'Alpha HQ upgrade',
+        'quotation_date' => '2026-04-05',
+        'status' => QuotationStatus::Submitted,
+    ]);
+
+    Quotation::factory()->create([
+        'customer_id' => $betaCustomer->getKey(),
+        'quotation_no' => 'QTN-BETA-001',
+        'subject' => 'Beta branch renewal',
+        'quotation_date' => '2026-03-12',
+        'status' => QuotationStatus::Lost,
+    ]);
+
+    $response = $this->get(route('quotations.index', [
+        'search' => 'Alpha',
+        'customer' => $alphaCustomer->getKey(),
+        'status' => QuotationStatus::Submitted->value,
+        'from' => '2026-04-01',
+        'to' => '2026-04-30',
+        'export' => 'csv',
+    ]));
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    expect($response->streamedContent())
+        ->toContain('QTN-ALPHA-001')
+        ->not->toContain('QTN-BETA-001');
+});
+
 test('authorized users can create quotations and initial status is logged', function () {
     actingAsQuotationRole('Sales Admin / Business Development');
 

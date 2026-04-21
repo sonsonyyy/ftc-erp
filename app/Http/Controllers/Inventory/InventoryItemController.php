@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Actions\Exports\StreamCsvExportAction;
 use App\Enums\InventoryItemStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreInventoryItemRequest;
@@ -12,8 +13,10 @@ use App\Models\StockMovement;
 use App\Models\Warehouse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\LazyCollection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InventoryItemController extends Controller
 {
@@ -22,8 +25,10 @@ class InventoryItemController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): Response|StreamedResponse {
         $this->authorize('viewAny', InventoryItem::class);
 
         $search = $request->string('search')->toString();
@@ -31,7 +36,7 @@ class InventoryItemController extends Controller
         $status = $request->string('status')->toString();
         $lowStockOnly = $request->string('low_stock')->toString() === '1';
 
-        $inventoryItems = InventoryItem::query()
+        $query = InventoryItem::query()
             ->with('inventoryCategory:id,name')
             ->withQuantityOnHand()
             ->search($search)
@@ -39,6 +44,13 @@ class InventoryItemController extends Controller
             ->status($status)
             ->when($lowStockOnly, fn ($query) => $query->belowReorderLevel())
             ->orderBy('item_name')
+            ->orderBy('id');
+
+        if ($request->string('export')->toString() === 'csv') {
+            return $this->exportIndex($request, $query->lazy(), $streamCsvExportAction);
+        }
+
+        $inventoryItems = (clone $query)
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (InventoryItem $inventoryItem) => $this->inventoryListItem($request, $inventoryItem));
@@ -60,6 +72,47 @@ class InventoryItemController extends Controller
                 'view_low_stock' => $request->user()?->can('viewAny', InventoryItem::class) ?? false,
             ],
         ]);
+    }
+
+    /**
+     * Stream the filtered inventory registry as CSV.
+     */
+    private function exportIndex(
+        Request $request,
+        LazyCollection $inventoryItems,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): StreamedResponse {
+        return $streamCsvExportAction->handle(
+            'inventory-items-'.now()->format('Ymd-His').'.csv',
+            [
+                'Item Code',
+                'Item Name',
+                'SKU',
+                'Category',
+                'Unit',
+                'Quantity On Hand',
+                'Reorder Level',
+                'Low Stock',
+                'Status',
+                'Standard Cost',
+            ],
+            $inventoryItems->map(function (InventoryItem $inventoryItem) use ($request): array {
+                $row = $this->inventoryListItem($request, $inventoryItem);
+
+                return [
+                    $row['item_code'],
+                    $row['item_name'],
+                    $row['sku'],
+                    $row['category']['name'],
+                    $row['unit'],
+                    $row['quantity_on_hand'],
+                    $row['reorder_level'],
+                    $row['is_low_stock'],
+                    $row['status_label'],
+                    $row['standard_cost'],
+                ];
+            }),
+        );
     }
 
     /**

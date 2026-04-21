@@ -1,6 +1,13 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { create as customersCreate, index as customersIndex, show as customersShow, edit as customersEdit } from '@/routes/customers';
+import {
+    create as customersCreate,
+    index as customersIndex,
+    show as customersShow,
+    edit as customersEdit,
+} from '@/routes/customers';
+import { FilterSelect } from '@/components/filter-select';
+import { IndexFiltersCard } from '@/components/index-filters-card';
 import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +19,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { cleanQueryParams, countActiveFilters } from '@/lib/utils';
 import type { CustomerListItem, PaginatedData, SelectOption } from '@/types';
 
 type Props = {
@@ -38,6 +46,14 @@ export default function CustomersIndex({
     statusOptions,
     can,
 }: Props) {
+    const activeFilterCount = countActiveFilters(filters);
+    const exportHref = customersIndex({
+        query: cleanQueryParams({
+            ...filters,
+            export: 'csv',
+        }),
+    });
+
     return (
         <>
             <Head title="Customers" />
@@ -49,7 +65,8 @@ export default function CustomersIndex({
                             Customers
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Manage customer master records and keep downstream modules tied to clean source data.
+                            Manage customer master records and keep downstream
+                            modules tied to clean source data.
                         </p>
                     </div>
 
@@ -60,48 +77,29 @@ export default function CustomersIndex({
                     )}
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filters</CardTitle>
-                        <CardDescription>
-                            Search by code, company, trade name, TIN, phone, or email.
-                        </CardDescription>
-                    </CardHeader>
+                <IndexFiltersCard
+                    action={customersIndex()}
+                    resetHref={customersIndex()}
+                    exportHref={exportHref}
+                    description="Search by code, company, trade name, TIN, phone, or email."
+                    activeFilterCount={activeFilterCount}
+                    fieldsClassName="md:grid-cols-[2fr_1fr]"
+                >
+                    <Input
+                        name="search"
+                        defaultValue={filters.search}
+                        placeholder="Search customers"
+                    />
 
-                    <CardContent>
-                        <Form
-                            action={customersIndex()}
-                            method="get"
-                            options={{ preserveState: true, replace: true }}
-                            className="grid gap-3 md:grid-cols-[2fr_1fr_auto_auto]"
-                        >
-                            <Input
-                                name="search"
-                                defaultValue={filters.search}
-                                placeholder="Search customers"
-                            />
-
-                            <select
-                                name="status"
-                                defaultValue={filters.status}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
-                            >
-                                <option value="">All statuses</option>
-                                {statusOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <Button type="submit">Apply</Button>
-
-                            <Button variant="outline" asChild>
-                                <Link href={customersIndex()}>Reset</Link>
-                            </Button>
-                        </Form>
-                    </CardContent>
-                </Card>
+                    <FilterSelect name="status" defaultValue={filters.status}>
+                        <option value="">All statuses</option>
+                        {statusOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </FilterSelect>
+                </IndexFiltersCard>
 
                 <Card>
                     <CardHeader>
@@ -115,12 +113,22 @@ export default function CustomersIndex({
                         <table className="min-w-full text-sm">
                             <thead>
                                 <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">Customer</th>
-                                    <th className="px-6 py-3 font-medium">Contact</th>
-                                    <th className="px-6 py-3 font-medium">Status</th>
-                                    <th className="px-6 py-3 font-medium">Sites</th>
-                                    <th className="px-6 py-3 font-medium">Attachments</th>
-                                    <th className="px-6 py-3 font-medium text-right">
+                                    <th className="px-6 py-3 font-medium">
+                                        Customer
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Contact
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Sites
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        Attachments
+                                    </th>
+                                    <th className="px-6 py-3 text-right font-medium">
                                         Actions
                                     </th>
                                 </tr>
@@ -133,7 +141,8 @@ export default function CustomersIndex({
                                             colSpan={6}
                                             className="px-6 py-10 text-center text-muted-foreground"
                                         >
-                                            No customers matched the current filters.
+                                            No customers matched the current
+                                            filters.
                                         </td>
                                     </tr>
                                 )}
@@ -181,7 +190,9 @@ export default function CustomersIndex({
                                             </Badge>
                                         </td>
 
-                                        <td className="px-6 py-4">{customer.site_count}</td>
+                                        <td className="px-6 py-4">
+                                            {customer.site_count}
+                                        </td>
                                         <td className="px-6 py-4">
                                             {customer.attachment_count}
                                         </td>

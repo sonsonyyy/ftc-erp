@@ -18,6 +18,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'next_due_date',
     'next_expiry_date',
     'remarks',
+    'approved_at',
+    'approved_by_user_id',
+    'approval_notes',
 ])]
 class ComplianceSubmission extends Model
 {
@@ -45,6 +48,16 @@ class ComplianceSubmission extends Model
     }
 
     /**
+     * Get the user who approved the submission.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id')->withTrashed();
+    }
+
+    /**
      * Get the attribute casts.
      *
      * @return array<string, string>
@@ -57,6 +70,7 @@ class ComplianceSubmission extends Model
             'expiry_date_snapshot' => 'date',
             'next_due_date' => 'date',
             'next_expiry_date' => 'date',
+            'approved_at' => 'datetime',
         ];
     }
 }

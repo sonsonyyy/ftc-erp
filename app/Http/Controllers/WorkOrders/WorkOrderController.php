@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\WorkOrders;
 
+use App\Actions\Exports\StreamCsvExportAction;
 use App\Actions\WorkOrders\UpdateWorkOrderStatusAction;
 use App\Enums\QuotationStatus;
 use App\Enums\WorkOrderLogType;
@@ -30,8 +31,10 @@ use App\Models\WorkOrderMaterial;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WorkOrderController extends Controller
 {
@@ -40,8 +43,10 @@ class WorkOrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): Response|StreamedResponse {
         $this->authorize('viewAny', WorkOrder::class);
 
         $search = $request->string('search')->toString();
@@ -51,7 +56,7 @@ class WorkOrderController extends Controller
         $priority = $request->string('priority')->toString();
         $serviceType = $request->string('service_type')->toString();
 
-        $workOrders = WorkOrder::query()
+        $query = WorkOrder::query()
             ->with([
                 'customer:id,customer_code,company_name',
                 'customerSite:id,customer_id,site_code,site_name',
@@ -66,7 +71,13 @@ class WorkOrderController extends Controller
             ->priority($priority)
             ->serviceType($serviceType)
             ->orderByDesc('scheduled_date')
-            ->orderByDesc('id')
+            ->orderByDesc('id');
+
+        if ($request->string('export')->toString() === 'csv') {
+            return $this->exportIndex($request, $query->lazy(), $streamCsvExportAction);
+        }
+
+        $workOrders = (clone $query)
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (WorkOrder $workOrder) => $this->workOrderListItem($request, $workOrder));
@@ -90,6 +101,51 @@ class WorkOrderController extends Controller
                 'create' => $request->user()?->can('create', WorkOrder::class) ?? false,
             ],
         ]);
+    }
+
+    /**
+     * Stream the filtered work-order registry as CSV.
+     */
+    private function exportIndex(
+        Request $request,
+        LazyCollection $workOrders,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): StreamedResponse {
+        return $streamCsvExportAction->handle(
+            'work-orders-'.now()->format('Ymd-His').'.csv',
+            [
+                'Work Order No',
+                'Summary',
+                'Customer Code',
+                'Customer Name',
+                'Site',
+                'Project No',
+                'Quotation No',
+                'Scheduled Date',
+                'Service Type',
+                'Priority',
+                'Status',
+                'Attachments',
+            ],
+            $workOrders->map(function (WorkOrder $workOrder) use ($request): array {
+                $row = $this->workOrderListItem($request, $workOrder);
+
+                return [
+                    $row['work_order_no'],
+                    $row['summary'],
+                    $row['customer']['customer_code'],
+                    $row['customer']['company_name'],
+                    $row['site']['site_name'],
+                    $row['project']['project_no'],
+                    $row['quotation']['quotation_no'],
+                    $row['scheduled_date'],
+                    $row['service_type_label'],
+                    $row['priority_label'],
+                    $row['status_label'],
+                    $row['attachment_count'],
+                ];
+            }),
+        );
     }
 
     /**

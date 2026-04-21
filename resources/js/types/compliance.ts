@@ -51,6 +51,14 @@ export type ComplianceSubmissionItem = {
     next_expiry_date: string | null;
     remarks: string | null;
     submitted_by: string | null;
+    approved_at: string | null;
+    approved_by: string | null;
+    approval_notes: string | null;
+    approval_state: string;
+    approval_state_label: string;
+    can: {
+        approve: boolean;
+    };
 };
 
 export type ComplianceRecordAlertItem = {
@@ -147,6 +155,7 @@ export type ComplianceRecordDetail = {
         remove_attachments: boolean;
         create_submission: boolean;
         create_task: boolean;
+        approve_submission: boolean;
     };
 };
 

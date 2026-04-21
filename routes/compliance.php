@@ -17,6 +17,8 @@ Route::middleware(['auth', 'verified', EnsureComplianceModuleIsReady::class])->g
         ->name('compliance-alerts.acknowledge');
     Route::post('compliance-records/{compliance_record}/submissions', [ComplianceSubmissionController::class, 'store'])
         ->name('compliance-records.submissions.store');
+    Route::patch('compliance-records/{compliance_record}/submissions/{submission}/approve', [ComplianceSubmissionController::class, 'approve'])
+        ->name('compliance-records.submissions.approve');
     Route::post('compliance-records/{compliance_record}/tasks', [ComplianceTaskController::class, 'store'])
         ->name('compliance-records.tasks.store');
     Route::patch('compliance-records/{compliance_record}/tasks/{task}', [ComplianceTaskController::class, 'update'])

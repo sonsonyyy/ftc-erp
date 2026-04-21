@@ -74,6 +74,13 @@ function statusBadgeClass(status: string): string {
     }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700';
 }
 
+function approvalBadgeClass(state: string): string {
+    return {
+        pending: 'border-amber-200 bg-amber-50 text-amber-700',
+        approved: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    }[state] ?? 'border-slate-200 bg-slate-100 text-slate-700';
+}
+
 export default function ComplianceRecordsShow({
     complianceRecord,
     assignedUserOptions,
@@ -347,6 +354,12 @@ export default function ComplianceRecordsShow({
                         </CardHeader>
 
                         <CardContent className="space-y-4">
+                            {!complianceRecord.can.create_submission && submissions.some((submission) => submission.approval_state === 'pending') && (
+                                <div className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                                    A submission is waiting for approval. Approve it below before recording another cycle.
+                                </div>
+                            )}
+
                             {complianceRecord.can.create_submission && (
                                 <form onSubmit={submitSubmission} className="space-y-4 rounded-lg border p-4">
                                     <div className="grid gap-4 md:grid-cols-2">
@@ -430,19 +443,44 @@ export default function ComplianceRecordsShow({
 
                             {submissions.map((submission) => (
                                 <div key={submission.id} className="rounded-lg border px-4 py-3">
-                                    <div className="space-y-2">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <p className="font-medium">
-                                                {submission.reference_no}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">
-                                                {formatDate(submission.submitted_at)}
-                                            </p>
-                                        </div>
+                                    <div className="space-y-3">
+                                        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                                            <div className="space-y-2">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="font-medium">
+                                                        {submission.reference_no}
+                                                    </p>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={approvalBadgeClass(submission.approval_state)}
+                                                    >
+                                                        {submission.approval_state_label}
+                                                    </Badge>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {formatDate(submission.submitted_at)}
+                                                    </p>
+                                                </div>
 
-                                        <p className="text-sm text-muted-foreground">
-                                            Submitted by {submission.submitted_by ?? 'Unknown'}
-                                        </p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Submitted by {submission.submitted_by ?? 'Unknown'}
+                                                </p>
+                                            </div>
+
+                                            {submission.can.approve && (
+                                                <Button size="sm" asChild>
+                                                    <Link
+                                                        href={ComplianceSubmissionController.approve({
+                                                            compliance_record: complianceRecord.id,
+                                                            submission: submission.id,
+                                                        })}
+                                                        method="patch"
+                                                        as="button"
+                                                    >
+                                                        Approve submission
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
 
                                         <p className="text-xs text-muted-foreground">
                                             Snapshot due: {formatDate(submission.due_date_snapshot)} • Snapshot expiry: {formatDate(submission.expiry_date_snapshot)}
@@ -455,6 +493,18 @@ export default function ComplianceRecordsShow({
                                         {submission.remarks && (
                                             <p className="text-sm text-muted-foreground">
                                                 {submission.remarks}
+                                            </p>
+                                        )}
+
+                                        <div className="rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                                            {submission.approved_at
+                                                ? `Approved ${formatDateTime(submission.approved_at)} by ${submission.approved_by ?? 'Unknown'}`
+                                                : 'Awaiting approval before next dates are applied to the main record.'}
+                                        </div>
+
+                                        {submission.approval_notes && (
+                                            <p className="text-sm text-muted-foreground">
+                                                Approval notes: {submission.approval_notes}
                                             </p>
                                         )}
                                     </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customers;
 
+use App\Actions\Exports\StreamCsvExportAction;
 use App\Enums\CustomerStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customers\StoreCustomerRequest;
@@ -11,8 +12,10 @@ use App\Models\Customer;
 use App\Models\CustomerSite;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\LazyCollection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerController extends Controller
 {
@@ -21,15 +24,24 @@ class CustomerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): Response|StreamedResponse {
         $this->authorize('viewAny', Customer::class);
 
-        $customers = Customer::query()
+        $query = Customer::query()
             ->withCount(['customerSites', 'attachments'])
             ->search($request->string('search')->toString())
             ->status($request->string('status')->toString())
             ->orderBy('company_name')
+            ->orderBy('id');
+
+        if ($request->string('export')->toString() === 'csv') {
+            return $this->exportIndex($request, $query->lazy(), $streamCsvExportAction);
+        }
+
+        $customers = (clone $query)
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (Customer $customer) => $this->customerListItem($request, $customer));
@@ -140,6 +152,45 @@ class CustomerController extends Controller
         ]);
 
         return to_route('customers.index');
+    }
+
+    /**
+     * Stream the filtered customer registry as CSV.
+     */
+    private function exportIndex(
+        Request $request,
+        LazyCollection $customers,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): StreamedResponse {
+        return $streamCsvExportAction->handle(
+            'customers-'.now()->format('Ymd-His').'.csv',
+            [
+                'Customer Code',
+                'Company Name',
+                'Trade Name',
+                'TIN',
+                'Phone',
+                'Email',
+                'Status',
+                'Sites',
+                'Attachments',
+            ],
+            $customers->map(function (Customer $customer) use ($request): array {
+                $row = $this->customerListItem($request, $customer);
+
+                return [
+                    $row['customer_code'],
+                    $row['company_name'],
+                    $row['trade_name'],
+                    $row['tin'],
+                    $row['phone'],
+                    $row['email'],
+                    $row['status_label'],
+                    $row['site_count'],
+                    $row['attachment_count'],
+                ];
+            }),
+        );
     }
 
     /**

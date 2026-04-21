@@ -104,6 +104,58 @@ test('project list can be filtered by search customer and status', function () {
         );
 });
 
+test('project export respects the active filters', function () {
+    actingAsProjectRole('Operations Admin');
+
+    $alphaCustomer = Customer::factory()->create([
+        'customer_code' => 'CUST-ALPHA',
+        'company_name' => 'Alpha Fire Systems',
+    ]);
+    $alphaSite = CustomerSite::factory()->create([
+        'customer_id' => $alphaCustomer->getKey(),
+        'site_name' => 'Alpha HQ',
+    ]);
+
+    $betaCustomer = Customer::factory()->create([
+        'customer_code' => 'CUST-BETA',
+        'company_name' => 'Beta Safety Corp',
+    ]);
+    $betaSite = CustomerSite::factory()->create([
+        'customer_id' => $betaCustomer->getKey(),
+        'site_name' => 'Beta Branch',
+    ]);
+
+    Project::factory()->create([
+        'customer_id' => $alphaCustomer->getKey(),
+        'customer_site_id' => $alphaSite->getKey(),
+        'project_no' => 'PRJ-ALPHA-001',
+        'title' => 'Alpha sprinkler retrofit',
+        'status' => ProjectStatus::Open,
+    ]);
+
+    Project::factory()->create([
+        'customer_id' => $betaCustomer->getKey(),
+        'customer_site_id' => $betaSite->getKey(),
+        'project_no' => 'PRJ-BETA-001',
+        'title' => 'Beta detection renewal',
+        'status' => ProjectStatus::Cancelled,
+    ]);
+
+    $response = $this->get(route('projects.index', [
+        'search' => 'Alpha',
+        'customer' => $alphaCustomer->getKey(),
+        'status' => ProjectStatus::Open->value,
+        'export' => 'csv',
+    ]));
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    expect($response->streamedContent())
+        ->toContain('PRJ-ALPHA-001')
+        ->not->toContain('PRJ-BETA-001');
+});
+
 test('authorized users can create projects and initial status is logged', function () {
     actingAsProjectRole('Operations Admin');
 

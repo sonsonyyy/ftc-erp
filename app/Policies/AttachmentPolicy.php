@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Attachment;
+use App\Models\ComplianceRecord;
 use App\Models\Customer;
 use App\Models\CustomerSite;
 use App\Models\Invoice;
@@ -53,6 +54,7 @@ class AttachmentPolicy
             'purchaseOrders',
             'purchaseReceipts',
             'invoices',
+            'complianceRecords',
         );
 
         return $attachment->customers->contains(
@@ -75,6 +77,8 @@ class AttachmentPolicy
             fn (PurchaseReceipt $purchaseReceipt) => $user->can('view', $purchaseReceipt),
         ) || $attachment->invoices->contains(
             fn (Invoice $invoice) => $user->can('view', $invoice),
+        ) || $attachment->complianceRecords->contains(
+            fn (ComplianceRecord $complianceRecord) => $user->can('view', $complianceRecord),
         );
     }
 

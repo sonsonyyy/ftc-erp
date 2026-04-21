@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Billing;
 
 use App\Actions\Billing\RecalculateInvoiceTotalsAction;
+use App\Actions\Exports\StreamCsvExportAction;
 use App\Actions\Tax\SyncInvoiceVatRecordsAction;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Billing\RecordInvoiceApprovalRequest;
 use App\Http\Requests\Billing\StoreInvoiceRequest;
 use App\Http\Requests\Billing\UpdateInvoiceRequest;
 use App\Models\Attachment;
@@ -19,8 +21,10 @@ use App\Models\WorkOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
 {
@@ -29,8 +33,10 @@ class InvoiceController extends Controller
     /**
      * Display a listing of invoices.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): Response|StreamedResponse {
         $this->authorize('viewAny', Invoice::class);
 
         $search = $request->string('search')->toString();
@@ -39,7 +45,7 @@ class InvoiceController extends Controller
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
 
-        $invoices = Invoice::query()
+        $query = Invoice::query()
             ->with([
                 'customer:id,customer_code,company_name',
                 'quotation:id,quotation_no,subject',
@@ -52,7 +58,13 @@ class InvoiceController extends Controller
             ->status($status)
             ->betweenInvoiceDates($from, $to)
             ->orderByDesc('invoice_date')
-            ->orderByDesc('id')
+            ->orderByDesc('id');
+
+        if ($request->string('export')->toString() === 'csv') {
+            return $this->exportIndex($request, $query->lazy(), $streamCsvExportAction);
+        }
+
+        $invoices = (clone $query)
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (Invoice $invoice) => $this->invoiceListItem($request, $invoice));
@@ -72,6 +84,53 @@ class InvoiceController extends Controller
                 'create' => $request->user()?->can('create', Invoice::class) ?? false,
             ],
         ]);
+    }
+
+    /**
+     * Stream the filtered invoice registry as CSV.
+     */
+    private function exportIndex(
+        Request $request,
+        LazyCollection $invoices,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): StreamedResponse {
+        return $streamCsvExportAction->handle(
+            'invoices-'.now()->format('Ymd-His').'.csv',
+            [
+                'Invoice No',
+                'Customer Code',
+                'Customer Name',
+                'Quotation No',
+                'Project No',
+                'Work Order No',
+                'Invoice Date',
+                'Due Date',
+                'Total Amount',
+                'Paid Amount',
+                'Balance Amount',
+                'Status',
+                'Payments',
+            ],
+            $invoices->map(function (Invoice $invoice) use ($request): array {
+                $row = $this->invoiceListItem($request, $invoice);
+
+                return [
+                    $row['invoice_no'],
+                    $row['customer']['customer_code'],
+                    $row['customer']['company_name'],
+                    $row['quotation']['quotation_no'],
+                    $row['project']['project_no'],
+                    $row['work_order']['work_order_no'],
+                    $row['invoice_date'],
+                    $row['due_date'],
+                    $row['total_amount'],
+                    $row['paid_amount'],
+                    $row['balance_amount'],
+                    $row['status_label'],
+                    $row['payment_count'],
+                ];
+            }),
+        );
     }
 
     /**
@@ -146,6 +205,7 @@ class InvoiceController extends Controller
                 'tax_amount' => $validated['tax_amount'],
                 'status' => $validated['status'],
                 'remarks' => $validated['remarks'] ?? null,
+                ...$this->manualApprovalState(),
             ]);
 
             $this->syncItems($invoice, $validated['items']);
@@ -184,6 +244,8 @@ class InvoiceController extends Controller
             'project:id,project_no,title',
             'workOrder:id,work_order_no,summary',
             'issuedBy:id,name',
+            'submittedBy:id,name',
+            'approvedBy:id,name',
             'attachments.uploadedBy:id,name',
             'items' => fn ($query) => $query->orderBy('id'),
             'paymentAllocations' => fn ($query) => $query
@@ -258,6 +320,7 @@ class InvoiceController extends Controller
                 'tax_amount' => $validated['tax_amount'],
                 'status' => $validated['status'],
                 'remarks' => $validated['remarks'] ?? null,
+                ...$this->manualApprovalState(),
             ]);
 
             $this->syncItems($invoice, $validated['items']);
@@ -301,6 +364,58 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Submit the selected invoice for approval.
+     */
+    public function submit(
+        RecordInvoiceApprovalRequest $request,
+        Invoice $invoice,
+    ): RedirectResponse {
+        $this->authorize('submit', $invoice);
+
+        $invoice->update([
+            'status' => InvoiceStatus::Draft,
+            'submitted_at' => now(),
+            'submitted_by_user_id' => $request->user()?->getKey(),
+            'approved_at' => null,
+            'approved_by_user_id' => null,
+            'approval_notes' => null,
+        ]);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Invoice submitted for approval.'),
+        ]);
+
+        return to_route('invoices.show', $invoice);
+    }
+
+    /**
+     * Approve and issue the selected invoice.
+     */
+    public function approve(
+        RecordInvoiceApprovalRequest $request,
+        Invoice $invoice,
+    ): RedirectResponse {
+        $this->authorize('approve', $invoice);
+
+        $invoice->update([
+            'status' => InvoiceStatus::Issued,
+            'submitted_at' => $invoice->submitted_at ?? now(),
+            'submitted_by_user_id' => $invoice->submitted_by_user_id ?? $request->user()?->getKey(),
+            'approved_at' => now(),
+            'approved_by_user_id' => $request->user()?->getKey(),
+            'approval_notes' => $request->validated('approval_notes'),
+        ]);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Invoice approved and issued.'),
+        ]);
+
+        return to_route('invoices.show', $invoice);
+    }
+
+    /**
      * Sync invoice line items from validated input.
      *
      * @param  array<int, array<string, mixed>>  $items
@@ -325,6 +440,22 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Reset approval metadata when the invoice is managed manually.
+     *
+     * @return array<string, mixed>
+     */
+    private function manualApprovalState(): array
+    {
+        return [
+            'submitted_at' => null,
+            'submitted_by_user_id' => null,
+            'approved_at' => null,
+            'approved_by_user_id' => null,
+            'approval_notes' => null,
+        ];
+    }
+
+    /**
      * Build the list payload for an invoice.
      *
      * @return array<string, mixed>
@@ -332,6 +463,7 @@ class InvoiceController extends Controller
     private function invoiceListItem(Request $request, Invoice $invoice): array
     {
         $status = $invoice->currentStatus();
+        $approval = $this->approvalState($invoice);
 
         return [
             'id' => $invoice->getKey(),
@@ -345,6 +477,8 @@ class InvoiceController extends Controller
             'paid_amount' => $invoice->paidAmount(),
             'status' => $status->value,
             'status_label' => $status->label(),
+            'approval_state' => $approval['value'],
+            'approval_state_label' => $approval['label'],
             'attachment_count' => (int) ($invoice->getAttribute('attachments_count') ?? 0),
             'payment_count' => (int) ($invoice->getAttribute('payment_allocations_count') ?? 0),
             'customer' => [
@@ -372,6 +506,8 @@ class InvoiceController extends Controller
                 'update' => $request->user()?->can('update', $invoice) ?? false,
                 'delete' => $request->user()?->can('delete', $invoice) ?? false,
                 'record_payment' => ($request->user()?->can('create', Payment::class) ?? false) && $invoice->allowsPayments(),
+                'submit' => $request->user()?->can('submit', $invoice) ?? false,
+                'approve' => $request->user()?->can('approve', $invoice) ?? false,
             ],
         ];
     }
@@ -384,6 +520,7 @@ class InvoiceController extends Controller
     private function invoiceDetail(Request $request, Invoice $invoice, bool $includeRelations = true): array
     {
         $status = $invoice->currentStatus();
+        $approval = $this->approvalState($invoice);
 
         return [
             'id' => $invoice->getKey(),
@@ -403,6 +540,13 @@ class InvoiceController extends Controller
             'status_label' => $status->label(),
             'stored_status' => $invoice->status->value,
             'stored_status_label' => $invoice->status->label(),
+            'approval_requested_at' => optional($invoice->submitted_at)?->toIso8601String(),
+            'approval_requested_by' => $invoice->submittedBy?->name,
+            'approved_at' => optional($invoice->approved_at)?->toIso8601String(),
+            'approved_by' => $invoice->approvedBy?->name,
+            'approval_notes' => $invoice->approval_notes,
+            'approval_state' => $approval['value'],
+            'approval_state_label' => $approval['label'],
             'remarks' => $invoice->remarks,
             'issued_by' => $invoice->issuedBy?->name,
             'attachment_count' => (int) ($invoice->getAttribute('attachments_count') ?? 0),
@@ -468,9 +612,38 @@ class InvoiceController extends Controller
                 'update' => $request->user()?->can('update', $invoice) ?? false,
                 'delete' => $request->user()?->can('delete', $invoice) ?? false,
                 'record_payment' => ($request->user()?->can('create', Payment::class) ?? false) && $invoice->allowsPayments(),
+                'submit' => $request->user()?->can('submit', $invoice) ?? false,
+                'approve' => $request->user()?->can('approve', $invoice) ?? false,
                 'upload_attachments' => $request->user()?->can('create', Attachment::class) ?? false,
                 'remove_attachments' => $request->user()?->can('delete', Attachment::class) ?? false,
             ],
+        ];
+    }
+
+    /**
+     * Resolve the lightweight approval state shown to users.
+     *
+     * @return array{value:string,label:string}
+     */
+    private function approvalState(Invoice $invoice): array
+    {
+        if ($invoice->approved_at !== null) {
+            return [
+                'value' => 'approved',
+                'label' => 'Approved',
+            ];
+        }
+
+        if ($invoice->submitted_at !== null && $invoice->status === InvoiceStatus::Draft) {
+            return [
+                'value' => 'pending',
+                'label' => 'Pending Approval',
+            ];
+        }
+
+        return [
+            'value' => 'not_requested',
+            'label' => 'Not Requested',
         ];
     }
 

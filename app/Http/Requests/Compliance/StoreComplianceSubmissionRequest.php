@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Compliance;
 
+use App\Models\ComplianceRecord;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -13,7 +14,11 @@ class StoreComplianceSubmissionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $complianceRecord = $this->route('compliance_record');
+
+        return $complianceRecord instanceof ComplianceRecord
+            && $this->user() !== null
+            && $this->user()->can('update', $complianceRecord);
     }
 
     /**
@@ -41,6 +46,18 @@ class StoreComplianceSubmissionRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
+                $complianceRecord = $this->route('compliance_record');
+
+                if (
+                    $complianceRecord instanceof ComplianceRecord
+                    && $complianceRecord->submissions()->whereNull('approved_at')->exists()
+                ) {
+                    $validator->errors()->add(
+                        'reference_no',
+                        'Approve the pending submission before recording another one.',
+                    );
+                }
+
                 if (
                     filled($this->input('next_due_date'))
                     && filled($this->input('submitted_at'))

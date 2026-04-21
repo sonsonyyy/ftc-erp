@@ -48,6 +48,14 @@ class ComplianceRecordPolicy
     }
 
     /**
+     * Determine whether the user can approve submission updates for the record.
+     */
+    public function approveSubmission(User $user, ComplianceRecord $complianceRecord): bool
+    {
+        return $user->hasPermissionTo('compliance_records.approve_submissions');
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, ComplianceRecord $complianceRecord): bool

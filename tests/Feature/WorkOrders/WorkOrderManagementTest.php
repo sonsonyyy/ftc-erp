@@ -130,6 +130,75 @@ test('work order list can be filtered by search customer project status priority
         );
 });
 
+test('work order export respects the active filters', function () {
+    actingAsWorkOrderRole('Operations Admin');
+
+    $alphaCustomer = Customer::factory()->create([
+        'customer_code' => 'CUST-ALPHA',
+        'company_name' => 'Alpha Fire Systems',
+    ]);
+    $alphaSite = CustomerSite::factory()->create([
+        'customer_id' => $alphaCustomer->getKey(),
+    ]);
+    $alphaProject = Project::factory()->create([
+        'customer_id' => $alphaCustomer->getKey(),
+        'customer_site_id' => $alphaSite->getKey(),
+        'project_no' => 'PRJ-ALPHA-001',
+    ]);
+
+    $betaCustomer = Customer::factory()->create([
+        'customer_code' => 'CUST-BETA',
+        'company_name' => 'Beta Safety Corp',
+    ]);
+    $betaSite = CustomerSite::factory()->create([
+        'customer_id' => $betaCustomer->getKey(),
+    ]);
+    $betaProject = Project::factory()->create([
+        'customer_id' => $betaCustomer->getKey(),
+        'customer_site_id' => $betaSite->getKey(),
+        'project_no' => 'PRJ-BETA-001',
+    ]);
+
+    WorkOrder::factory()->create([
+        'customer_id' => $alphaCustomer->getKey(),
+        'customer_site_id' => $alphaSite->getKey(),
+        'project_id' => $alphaProject->getKey(),
+        'work_order_no' => 'WO-ALPHA-001',
+        'summary' => 'Alpha preventive maintenance',
+        'status' => WorkOrderStatus::Scheduled,
+        'priority' => WorkOrderPriority::High,
+        'service_type' => WorkOrderServiceType::PreventiveMaintenance,
+    ]);
+
+    WorkOrder::factory()->create([
+        'customer_id' => $betaCustomer->getKey(),
+        'customer_site_id' => $betaSite->getKey(),
+        'project_id' => $betaProject->getKey(),
+        'work_order_no' => 'WO-BETA-001',
+        'summary' => 'Beta emergency callout',
+        'status' => WorkOrderStatus::Cancelled,
+        'priority' => WorkOrderPriority::Urgent,
+        'service_type' => WorkOrderServiceType::EmergencyService,
+    ]);
+
+    $response = $this->get(route('work-orders.index', [
+        'search' => 'Alpha',
+        'customer' => $alphaCustomer->getKey(),
+        'project' => $alphaProject->getKey(),
+        'status' => WorkOrderStatus::Scheduled->value,
+        'priority' => WorkOrderPriority::High->value,
+        'service_type' => WorkOrderServiceType::PreventiveMaintenance->value,
+        'export' => 'csv',
+    ]));
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    expect($response->streamedContent())
+        ->toContain('WO-ALPHA-001')
+        ->not->toContain('WO-BETA-001');
+});
+
 test('authorized users can create work orders and initial log is recorded', function () {
     actingAsWorkOrderRole('Operations Admin');
 

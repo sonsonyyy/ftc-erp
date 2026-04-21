@@ -76,6 +76,35 @@ test('customer list can be filtered by search and status', function () {
         );
 });
 
+test('customer export respects the active filters', function () {
+    actingAsRole('Sales Admin / Business Development');
+
+    Customer::factory()->create([
+        'customer_code' => 'CUST-ALPHA',
+        'company_name' => 'Alpha Fire Systems',
+        'status' => CustomerStatus::Active,
+    ]);
+
+    Customer::factory()->create([
+        'customer_code' => 'CUST-BETA',
+        'company_name' => 'Beta Safety Corp',
+        'status' => CustomerStatus::Inactive,
+    ]);
+
+    $response = $this->get(route('customers.index', [
+        'search' => 'Alpha',
+        'status' => CustomerStatus::Active->value,
+        'export' => 'csv',
+    ]));
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    expect($response->streamedContent())
+        ->toContain('Alpha Fire Systems')
+        ->not->toContain('Beta Safety Corp');
+});
+
 test('authorized users can create customers', function () {
     actingAsRole('Sales Admin / Business Development');
 

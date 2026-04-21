@@ -105,6 +105,61 @@ test('inventory list can be filtered by search category status and low stock fla
         );
 });
 
+test('inventory export respects the active filters', function () {
+    actingAsInventoryItemRole('Warehouse / Inventory Officer');
+
+    $warehouse = Warehouse::factory()->create();
+    $sprinklerCategory = InventoryCategory::factory()->create([
+        'name' => 'Sprinklers',
+    ]);
+    $alarmCategory = InventoryCategory::factory()->create([
+        'name' => 'Alarm Devices',
+    ]);
+
+    $alphaItem = InventoryItem::factory()->create([
+        'item_code' => 'ITM-ALPHA-001',
+        'item_name' => 'Alpha Sprinkler Head',
+        'inventory_category_id' => $sprinklerCategory->getKey(),
+        'status' => InventoryItemStatus::Active,
+        'reorder_level' => 10,
+    ]);
+
+    $betaItem = InventoryItem::factory()->create([
+        'item_code' => 'ITM-BETA-001',
+        'item_name' => 'Beta Smoke Detector',
+        'inventory_category_id' => $alarmCategory->getKey(),
+        'status' => InventoryItemStatus::Inactive,
+        'reorder_level' => 5,
+    ]);
+
+    StockBalance::query()->create([
+        'warehouse_id' => $warehouse->getKey(),
+        'inventory_item_id' => $alphaItem->getKey(),
+        'quantity_on_hand' => '2.00',
+    ]);
+
+    StockBalance::query()->create([
+        'warehouse_id' => $warehouse->getKey(),
+        'inventory_item_id' => $betaItem->getKey(),
+        'quantity_on_hand' => '50.00',
+    ]);
+
+    $response = $this->get(route('inventory.index', [
+        'search' => 'Alpha',
+        'category' => $sprinklerCategory->getKey(),
+        'status' => InventoryItemStatus::Active->value,
+        'low_stock' => '1',
+        'export' => 'csv',
+    ]));
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    expect($response->streamedContent())
+        ->toContain('ITM-ALPHA-001')
+        ->not->toContain('ITM-BETA-001');
+});
+
 test('low stock page can be filtered by warehouse', function () {
     actingAsInventoryItemRole('Warehouse / Inventory Officer');
 

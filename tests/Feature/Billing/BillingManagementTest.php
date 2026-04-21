@@ -93,6 +93,20 @@ function createInvoiceRecord(array $attributes = [], ?array $items = null): Invo
             ? ($attributes['status'] ?? InvoiceStatus::Issued)->value
             : $attributes['status'],
         'remarks' => $attributes['remarks'] ?? null,
+        ...collect($attributes)->except([
+            'customer',
+            'invoice_no',
+            'quotation_id',
+            'customer_id',
+            'project_id',
+            'work_order_id',
+            'issued_by_user_id',
+            'invoice_date',
+            'due_date',
+            'tax_amount',
+            'status',
+            'remarks',
+        ])->all(),
     ]);
 
     $lines = $items ?? [
@@ -186,6 +200,39 @@ test('billing users can browse and filter paginated invoices', function () {
         );
 });
 
+test('invoice export respects the active filters', function () {
+    actingAsBillingRole();
+
+    $customer = Customer::factory()->create([
+        'customer_code' => 'CUST-BILL-001',
+        'company_name' => 'Metro Fire Customer',
+    ]);
+
+    createInvoiceRecord([
+        'customer' => $customer,
+        'customer_id' => $customer->getKey(),
+        'invoice_no' => 'INV-BILL-001',
+    ]);
+
+    createInvoiceRecord([
+        'invoice_no' => 'INV-BILL-002',
+        'due_date' => now()->subDays(5)->toDateString(),
+    ]);
+
+    $response = $this->get(route('invoices.index', [
+        'search' => 'INV-BILL-001',
+        'customer' => $customer->getKey(),
+        'export' => 'csv',
+    ]));
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    expect($response->streamedContent())
+        ->toContain('INV-BILL-001')
+        ->not->toContain('INV-BILL-002');
+});
+
 test('billing users can create and update invoices', function () {
     actingAsBillingRole();
 
@@ -254,6 +301,51 @@ test('billing users can create and update invoices', function () {
 
     expect((float) $invoice->subtotal)->toBe(1500.0);
     expect((float) $invoice->total_amount)->toBe(1740.0);
+});
+
+test('billing users can submit and approve invoices', function () {
+    $requester = actingAsBillingRole();
+
+    $invoice = createInvoiceRecord([
+        'status' => InvoiceStatus::Draft,
+    ]);
+
+    $this->patch(route('invoices.submit', $invoice))
+        ->assertRedirect(route('invoices.show', $invoice));
+
+    $invoice->refresh();
+
+    expect($invoice->status)->toBe(InvoiceStatus::Draft);
+    expect($invoice->submitted_by_user_id)->toBe($requester->getKey());
+    expect($invoice->submitted_at)->not->toBeNull();
+    expect($invoice->approved_at)->toBeNull();
+
+    $approver = actingAsBillingRole('Management / CEO');
+
+    $this->patch(route('invoices.approve', $invoice), [
+        'approval_notes' => 'Approved for release.',
+    ])->assertRedirect(route('invoices.show', $invoice));
+
+    $invoice->refresh();
+
+    expect($invoice->status)->toBe(InvoiceStatus::Issued);
+    expect($invoice->approved_by_user_id)->toBe($approver->getKey());
+    expect($invoice->approved_at)->not->toBeNull();
+    expect($invoice->approval_notes)->toBe('Approved for release.');
+});
+
+test('users without approval permission cannot approve invoices', function () {
+    $invoice = createInvoiceRecord([
+        'status' => InvoiceStatus::Draft,
+        'submitted_at' => now(),
+        'submitted_by_user_id' => User::factory()->create()->getKey(),
+    ]);
+
+    $this->actingAs(User::factory()->create())
+        ->patch(route('invoices.approve', $invoice), [
+            'approval_notes' => 'Unauthorized approval',
+        ])
+        ->assertForbidden();
 });
 
 test('billing users can archive invoices without payment allocations', function () {

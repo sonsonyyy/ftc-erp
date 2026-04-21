@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Purchasing;
 
+use App\Actions\Exports\StreamCsvExportAction;
 use App\Enums\InventoryItemStatus;
 use App\Enums\PurchaseOrderStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Purchasing\RecordPurchaseOrderApprovalRequest;
 use App\Http\Requests\Purchasing\StorePurchaseOrderRequest;
 use App\Http\Requests\Purchasing\UpdatePurchaseOrderRequest;
 use App\Models\Attachment;
@@ -18,8 +20,10 @@ use App\Models\WorkOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PurchaseOrderController extends Controller
 {
@@ -28,15 +32,17 @@ class PurchaseOrderController extends Controller
     /**
      * Display a listing of purchase orders.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): Response|StreamedResponse {
         $this->authorize('viewAny', PurchaseOrder::class);
 
         $search = $request->string('search')->toString();
         $supplierId = $request->integer('supplier') ?: null;
         $status = $request->string('status')->toString();
 
-        $purchaseOrders = PurchaseOrder::query()
+        $query = PurchaseOrder::query()
             ->with([
                 'supplier:id,supplier_code,company_name',
                 'purchaseRequest:id,request_no,purpose',
@@ -50,7 +56,13 @@ class PurchaseOrderController extends Controller
             ->forSupplier($supplierId)
             ->status($status)
             ->orderByDesc('order_date')
-            ->orderByDesc('id')
+            ->orderByDesc('id');
+
+        if ($request->string('export')->toString() === 'csv') {
+            return $this->exportIndex($request, $query->lazy(), $streamCsvExportAction);
+        }
+
+        $purchaseOrders = (clone $query)
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (PurchaseOrder $purchaseOrder) => $this->purchaseOrderListItem($request, $purchaseOrder));
@@ -68,6 +80,53 @@ class PurchaseOrderController extends Controller
                 'create' => $request->user()?->can('create', PurchaseOrder::class) ?? false,
             ],
         ]);
+    }
+
+    /**
+     * Stream the filtered purchase-order registry as CSV.
+     */
+    private function exportIndex(
+        Request $request,
+        LazyCollection $purchaseOrders,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): StreamedResponse {
+        return $streamCsvExportAction->handle(
+            'purchase-orders-'.now()->format('Ymd-His').'.csv',
+            [
+                'PO No',
+                'Supplier Code',
+                'Supplier Name',
+                'Supplier Reference',
+                'Purchase Request',
+                'Project No',
+                'Work Order No',
+                'Order Date',
+                'Expected Date',
+                'Status',
+                'Ordered Quantity',
+                'Received Quantity',
+                'Receipts',
+            ],
+            $purchaseOrders->map(function (PurchaseOrder $purchaseOrder) use ($request): array {
+                $row = $this->purchaseOrderListItem($request, $purchaseOrder);
+
+                return [
+                    $row['po_no'],
+                    $row['supplier']['supplier_code'],
+                    $row['supplier']['company_name'],
+                    $row['supplier_reference'],
+                    $row['purchase_request']['request_no'],
+                    $row['project']['project_no'],
+                    $row['work_order']['work_order_no'],
+                    $row['order_date'],
+                    $row['expected_date'],
+                    $row['status_label'],
+                    $row['ordered_quantity_total'],
+                    $row['received_quantity_total'],
+                    $row['receipt_count'],
+                ];
+            }),
+        );
     }
 
     /**
@@ -138,6 +197,7 @@ class PurchaseOrderController extends Controller
                 'status' => $validated['status'],
                 'supplier_reference' => $validated['supplier_reference'] ?? null,
                 'remarks' => $validated['remarks'] ?? null,
+                ...$this->manualApprovalState(),
             ]);
 
             $this->syncItems($purchaseOrder, $validated['items']);
@@ -167,6 +227,8 @@ class PurchaseOrderController extends Controller
             'project:id,project_no,title',
             'workOrder:id,work_order_no,summary',
             'orderedBy:id,name',
+            'submittedBy:id,name',
+            'approvedBy:id,name',
             'attachments.uploadedBy',
             'items' => fn ($query) => $query
                 ->with([
@@ -242,6 +304,7 @@ class PurchaseOrderController extends Controller
                 'status' => $validated['status'],
                 'supplier_reference' => $validated['supplier_reference'] ?? null,
                 'remarks' => $validated['remarks'] ?? null,
+                ...$this->manualApprovalState(),
             ]);
 
             $this->syncItems($purchaseOrder, $validated['items']);
@@ -275,6 +338,58 @@ class PurchaseOrderController extends Controller
         ]);
 
         return to_route('purchase-orders.index');
+    }
+
+    /**
+     * Submit the selected purchase order for approval.
+     */
+    public function submit(
+        RecordPurchaseOrderApprovalRequest $request,
+        PurchaseOrder $purchaseOrder,
+    ): RedirectResponse {
+        $this->authorize('submit', $purchaseOrder);
+
+        $purchaseOrder->update([
+            'status' => PurchaseOrderStatus::Submitted,
+            'submitted_at' => now(),
+            'submitted_by_user_id' => $request->user()?->getKey(),
+            'approved_at' => null,
+            'approved_by_user_id' => null,
+            'approval_notes' => null,
+        ]);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Purchase order submitted for approval.'),
+        ]);
+
+        return to_route('purchase-orders.show', $purchaseOrder);
+    }
+
+    /**
+     * Approve the selected purchase order.
+     */
+    public function approve(
+        RecordPurchaseOrderApprovalRequest $request,
+        PurchaseOrder $purchaseOrder,
+    ): RedirectResponse {
+        $this->authorize('approve', $purchaseOrder);
+
+        $purchaseOrder->update([
+            'status' => PurchaseOrderStatus::Approved,
+            'submitted_at' => $purchaseOrder->submitted_at ?? now(),
+            'submitted_by_user_id' => $purchaseOrder->submitted_by_user_id ?? $request->user()?->getKey(),
+            'approved_at' => now(),
+            'approved_by_user_id' => $request->user()?->getKey(),
+            'approval_notes' => $request->validated('approval_notes'),
+        ]);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Purchase order approved.'),
+        ]);
+
+        return to_route('purchase-orders.show', $purchaseOrder);
     }
 
     /**
@@ -340,6 +455,22 @@ class PurchaseOrderController extends Controller
     }
 
     /**
+     * Reset approval metadata when the record is managed manually.
+     *
+     * @return array<string, mixed>
+     */
+    private function manualApprovalState(): array
+    {
+        return [
+            'submitted_at' => null,
+            'submitted_by_user_id' => null,
+            'approved_at' => null,
+            'approved_by_user_id' => null,
+            'approval_notes' => null,
+        ];
+    }
+
+    /**
      * Transform a purchase order into an index payload.
      *
      * @return array<string, mixed>
@@ -348,6 +479,7 @@ class PurchaseOrderController extends Controller
     {
         $receiptCount = (int) ($purchaseOrder->getAttribute('receipts_count') ?? 0);
         $editable = ($request->user()?->can('update', $purchaseOrder) ?? false) && $receiptCount === 0;
+        $approval = $this->approvalState($purchaseOrder);
 
         return [
             'id' => $purchaseOrder->getKey(),
@@ -361,6 +493,8 @@ class PurchaseOrderController extends Controller
             'attachment_count' => (int) ($purchaseOrder->getAttribute('attachments_count') ?? 0),
             'ordered_quantity_total' => (float) ($purchaseOrder->getAttribute('ordered_quantity_total') ?? 0),
             'received_quantity_total' => (float) ($purchaseOrder->getAttribute('received_quantity_total') ?? 0),
+            'approval_state' => $approval['value'],
+            'approval_state_label' => $approval['label'],
             'supplier' => [
                 'id' => $purchaseOrder->supplier?->getKey(),
                 'supplier_code' => $purchaseOrder->supplier?->supplier_code,
@@ -385,6 +519,8 @@ class PurchaseOrderController extends Controller
                 'update' => $editable,
                 'delete' => $request->user()?->can('delete', $purchaseOrder) ?? false,
                 'receive' => $request->user()?->can('receive', $purchaseOrder) ?? false,
+                'submit' => $request->user()?->can('submit', $purchaseOrder) ?? false,
+                'approve' => $request->user()?->can('approve', $purchaseOrder) ?? false,
             ],
         ];
     }
@@ -401,6 +537,7 @@ class PurchaseOrderController extends Controller
     ): array {
         $receiptCount = (int) ($purchaseOrder->getAttribute('receipts_count') ?? 0);
         $editable = ($request->user()?->can('update', $purchaseOrder) ?? false) && $receiptCount === 0;
+        $approval = $this->approvalState($purchaseOrder);
 
         $detail = [
             'id' => $purchaseOrder->getKey(),
@@ -416,6 +553,13 @@ class PurchaseOrderController extends Controller
             'supplier_reference' => $purchaseOrder->supplier_reference,
             'remarks' => $purchaseOrder->remarks,
             'ordered_by' => $purchaseOrder->orderedBy?->name,
+            'approval_requested_at' => optional($purchaseOrder->submitted_at)?->toIso8601String(),
+            'approval_requested_by' => $purchaseOrder->submittedBy?->name,
+            'approved_at' => optional($purchaseOrder->approved_at)?->toIso8601String(),
+            'approved_by' => $purchaseOrder->approvedBy?->name,
+            'approval_notes' => $purchaseOrder->approval_notes,
+            'approval_state' => $approval['value'],
+            'approval_state_label' => $approval['label'],
             'receipt_count' => $receiptCount,
             'attachment_count' => (int) ($purchaseOrder->getAttribute('attachments_count') ?? 0),
             'supplier' => [
@@ -444,6 +588,8 @@ class PurchaseOrderController extends Controller
                 'update' => $editable,
                 'delete' => $request->user()?->can('delete', $purchaseOrder) ?? false,
                 'receive' => $request->user()?->can('receive', $purchaseOrder) ?? false,
+                'submit' => $request->user()?->can('submit', $purchaseOrder) ?? false,
+                'approve' => $request->user()?->can('approve', $purchaseOrder) ?? false,
                 'upload_attachments' => ($request->user()?->hasPermissionTo('attachments.create') ?? false)
                     && ($request->user()?->can('update', $purchaseOrder) ?? false),
                 'remove_attachments' => ($request->user()?->hasPermissionTo('attachments.delete') ?? false)
@@ -506,6 +652,33 @@ class PurchaseOrderController extends Controller
                         'view' => $request->user()?->can('view', $purchaseReceipt) ?? false,
                     ],
                 ])->all(),
+        ];
+    }
+
+    /**
+     * Resolve the lightweight approval state shown to users.
+     *
+     * @return array{value:string,label:string}
+     */
+    private function approvalState(PurchaseOrder $purchaseOrder): array
+    {
+        if ($purchaseOrder->approved_at !== null) {
+            return [
+                'value' => 'approved',
+                'label' => 'Approved',
+            ];
+        }
+
+        if ($purchaseOrder->status === PurchaseOrderStatus::Submitted && $purchaseOrder->submitted_at !== null) {
+            return [
+                'value' => 'pending',
+                'label' => 'Pending Approval',
+            ];
+        }
+
+        return [
+            'value' => 'not_requested',
+            'label' => 'Not Requested',
         ];
     }
 

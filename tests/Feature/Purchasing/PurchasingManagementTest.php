@@ -388,6 +388,44 @@ test('purchase request validation errors are returned', function () {
         ]);
 });
 
+test('purchase-order export respects the active filters', function () {
+    actingAsPurchasingRole();
+
+    $alphaRequest = createPurchaseRequestRecord([
+        'request_no' => 'PR-ALPHA-001',
+    ]);
+
+    $betaRequest = createPurchaseRequestRecord([
+        'request_no' => 'PR-BETA-001',
+    ]);
+
+    createPurchaseOrderRecord([
+        'po_no' => 'PO-ALPHA-001',
+        'supplier_reference' => 'ALPHA-REF',
+        'status' => PurchaseOrderStatus::Approved,
+    ], $alphaRequest);
+
+    createPurchaseOrderRecord([
+        'po_no' => 'PO-BETA-001',
+        'supplier_reference' => 'BETA-REF',
+        'status' => PurchaseOrderStatus::Cancelled,
+    ], $betaRequest);
+
+    $response = $this->get(route('purchase-orders.index', [
+        'search' => 'ALPHA',
+        'supplier' => $alphaRequest->supplier_id,
+        'status' => PurchaseOrderStatus::Approved->value,
+        'export' => 'csv',
+    ]));
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    expect($response->streamedContent())
+        ->toContain('PO-ALPHA-001')
+        ->not->toContain('PO-BETA-001');
+});
+
 test('authorized users can create purchase orders and linked request becomes ordered', function () {
     actingAsPurchasingRole();
 
@@ -421,6 +459,51 @@ test('authorized users can create purchase orders and linked request becomes ord
 
     expect($purchaseOrder->items()->count())->toBe(2);
     expect($purchaseRequest->refresh()->status)->toBe(PurchaseRequestStatus::Ordered);
+});
+
+test('purchasing users can submit and approve purchase orders', function () {
+    $requester = actingAsPurchasingRole();
+
+    $purchaseOrder = createPurchaseOrderRecord([
+        'status' => PurchaseOrderStatus::Draft,
+    ]);
+
+    $this->patch(route('purchase-orders.submit', $purchaseOrder))
+        ->assertRedirect(route('purchase-orders.show', $purchaseOrder));
+
+    $purchaseOrder->refresh();
+
+    expect($purchaseOrder->status)->toBe(PurchaseOrderStatus::Submitted);
+    expect($purchaseOrder->submitted_by_user_id)->toBe($requester->getKey());
+    expect($purchaseOrder->submitted_at)->not->toBeNull();
+    expect($purchaseOrder->approved_at)->toBeNull();
+
+    $approver = actingAsPurchasingRole('Management / CEO');
+
+    $this->patch(route('purchase-orders.approve', $purchaseOrder), [
+        'approval_notes' => 'Supplier pricing confirmed.',
+    ])->assertRedirect(route('purchase-orders.show', $purchaseOrder));
+
+    $purchaseOrder->refresh();
+
+    expect($purchaseOrder->status)->toBe(PurchaseOrderStatus::Approved);
+    expect($purchaseOrder->approved_by_user_id)->toBe($approver->getKey());
+    expect($purchaseOrder->approved_at)->not->toBeNull();
+    expect($purchaseOrder->approval_notes)->toBe('Supplier pricing confirmed.');
+});
+
+test('users without approval permission cannot approve purchase orders', function () {
+    $purchaseOrder = createPurchaseOrderRecord([
+        'status' => PurchaseOrderStatus::Submitted,
+        'submitted_at' => now(),
+        'submitted_by_user_id' => User::factory()->create()->getKey(),
+    ]);
+
+    $this->actingAs(User::factory()->create())
+        ->patch(route('purchase-orders.approve', $purchaseOrder), [
+            'approval_notes' => 'Unauthorized approval',
+        ])
+        ->assertForbidden();
 });
 
 test('purchase order validation fails when supplier does not match the linked request', function () {

@@ -7,6 +7,10 @@ use App\Http\Controllers\Purchasing\SupplierController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::patch('purchase-orders/{purchase_order}/submit', [PurchaseOrderController::class, 'submit'])
+        ->name('purchase-orders.submit');
+    Route::patch('purchase-orders/{purchase_order}/approve', [PurchaseOrderController::class, 'approve'])
+        ->name('purchase-orders.approve');
     Route::get('purchase-orders/{purchase_order}/receipts/create', [PurchaseReceiptController::class, 'create'])
         ->name('purchase-orders.receipts.create');
     Route::post('purchase-orders/{purchase_order}/receipts', [PurchaseReceiptController::class, 'store'])

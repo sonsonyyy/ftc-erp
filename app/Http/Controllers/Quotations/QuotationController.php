@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Quotations;
 
+use App\Actions\Exports\StreamCsvExportAction;
 use App\Actions\Quotations\UpdateQuotationStatusAction;
 use App\Enums\QuotationStatus;
 use App\Http\Controllers\Controller;
@@ -20,8 +21,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class QuotationController extends Controller
 {
@@ -32,8 +35,10 @@ class QuotationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): Response|StreamedResponse {
         $this->authorize('viewAny', Quotation::class);
 
         $search = $request->string('search')->toString();
@@ -42,7 +47,7 @@ class QuotationController extends Controller
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
 
-        $quotations = Quotation::query()
+        $query = Quotation::query()
             ->with([
                 'customer:id,customer_code,company_name',
                 'customerSite:id,customer_id,site_code,site_name',
@@ -54,7 +59,13 @@ class QuotationController extends Controller
             ->status($status)
             ->betweenQuotationDates($from, $to)
             ->orderByDesc('quotation_date')
-            ->orderByDesc('id')
+            ->orderByDesc('id');
+
+        if ($request->string('export')->toString() === 'csv') {
+            return $this->exportIndex($request, $query->lazy(), $streamCsvExportAction);
+        }
+
+        $quotations = (clone $query)
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (Quotation $quotation) => $this->quotationListItem($request, $quotation));
@@ -75,6 +86,49 @@ class QuotationController extends Controller
                 'view_kpi' => $request->user()?->can('viewAny', Quotation::class) ?? false,
             ],
         ]);
+    }
+
+    /**
+     * Stream the filtered quotation registry as CSV.
+     */
+    private function exportIndex(
+        Request $request,
+        LazyCollection $quotations,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): StreamedResponse {
+        return $streamCsvExportAction->handle(
+            'quotations-'.now()->format('Ymd-His').'.csv',
+            [
+                'Quotation No',
+                'Subject',
+                'Customer Code',
+                'Customer Name',
+                'Site',
+                'Quotation Date',
+                'Valid Until',
+                'Amount',
+                'Status',
+                'Sales Owner',
+                'Attachments',
+            ],
+            $quotations->map(function (Quotation $quotation) use ($request): array {
+                $row = $this->quotationListItem($request, $quotation);
+
+                return [
+                    $row['quotation_no'],
+                    $row['subject'],
+                    $row['customer']['customer_code'],
+                    $row['customer']['company_name'],
+                    $row['site']['site_name'],
+                    $row['quotation_date'],
+                    $row['valid_until'],
+                    $row['quotation_amount'],
+                    $row['status_label'],
+                    $row['assigned_sales_user'],
+                    $row['attachment_count'],
+                ];
+            }),
+        );
     }
 
     /**

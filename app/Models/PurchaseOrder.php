@@ -26,6 +26,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'status',
     'supplier_reference',
     'remarks',
+    'submitted_at',
+    'submitted_by_user_id',
+    'approved_at',
+    'approved_by_user_id',
+    'approval_notes',
 ])]
 class PurchaseOrder extends Model
 {
@@ -89,6 +94,26 @@ class PurchaseOrder extends Model
     public function orderedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ordered_by_user_id');
+    }
+
+    /**
+     * Get the user who submitted the purchase order for approval.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function submittedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_by_user_id')->withTrashed();
+    }
+
+    /**
+     * Get the user who approved the purchase order.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id')->withTrashed();
     }
 
     /**
@@ -221,6 +246,8 @@ class PurchaseOrder extends Model
         return [
             'order_date' => 'date',
             'expected_date' => 'date',
+            'submitted_at' => 'datetime',
+            'approved_at' => 'datetime',
             'status' => PurchaseOrderStatus::class,
         ];
     }

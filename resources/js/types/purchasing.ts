@@ -278,6 +278,8 @@ export type PurchaseOrderListItem = {
     attachment_count: number;
     ordered_quantity_total: number;
     received_quantity_total: number;
+    approval_state: string;
+    approval_state_label: string;
     supplier: {
         id: number | null;
         supplier_code: string | null;
@@ -302,6 +304,8 @@ export type PurchaseOrderListItem = {
         update: boolean;
         delete: boolean;
         receive: boolean;
+        submit: boolean;
+        approve: boolean;
     };
 };
 
@@ -356,6 +360,13 @@ export type PurchaseOrderDetail = {
     supplier_reference: string | null;
     remarks: string | null;
     ordered_by: string | null;
+    approval_requested_at: string | null;
+    approval_requested_by: string | null;
+    approved_at: string | null;
+    approved_by: string | null;
+    approval_notes: string | null;
+    approval_state: string;
+    approval_state_label: string;
     receipt_count: number;
     attachment_count: number;
     supplier: {
@@ -387,6 +398,8 @@ export type PurchaseOrderDetail = {
         update: boolean;
         delete: boolean;
         receive: boolean;
+        submit: boolean;
+        approve: boolean;
         upload_attachments: boolean;
         remove_attachments: boolean;
     };

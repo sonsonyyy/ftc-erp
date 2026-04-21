@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Projects;
 
+use App\Actions\Exports\StreamCsvExportAction;
 use App\Actions\Projects\UpdateProjectStatusAction;
 use App\Enums\ProjectStatus;
 use App\Enums\QuotationStatus;
@@ -24,8 +25,10 @@ use App\Models\WorkOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectController extends Controller
 {
@@ -34,15 +37,17 @@ class ProjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): Response|StreamedResponse {
         $this->authorize('viewAny', Project::class);
 
         $search = $request->string('search')->toString();
         $customerId = $request->integer('customer') ?: null;
         $status = $request->string('status')->toString();
 
-        $projects = Project::query()
+        $query = Project::query()
             ->with([
                 'customer:id,customer_code,company_name',
                 'customerSite:id,customer_id,site_code,site_name',
@@ -53,7 +58,13 @@ class ProjectController extends Controller
             ->forCustomer($customerId)
             ->status($status)
             ->orderByDesc('start_date')
-            ->orderByDesc('id')
+            ->orderByDesc('id');
+
+        if ($request->string('export')->toString() === 'csv') {
+            return $this->exportIndex($request, $query->lazy(), $streamCsvExportAction);
+        }
+
+        $projects = (clone $query)
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->through(fn (Project $project) => $this->projectListItem($request, $project));
@@ -71,6 +82,51 @@ class ProjectController extends Controller
                 'create' => $request->user()?->can('create', Project::class) ?? false,
             ],
         ]);
+    }
+
+    /**
+     * Stream the filtered project registry as CSV.
+     */
+    private function exportIndex(
+        Request $request,
+        LazyCollection $projects,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): StreamedResponse {
+        return $streamCsvExportAction->handle(
+            'projects-'.now()->format('Ymd-His').'.csv',
+            [
+                'Project No',
+                'Title',
+                'Project Type',
+                'Customer Code',
+                'Customer Name',
+                'Site',
+                'Quotation No',
+                'Start Date',
+                'Target End Date',
+                'Status',
+                'Work Orders',
+                'Attachments',
+            ],
+            $projects->map(function (Project $project) use ($request): array {
+                $row = $this->projectListItem($request, $project);
+
+                return [
+                    $row['project_no'],
+                    $row['title'],
+                    $row['project_type'],
+                    $row['customer']['customer_code'],
+                    $row['customer']['company_name'],
+                    $row['site']['site_name'],
+                    $row['quotation']['quotation_no'],
+                    $row['start_date'],
+                    $row['target_end_date'],
+                    $row['status_label'],
+                    $row['work_order_count'],
+                    $row['attachment_count'],
+                ];
+            }),
+        );
     }
 
     /**

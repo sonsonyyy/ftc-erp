@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\User;
 
@@ -46,6 +47,30 @@ class InvoicePolicy
     {
         return $user->hasPermissionTo('invoices.update')
             && ! $invoice->paymentAllocations()->exists();
+    }
+
+    /**
+     * Determine whether the user can submit the invoice for approval.
+     */
+    public function submit(User $user, Invoice $invoice): bool
+    {
+        return $user->hasPermissionTo('invoices.update')
+            && ! $invoice->paymentAllocations()->exists()
+            && $invoice->status === InvoiceStatus::Draft
+            && $invoice->submitted_at === null
+            && $invoice->approved_at === null;
+    }
+
+    /**
+     * Determine whether the user can approve and issue the invoice.
+     */
+    public function approve(User $user, Invoice $invoice): bool
+    {
+        return $user->hasPermissionTo('invoices.approve')
+            && ! $invoice->paymentAllocations()->exists()
+            && $invoice->status === InvoiceStatus::Draft
+            && $invoice->submitted_at !== null
+            && $invoice->approved_at === null;
     }
 
     /**
