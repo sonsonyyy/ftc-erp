@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             DemoBillingSeeder::class,
             DemoPayrollSeeder::class,
             DemoTaxStatutorySeeder::class,
+            DemoComplianceSeeder::class,
         ]);
     }
 }

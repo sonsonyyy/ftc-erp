@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ComponentProps } from 'react';
 import { dashboard } from '@/routes';
+import { calendar as complianceRecordsCalendar, index as complianceRecordsIndex } from '@/routes/compliance-records';
 import { lowStock as inventoryLowStock, show as inventoryShow } from '@/routes/inventory';
 import { index as projectsIndex } from '@/routes/projects';
 import { index as quotationsIndex } from '@/routes/quotations';
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type {
+    DashboardComplianceSnapshot,
     DashboardLowStockSnapshot,
     DashboardMetricSnapshot,
     DashboardStockMovementSnapshot,
@@ -21,12 +23,15 @@ type Props = {
     quotationSnapshot: DashboardMetricSnapshot;
     projectSnapshot: DashboardMetricSnapshot;
     workOrderSnapshot: DashboardMetricSnapshot;
+    complianceSnapshot: DashboardComplianceSnapshot;
     can: {
         view_low_stock: boolean;
         view_stock_movements: boolean;
         view_quotations: boolean;
         view_projects: boolean;
         view_work_orders: boolean;
+        view_compliance: boolean;
+        view_compliance_alerts: boolean;
     };
 };
 
@@ -117,12 +122,99 @@ function ModuleSnapshotCard({
     );
 }
 
+function ComplianceSnapshotCard({
+    snapshot,
+    canView,
+    canViewAlerts,
+}: {
+    snapshot: DashboardComplianceSnapshot;
+    canView: boolean;
+    canViewAlerts: boolean;
+}) {
+    return (
+        <Card>
+            <CardHeader className="space-y-3">
+                <div className="space-y-1">
+                    <CardDescription>Compliance deadlines</CardDescription>
+                    <CardTitle className="text-3xl tracking-tight">
+                        {canView ? snapshot.due_soon_count ?? 0 : 'Restricted'}
+                    </CardTitle>
+                </div>
+
+                <p className="text-sm text-muted-foreground">
+                    {canView
+                        ? 'Records that are approaching deadline and need prep work or follow-up.'
+                        : 'Your role does not include compliance visibility.'}
+                </p>
+            </CardHeader>
+
+            <CardContent className="space-y-3">
+                {canView ? (
+                    <>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-lg border bg-muted/20 px-4 py-3">
+                                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                    For renewal
+                                </p>
+                                <p className="mt-1 text-xl font-semibold tracking-tight">
+                                    {snapshot.for_renewal_count ?? 0}
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg border bg-muted/20 px-4 py-3">
+                                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                    Overdue
+                                </p>
+                                <p className="mt-1 text-xl font-semibold tracking-tight">
+                                    {snapshot.overdue_count ?? 0}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="rounded-lg border bg-muted/20 px-4 py-3">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                Expired / Open alerts
+                            </p>
+                            <p className="mt-1 text-xl font-semibold tracking-tight">
+                                {snapshot.expired_count ?? 0}
+                                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                                    expired
+                                </span>
+                            </p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                {canViewAlerts
+                                    ? `${snapshot.open_alert_count ?? 0} open alerts`
+                                    : 'Alert visibility is restricted'}
+                            </p>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <Button variant="outline" asChild className="flex-1">
+                                <Link href={complianceRecordsIndex()}>Open registry</Link>
+                            </Button>
+
+                            <Button variant="outline" asChild className="flex-1">
+                                <Link href={complianceRecordsCalendar()}>Open calendar</Link>
+                            </Button>
+                        </div>
+                    </>
+                ) : (
+                    <div className="rounded-lg border border-dashed px-4 py-4 text-sm text-muted-foreground">
+                        Access is limited to roles with compliance visibility.
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function Dashboard({
     lowStockSnapshot,
     movementSnapshot,
     quotationSnapshot,
     projectSnapshot,
     workOrderSnapshot,
+    complianceSnapshot,
     can,
 }: Props) {
     return (
@@ -137,7 +229,7 @@ export default function Dashboard({
                     </p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
                     <Card className="md:col-span-2 xl:col-span-2">
                         <CardHeader>
                             <CardTitle>Inventory Snapshot</CardTitle>
@@ -225,6 +317,12 @@ export default function Dashboard({
                         href={workOrdersIndex()}
                         snapshot={workOrderSnapshot}
                         canView={can.view_work_orders}
+                    />
+
+                    <ComplianceSnapshotCard
+                        snapshot={complianceSnapshot}
+                        canView={can.view_compliance}
+                        canViewAlerts={can.view_compliance_alerts}
                     />
                 </div>
 

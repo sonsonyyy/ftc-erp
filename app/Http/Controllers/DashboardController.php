@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ComplianceRecordStatus;
 use App\Enums\InventoryItemStatus;
 use App\Enums\ProjectStatus;
 use App\Enums\QuotationStatus;
 use App\Enums\WorkOrderStatus;
+use App\Models\ComplianceAlert;
+use App\Models\ComplianceRecord;
 use App\Models\InventoryItem;
 use App\Models\Project;
 use App\Models\Quotation;
 use App\Models\StockMovement;
 use App\Models\WorkOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -40,6 +44,11 @@ class DashboardController extends Controller
         $canViewQuotations = $user?->can('viewAny', Quotation::class) ?? false;
         $canViewProjects = $user?->can('viewAny', Project::class) ?? false;
         $canViewWorkOrders = $user?->can('viewAny', WorkOrder::class) ?? false;
+        $complianceModuleReady = $this->complianceModuleReady();
+        $canViewCompliance = $complianceModuleReady
+            && ($user?->can('viewAny', ComplianceRecord::class) ?? false);
+        $canViewComplianceAlerts = $complianceModuleReady
+            && ($user?->can('viewAny', ComplianceAlert::class) ?? false);
 
         return Inertia::render('dashboard', [
             'lowStockSnapshot' => [
@@ -59,12 +68,17 @@ class DashboardController extends Controller
             'workOrderSnapshot' => $canViewWorkOrders
                 ? $this->workOrderSnapshot()
                 : $this->restrictedMetricSnapshot(),
+            'complianceSnapshot' => $canViewCompliance
+                ? $this->complianceSnapshot($canViewComplianceAlerts)
+                : $this->restrictedComplianceSnapshot(),
             'can' => [
                 'view_low_stock' => $canViewLowStock,
                 'view_stock_movements' => $canViewStockMovements,
                 'view_quotations' => $canViewQuotations,
                 'view_projects' => $canViewProjects,
                 'view_work_orders' => $canViewWorkOrders,
+                'view_compliance' => $canViewCompliance,
+                'view_compliance_alerts' => $canViewComplianceAlerts,
             ],
         ]);
     }
@@ -131,6 +145,71 @@ class DashboardController extends Controller
             'count' => null,
             'secondary_count' => null,
         ];
+    }
+
+    /**
+     * Get the compliance deadline snapshot for the dashboard.
+     *
+     * @return array{
+     *     due_soon_count: int,
+     *     for_renewal_count: int,
+     *     overdue_count: int,
+     *     expired_count: int,
+     *     open_alert_count: int|null
+     * }
+     */
+    private function complianceSnapshot(bool $canViewComplianceAlerts): array
+    {
+        $today = now();
+
+        return [
+            'due_soon_count' => ComplianceRecord::query()
+                ->displayStatus(ComplianceRecordStatus::DueSoon->value, $today)
+                ->count(),
+            'for_renewal_count' => ComplianceRecord::query()
+                ->displayStatus(ComplianceRecordStatus::ForRenewal->value, $today)
+                ->count(),
+            'overdue_count' => ComplianceRecord::query()
+                ->displayStatus(ComplianceRecordStatus::Overdue->value, $today)
+                ->count(),
+            'expired_count' => ComplianceRecord::query()
+                ->displayStatus(ComplianceRecordStatus::Expired->value, $today)
+                ->count(),
+            'open_alert_count' => $canViewComplianceAlerts
+                ? ComplianceAlert::query()->unacknowledged()->count()
+                : null,
+        ];
+    }
+
+    /**
+     * Get an empty compliance snapshot for restricted users.
+     *
+     * @return array{
+     *     due_soon_count: null,
+     *     for_renewal_count: null,
+     *     overdue_count: null,
+     *     expired_count: null,
+     *     open_alert_count: null
+     * }
+     */
+    private function restrictedComplianceSnapshot(): array
+    {
+        return [
+            'due_soon_count' => null,
+            'for_renewal_count' => null,
+            'overdue_count' => null,
+            'expired_count' => null,
+            'open_alert_count' => null,
+        ];
+    }
+
+    /**
+     * Determine if the compliance module tables are available.
+     */
+    private function complianceModuleReady(): bool
+    {
+        return Schema::hasTable('compliance_records')
+            && Schema::hasTable('compliance_alerts');
     }
 
     /**

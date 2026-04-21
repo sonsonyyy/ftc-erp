@@ -1,10 +1,14 @@
 <?php
 
+use App\Enums\ComplianceAlertType;
+use App\Enums\ComplianceRecordStatus;
 use App\Enums\InventoryItemStatus;
 use App\Enums\ProjectStatus;
 use App\Enums\QuotationStatus;
 use App\Enums\StockMovementType;
 use App\Enums\WorkOrderStatus;
+use App\Models\ComplianceAlert;
+use App\Models\ComplianceRecord;
 use App\Models\InventoryItem;
 use App\Models\Project;
 use App\Models\Quotation;
@@ -17,6 +21,7 @@ use App\Models\WorkOrder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -188,6 +193,8 @@ test('dashboard shows operational snapshots for roles with module visibility', f
             ->where('can.view_quotations', true)
             ->where('can.view_projects', true)
             ->where('can.view_work_orders', true)
+            ->where('can.view_compliance', false)
+            ->where('can.view_compliance_alerts', false)
             ->where('lowStockSnapshot.count', 1)
             ->where('lowStockSnapshot.items.0.item_code', 'ITM-LOW-001')
             ->where('lowStockSnapshot.items.0.shortage', 7)
@@ -199,7 +206,70 @@ test('dashboard shows operational snapshots for roles with module visibility', f
             ->where('projectSnapshot.count', 2)
             ->where('projectSnapshot.secondary_count', 1)
             ->where('workOrderSnapshot.count', 2)
-            ->where('workOrderSnapshot.secondary_count', 1),
+            ->where('workOrderSnapshot.secondary_count', 1)
+            ->where('complianceSnapshot.due_soon_count', null)
+            ->where('complianceSnapshot.for_renewal_count', null)
+            ->where('complianceSnapshot.overdue_count', null)
+            ->where('complianceSnapshot.expired_count', null)
+            ->where('complianceSnapshot.open_alert_count', null),
+        );
+});
+
+test('dashboard shows compliance deadline snapshots for compliance roles', function () {
+    Carbon::setTestNow('2026-04-20 09:00:00');
+
+    actingAsDashboardRole('Compliance Officer / Corporate Admin');
+
+    $dueSoonRecord = ComplianceRecord::factory()->create([
+        'record_no' => 'CMP-DASH-001',
+        'due_date' => '2026-04-25',
+        'expiry_date' => null,
+        'status' => ComplianceRecordStatus::Active,
+    ]);
+
+    ComplianceRecord::factory()->create([
+        'record_no' => 'CMP-DASH-002',
+        'due_date' => null,
+        'expiry_date' => '2026-04-30',
+        'status' => ComplianceRecordStatus::Active,
+    ]);
+
+    ComplianceRecord::factory()->create([
+        'record_no' => 'CMP-DASH-003',
+        'due_date' => '2026-04-10',
+        'expiry_date' => null,
+        'status' => ComplianceRecordStatus::ForFiling,
+    ]);
+
+    ComplianceRecord::factory()->create([
+        'record_no' => 'CMP-DASH-004',
+        'due_date' => null,
+        'expiry_date' => '2026-04-15',
+        'status' => ComplianceRecordStatus::Active,
+    ]);
+
+    ComplianceAlert::factory()->create([
+        'compliance_record_id' => $dueSoonRecord->getKey(),
+        'alert_type' => ComplianceAlertType::DueReminder,
+        'deadline_type' => 'due',
+        'scheduled_for' => '2026-04-20',
+        'reference_date' => '2026-04-25',
+        'days_before' => 5,
+        'acknowledged_at' => null,
+        'acknowledged_by_user_id' => null,
+    ]);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('can.view_compliance', true)
+            ->where('can.view_compliance_alerts', true)
+            ->where('complianceSnapshot.due_soon_count', 1)
+            ->where('complianceSnapshot.for_renewal_count', 1)
+            ->where('complianceSnapshot.overdue_count', 1)
+            ->where('complianceSnapshot.expired_count', 1)
+            ->where('complianceSnapshot.open_alert_count', 1),
         );
 });
 
@@ -219,6 +289,8 @@ test('dashboard hides restricted module snapshots for roles without view permiss
             ->where('can.view_quotations', false)
             ->where('can.view_projects', false)
             ->where('can.view_work_orders', false)
+            ->where('can.view_compliance', false)
+            ->where('can.view_compliance_alerts', false)
             ->where('lowStockSnapshot.count', null)
             ->where('lowStockSnapshot.items', [])
             ->where('movementSnapshot.last_7_days_count', null)
@@ -228,6 +300,36 @@ test('dashboard hides restricted module snapshots for roles without view permiss
             ->where('projectSnapshot.count', null)
             ->where('projectSnapshot.secondary_count', null)
             ->where('workOrderSnapshot.count', null)
-            ->where('workOrderSnapshot.secondary_count', null),
+            ->where('workOrderSnapshot.secondary_count', null)
+            ->where('complianceSnapshot.due_soon_count', null)
+            ->where('complianceSnapshot.for_renewal_count', null)
+            ->where('complianceSnapshot.overdue_count', null)
+            ->where('complianceSnapshot.expired_count', null)
+            ->where('complianceSnapshot.open_alert_count', null),
+        );
+});
+
+test('dashboard remains accessible when compliance tables are not migrated yet', function () {
+    actingAsDashboardRole('Compliance Officer / Corporate Admin');
+
+    Schema::withoutForeignKeyConstraints(function (): void {
+        Schema::dropIfExists('compliance_alerts');
+        Schema::dropIfExists('compliance_submissions');
+        Schema::dropIfExists('compliance_tasks');
+        Schema::dropIfExists('compliance_records');
+        Schema::dropIfExists('compliance_templates');
+    });
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('can.view_compliance', false)
+            ->where('can.view_compliance_alerts', false)
+            ->where('complianceSnapshot.due_soon_count', null)
+            ->where('complianceSnapshot.for_renewal_count', null)
+            ->where('complianceSnapshot.overdue_count', null)
+            ->where('complianceSnapshot.expired_count', null)
+            ->where('complianceSnapshot.open_alert_count', null),
         );
 });

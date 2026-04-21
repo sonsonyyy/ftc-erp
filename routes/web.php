@@ -25,4 +25,5 @@ require __DIR__.'/purchasing.php';
 require __DIR__.'/billing.php';
 require __DIR__.'/payroll.php';
 require __DIR__.'/tax.php';
+require __DIR__.'/compliance.php';
 require __DIR__.'/settings.php';

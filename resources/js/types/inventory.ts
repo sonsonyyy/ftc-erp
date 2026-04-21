@@ -56,6 +56,12 @@ export type InventoryMovementSnippet = {
     balance_after: number;
     movement_date: string | null;
     created_by: string | null;
+    inventory_item: {
+        id: number | null;
+        item_code: string | null;
+        item_name: string | null;
+        unit?: string | null;
+    };
     warehouse: {
         id: number | null;
         warehouse_code: string | null;

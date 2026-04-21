@@ -11,6 +11,7 @@ import {
     MapPinned,
     Package,
     ScrollText,
+    ShieldCheck,
     ShoppingCart,
     Truck,
     Users,
@@ -30,6 +31,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as accountsReceivableIndex } from '@/routes/accounts-receivable';
+import { index as complianceRecordsIndex } from '@/routes/compliance-records';
 import { index as customersIndex } from '@/routes/customers';
 import { index as departmentsIndex } from '@/routes/departments';
 import { index as employeesIndex } from '@/routes/employees';
@@ -96,6 +98,12 @@ const mainNavItems: NavItem[] = [
         href: taxReportRunsIndex(),
         icon: FileText,
         permission: 'tax_report_runs.view',
+    },
+    {
+        title: 'Compliance',
+        href: complianceRecordsIndex(),
+        icon: ShieldCheck,
+        permission: 'compliance_records.view',
     },
     {
         title: 'Customers',

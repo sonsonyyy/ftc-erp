@@ -7,6 +7,11 @@ use App\Enums\TaxReportType;
 use App\Enums\VatRecordType;
 use App\Enums\WithholdingRecordType;
 use App\Enums\WorkOrderStatus;
+use App\Models\ComplianceAlert;
+use App\Models\ComplianceRecord;
+use App\Models\ComplianceSubmission;
+use App\Models\ComplianceTask;
+use App\Models\ComplianceTemplate;
 use App\Models\Customer;
 use App\Models\CustomerSite;
 use App\Models\Department;
@@ -44,13 +49,16 @@ test('database seeder provisions core ERP demo data', function () {
     expect(User::query()->whereIn('email', [
         'admin@example.com',
         'sales@example.com',
+        'sales.coordinator@example.com',
         'operations@example.com',
         'coordinator@example.com',
         'warehouse@example.com',
+        'purchasing@example.com',
         'hr@example.com',
         'billing@example.com',
+        'compliance@example.com',
         'ceo@example.com',
-    ])->count())->toBe(8);
+    ])->count())->toBe(11);
 
     expect(Customer::query()->whereIn('customer_code', [
         'CUST-10001',
@@ -170,4 +178,23 @@ test('database seeder provisions core ERP demo data', function () {
 
     expect(Invoice::query()->count())->toBe(5);
     expect(Payment::query()->count())->toBe(2);
+
+    expect(ComplianceTemplate::query()->count())->toBe(6);
+    expect(ComplianceRecord::query()->count())->toBe(6);
+    expect(ComplianceTask::query()->count())->toBe(3);
+    expect(ComplianceSubmission::query()->count())->toBe(2);
+    expect(ComplianceAlert::query()->count())->toBe(6);
+    expect(ComplianceAlert::query()->whereNull('acknowledged_at')->count())->toBe(5);
+
+    $expiredComplianceRecord = ComplianceRecord::query()
+        ->where('record_no', 'CMP-2026-0003')
+        ->firstOrFail();
+
+    expect($expiredComplianceRecord->title)->toBe('Business Permit 2026');
+
+    $renewalRecord = ComplianceRecord::query()
+        ->where('record_no', 'CMP-2026-0002')
+        ->firstOrFail();
+
+    expect($renewalRecord->latest_submission_reference)->toBe('SUB-CMP-0002');
 });

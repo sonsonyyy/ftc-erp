@@ -45,3 +45,11 @@ export type DashboardMetricSnapshot = {
     count: number | null;
     secondary_count: number | null;
 };
+
+export type DashboardComplianceSnapshot = {
+    due_soon_count: number | null;
+    for_renewal_count: number | null;
+    overdue_count: number | null;
+    expired_count: number | null;
+    open_alert_count: number | null;
+};
