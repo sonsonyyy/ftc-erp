@@ -13,3 +13,9 @@ export type NavItem = {
     isActive?: boolean;
     permission?: string;
 };
+
+export type NavSection = {
+    title: string;
+    icon?: LucideIcon | null;
+    items: NavItem[];
+};
