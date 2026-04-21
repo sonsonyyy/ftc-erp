@@ -4,6 +4,7 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
 
 uses(RefreshDatabase::class);
@@ -26,6 +27,10 @@ test('login screen can be rendered', function () {
     $response = $this->get(route('login'));
 
     $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('auth/login')
+        ->has('canResetPassword'),
+    );
 });
 
 test('users with assigned roles can authenticate using the login screen', function () {
