@@ -6,8 +6,8 @@ import {
     show as projectsShow,
 } from '@/routes/projects';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -102,10 +102,10 @@ export default function ProjectsIndex({
                 <IndexFiltersCard
                     action={projectsIndex()}
                     resetHref={projectsIndex()}
+                    filters={filters}
                     exportHref={exportHref}
                     description="Search by project number, title, type, customer, or site."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.3fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -135,167 +135,148 @@ export default function ProjectsIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Project registry</CardTitle>
-                        <CardDescription>
-                            {projects.total} project records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Project registry"
+                    description={`${projects.total} project records`}
+                    pagination={projects}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Project
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Customer / site
+                                </th>
+                                <th className="px-6 py-3 font-medium">Dates</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Linked work
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Project
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Customer / site
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Dates
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Linked work
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {projects.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No projects matched the current
-                                            filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {projects.data.map((project) => (
-                                    <tr
-                                        key={project.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {projects.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {project.project_no}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {project.title}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Type: {project.project_type}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No projects matched the current filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
+                            {projects.data.map((project) => (
+                                <tr
+                                    key={project.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {project.project_no}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {project.title}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Type: {project.project_type}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {project.customer.customer_code}{' '}
+                                                -{' '}
+                                                {project.customer.company_name}
+                                            </p>
+                                            <p>
+                                                {project.site.site_name ??
+                                                    'No site linked'}
+                                            </p>
+                                            {project.quotation.quotation_no && (
+                                                <p className="text-xs">
+                                                    Quote:{' '}
                                                     {
-                                                        project.customer
-                                                            .customer_code
-                                                    }{' '}
-                                                    -{' '}
-                                                    {
-                                                        project.customer
-                                                            .company_name
+                                                        project.quotation
+                                                            .quotation_no
                                                     }
                                                 </p>
-                                                <p>
-                                                    {project.site.site_name ??
-                                                        'No site linked'}
-                                                </p>
-                                                {project.quotation
-                                                    .quotation_no && (
-                                                    <p className="text-xs">
-                                                        Quote:{' '}
-                                                        {
-                                                            project.quotation
-                                                                .quotation_no
-                                                        }
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    Start:{' '}
-                                                    {formatDate(
-                                                        project.start_date,
-                                                    )}
-                                                </p>
-                                                <p>
-                                                    Target end:{' '}
-                                                    {formatDate(
-                                                        project.target_end_date,
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={statusBadgeClass(
-                                                    project.status,
-                                                )}
-                                            >
-                                                {project.status_label}
-                                            </Badge>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {project.work_order_count}{' '}
-                                                    work orders
-                                                </p>
-                                                <p>
-                                                    {project.attachment_count}{' '}
-                                                    attachments
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-right">
-                                            {project.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link
-                                                        href={projectsShow(
-                                                            project.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
                                             )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
+                                        </div>
+                                    </td>
 
-                    <PaginationLinks pagination={projects} />
-                </Card>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                Start:{' '}
+                                                {formatDate(project.start_date)}
+                                            </p>
+                                            <p>
+                                                Target end:{' '}
+                                                {formatDate(
+                                                    project.target_end_date,
+                                                )}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={statusBadgeClass(
+                                                project.status,
+                                            )}
+                                        >
+                                            {project.status_label}
+                                        </Badge>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {project.work_order_count} work
+                                                orders
+                                            </p>
+                                            <p>
+                                                {project.attachment_count}{' '}
+                                                attachments
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-right">
+                                        {project.can.view && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                            >
+                                                <Link
+                                                    href={projectsShow(
+                                                        project.id,
+                                                    )}
+                                                >
+                                                    Open
+                                                </Link>
+                                            </Button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

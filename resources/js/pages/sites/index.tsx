@@ -8,8 +8,8 @@ import {
 } from '@/routes/sites';
 import { show as customersShow } from '@/routes/customers';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -72,9 +72,9 @@ export default function SitesIndex({
                 <IndexFiltersCard
                     action={sitesIndex()}
                     resetHref={sitesIndex()}
+                    filters={filters}
                     description="Search by site code, site name, location, contact details, or customer."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="md:grid-cols-[2fr_1.2fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -106,149 +106,138 @@ export default function SitesIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Site list</CardTitle>
-                        <CardDescription>
-                            {sites.total} total site records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Site list"
+                    description={`${sites.total} total site records`}
+                    pagination={sites}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">Site</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Customer
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Location
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Site
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Customer
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Location
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {sites.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={5}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No sites matched the current
-                                            filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {sites.data.map((site) => (
-                                    <tr
-                                        key={site.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {sites.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {site.site_name}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {site.site_code ??
-                                                        'No site code'}
-                                                    {site.contact_person &&
-                                                        ` • ${site.contact_person}`}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No sites matched the current filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4">
-                                            {site.customer.id ? (
-                                                <Link
-                                                    href={customersShow(
-                                                        site.customer.id,
-                                                    )}
-                                                    className="font-medium hover:underline"
-                                                >
-                                                    {site.customer.company_name}
-                                                </Link>
-                                            ) : (
-                                                <span className="text-muted-foreground">
-                                                    Unlinked
-                                                </span>
-                                            )}
-                                            <p className="text-sm text-muted-foreground">
-                                                {site.customer.customer_code ??
-                                                    ''}
+                            {sites.data.map((site) => (
+                                <tr
+                                    key={site.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {site.site_name}
                                             </p>
-                                        </td>
+                                            <p className="text-muted-foreground">
+                                                {site.site_code ??
+                                                    'No site code'}
+                                                {site.contact_person &&
+                                                    ` • ${site.contact_person}`}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {[site.city, site.province]
-                                                .filter(Boolean)
-                                                .join(', ') || 'Not set'}
-                                        </td>
-
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={
-                                                    site.is_active
-                                                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                                        : 'border-slate-200 bg-slate-100 text-slate-700'
-                                                }
+                                    <td className="px-6 py-4">
+                                        {site.customer.id ? (
+                                            <Link
+                                                href={customersShow(
+                                                    site.customer.id,
+                                                )}
+                                                className="font-medium hover:underline"
                                             >
-                                                {site.is_active
-                                                    ? 'Active'
-                                                    : 'Inactive'}
-                                            </Badge>
-                                        </td>
+                                                {site.customer.company_name}
+                                            </Link>
+                                        ) : (
+                                            <span className="text-muted-foreground">
+                                                Unlinked
+                                            </span>
+                                        )}
+                                        <p className="text-sm text-muted-foreground">
+                                            {site.customer.customer_code ?? ''}
+                                        </p>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                {site.can.view && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {[site.city, site.province]
+                                            .filter(Boolean)
+                                            .join(', ') || 'Not set'}
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={
+                                                site.is_active
+                                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                                    : 'border-slate-200 bg-slate-100 text-slate-700'
+                                            }
+                                        >
+                                            {site.is_active
+                                                ? 'Active'
+                                                : 'Inactive'}
+                                        </Badge>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {site.can.view && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={sitesShow(
+                                                            site.id,
+                                                        )}
                                                     >
-                                                        <Link
-                                                            href={sitesShow(
-                                                                site.id,
-                                                            )}
-                                                        >
-                                                            Open
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
 
-                                                {site.can.update && (
-                                                    <Button size="sm" asChild>
-                                                        <Link
-                                                            href={sitesEdit(
-                                                                site.id,
-                                                            )}
-                                                        >
-                                                            Edit
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={sites} />
-                </Card>
+                                            {site.can.update && (
+                                                <Button size="sm" asChild>
+                                                    <Link
+                                                        href={sitesEdit(
+                                                            site.id,
+                                                        )}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

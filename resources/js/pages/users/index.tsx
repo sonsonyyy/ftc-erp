@@ -1,16 +1,16 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { create as usersCreate, edit as usersEdit, index as usersIndex, show as usersShow } from '@/routes/users';
-import { PaginationLinks } from '@/components/pagination-links';
+import {
+    create as usersCreate,
+    edit as usersEdit,
+    index as usersIndex,
+    show as usersShow,
+} from '@/routes/users';
+import { DataTableCard } from '@/components/data-table-card';
+import { FilterSelect } from '@/components/filter-select';
+import { IndexFiltersCard } from '@/components/index-filters-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import type { PaginatedData, SelectOption, UserListItem } from '@/types';
 
@@ -52,7 +52,8 @@ export default function UsersIndex({
                             Users
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Provision ERP users internally and control their roles before they access business modules.
+                            Provision ERP users internally and control their
+                            roles before they access business modules.
                         </p>
                     </div>
 
@@ -63,182 +64,165 @@ export default function UsersIndex({
                     )}
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Filters</CardTitle>
-                        <CardDescription>
-                            Search by user name or email, then narrow by role or account status.
-                        </CardDescription>
-                    </CardHeader>
+                <IndexFiltersCard
+                    action={usersIndex()}
+                    resetHref={usersIndex()}
+                    filters={filters}
+                    description="Search by user name or email, then narrow by role or account status."
+                >
+                    <Input
+                        name="search"
+                        defaultValue={filters.search}
+                        placeholder="Search users"
+                    />
 
-                    <CardContent>
-                        <Form
-                            action={usersIndex()}
-                            method="get"
-                            options={{ preserveState: true, replace: true }}
-                            className="grid gap-3 md:grid-cols-[2fr_1fr_1fr_auto_auto]"
-                        >
-                            <Input
-                                name="search"
-                                defaultValue={filters.search}
-                                placeholder="Search users"
-                            />
+                    <FilterSelect name="role" defaultValue={filters.role ?? ''}>
+                        <option value="">All roles</option>
+                        {roleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </FilterSelect>
 
-                            <select
-                                name="role"
-                                defaultValue={filters.role ?? ''}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
-                            >
-                                <option value="">All roles</option>
-                                {roleOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
+                    <FilterSelect name="active" defaultValue={filters.active}>
+                        <option value="">All statuses</option>
+                        {activityOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </FilterSelect>
+                </IndexFiltersCard>
 
-                            <select
-                                name="active"
-                                defaultValue={filters.active}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
-                            >
-                                <option value="">All statuses</option>
-                                {activityOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
+                <DataTableCard
+                    title="User list"
+                    description={`${users.total} total internal users`}
+                    pagination={users}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">User</th>
+                                <th className="px-6 py-3 font-medium">Roles</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Created
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                            <Button type="submit">Apply</Button>
-
-                            <Button variant="outline" asChild>
-                                <Link href={usersIndex()}>Reset</Link>
-                            </Button>
-                        </Form>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>User list</CardTitle>
-                        <CardDescription>
-                            {users.total} total internal users
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">User</th>
-                                    <th className="px-6 py-3 font-medium">Roles</th>
-                                    <th className="px-6 py-3 font-medium">Status</th>
-                                    <th className="px-6 py-3 font-medium">Created</th>
-                                    <th className="px-6 py-3 font-medium text-right">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {users.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={5}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No users matched the current filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {users.data.map((managedUser) => (
-                                    <tr
-                                        key={managedUser.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {users.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {managedUser.name}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {managedUser.email}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No users matched the current filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-wrap gap-2">
-                                                {managedUser.roles.map((role) => (
-                                                    <Badge key={role} variant="secondary">
-                                                        {role}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        </td>
+                            {users.data.map((managedUser) => (
+                                <tr
+                                    key={managedUser.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {managedUser.name}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {managedUser.email}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-wrap gap-2">
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-wrap gap-2">
+                                            {managedUser.roles.map((role) => (
                                                 <Badge
-                                                    variant="outline"
-                                                    className={activityBadgeClass(
-                                                        managedUser.is_active,
-                                                    )}
+                                                    key={role}
+                                                    variant="secondary"
                                                 >
-                                                    {managedUser.is_active
-                                                        ? 'Active'
-                                                        : 'Inactive'}
+                                                    {role}
                                                 </Badge>
+                                            ))}
+                                        </div>
+                                    </td>
 
-                                                <Badge variant="outline">
-                                                    {managedUser.email_verified_at
-                                                        ? 'Verified'
-                                                        : 'Unverified'}
-                                                </Badge>
-                                            </div>
-                                        </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-wrap gap-2">
+                                            <Badge
+                                                variant="outline"
+                                                className={activityBadgeClass(
+                                                    managedUser.is_active,
+                                                )}
+                                            >
+                                                {managedUser.is_active
+                                                    ? 'Active'
+                                                    : 'Inactive'}
+                                            </Badge>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {managedUser.created_at
-                                                ? new Date(
-                                                      managedUser.created_at,
-                                                  ).toLocaleDateString()
-                                                : 'N/A'}
-                                        </td>
+                                            <Badge variant="outline">
+                                                {managedUser.email_verified_at
+                                                    ? 'Verified'
+                                                    : 'Unverified'}
+                                            </Badge>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                {managedUser.can.view && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {managedUser.created_at
+                                            ? new Date(
+                                                  managedUser.created_at,
+                                              ).toLocaleDateString()
+                                            : 'N/A'}
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {managedUser.can.view && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={usersShow(
+                                                            managedUser.id,
+                                                        )}
                                                     >
-                                                        <Link href={usersShow(managedUser.id)}>
-                                                            Open
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
 
-                                                {managedUser.can.update && (
-                                                    <Button size="sm" asChild>
-                                                        <Link href={usersEdit(managedUser.id)}>
-                                                            Edit
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={users} />
-                </Card>
+                                            {managedUser.can.update && (
+                                                <Button size="sm" asChild>
+                                                    <Link
+                                                        href={usersEdit(
+                                                            managedUser.id,
+                                                        )}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

@@ -7,8 +7,8 @@ import {
     show as suppliersShow,
 } from '@/routes/suppliers';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -74,9 +74,9 @@ export default function SuppliersIndex({
                 <IndexFiltersCard
                     action={suppliersIndex()}
                     resetHref={suppliersIndex()}
+                    filters={filters}
                     description="Search by supplier code, company, contact person, phone, email, or payment terms."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="md:grid-cols-[2fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -97,160 +97,151 @@ export default function SuppliersIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Supplier list</CardTitle>
-                        <CardDescription>
-                            {suppliers.total} supplier records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Supplier list"
+                    description={`${suppliers.total} supplier records`}
+                    pagination={suppliers}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Supplier
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Contact
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Activity
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Linked docs
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Attachments
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Supplier
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Contact
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Activity
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Linked docs
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Attachments
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {suppliers.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No suppliers matched the current
-                                            filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {suppliers.data.map((supplier) => (
-                                    <tr
-                                        key={supplier.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {suppliers.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {supplier.company_name}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {supplier.supplier_code}
-                                                </p>
-                                                {supplier.payment_terms && (
-                                                    <p className="text-xs text-muted-foreground">
-                                                        Terms:{' '}
-                                                        {supplier.payment_terms}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </td>
+                                        No suppliers matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {supplier.contact_person ??
-                                                        'No contact person'}
+                            {suppliers.data.map((supplier) => (
+                                <tr
+                                    key={supplier.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {supplier.company_name}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {supplier.supplier_code}
+                                            </p>
+                                            {supplier.payment_terms && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    Terms:{' '}
+                                                    {supplier.payment_terms}
                                                 </p>
-                                                {supplier.phone && (
-                                                    <p>{supplier.phone}</p>
-                                                )}
-                                                {supplier.email && (
-                                                    <p>{supplier.email}</p>
-                                                )}
-                                            </div>
-                                        </td>
+                                            )}
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={badgeClass(
-                                                    supplier.is_active,
-                                                )}
-                                            >
-                                                {supplier.activity_label}
-                                            </Badge>
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {supplier.contact_person ??
+                                                    'No contact person'}
+                                            </p>
+                                            {supplier.phone && (
+                                                <p>{supplier.phone}</p>
+                                            )}
+                                            {supplier.email && (
+                                                <p>{supplier.email}</p>
+                                            )}
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {
-                                                        supplier.purchase_request_count
-                                                    }{' '}
-                                                    requests
-                                                </p>
-                                                <p>
-                                                    {
-                                                        supplier.purchase_order_count
-                                                    }{' '}
-                                                    orders
-                                                </p>
-                                            </div>
-                                        </td>
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={badgeClass(
+                                                supplier.is_active,
+                                            )}
+                                        >
+                                            {supplier.activity_label}
+                                        </Badge>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            {supplier.attachment_count}
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {
+                                                    supplier.purchase_request_count
+                                                }{' '}
+                                                requests
+                                            </p>
+                                            <p>
+                                                {supplier.purchase_order_count}{' '}
+                                                orders
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                {supplier.can.view && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
+                                    <td className="px-6 py-4">
+                                        {supplier.attachment_count}
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {supplier.can.view && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={suppliersShow(
+                                                            supplier.id,
+                                                        )}
                                                     >
-                                                        <Link
-                                                            href={suppliersShow(
-                                                                supplier.id,
-                                                            )}
-                                                        >
-                                                            Open
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
 
-                                                {supplier.can.update && (
-                                                    <Button size="sm" asChild>
-                                                        <Link
-                                                            href={suppliersEdit(
-                                                                supplier.id,
-                                                            )}
-                                                        >
-                                                            Edit
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={suppliers} />
-                </Card>
+                                            {supplier.can.update && (
+                                                <Button size="sm" asChild>
+                                                    <Link
+                                                        href={suppliersEdit(
+                                                            supplier.id,
+                                                        )}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

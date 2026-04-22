@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
 import {
     create as quotationsCreate,
@@ -9,7 +10,6 @@ import {
     kpi as quotationsKpi,
     show as quotationsShow,
 } from '@/routes/quotations';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -125,10 +125,10 @@ export default function QuotationsIndex({
                 <IndexFiltersCard
                     action={quotationsIndex()}
                     resetHref={quotationsIndex()}
+                    filters={filters}
                     exportHref={exportHref}
                     description="Search by quotation number, subject, customer, site, or lost reason."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.3fr_1fr_1fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -170,176 +170,167 @@ export default function QuotationsIndex({
                     />
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Quotation registry</CardTitle>
-                        <CardDescription>
-                            {quotations.total} quotation records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Quotation registry"
+                    description={`${quotations.total} quotation records`}
+                    pagination={quotations}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Quotation
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Customer / site
+                                </th>
+                                <th className="px-6 py-3 font-medium">Dates</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Amount
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Attachments
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Quotation
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Customer / site
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Dates
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Amount
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Attachments
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {quotations.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={7}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No quotations matched the current
-                                            filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {quotations.data.map((quotation) => (
-                                    <tr
-                                        key={quotation.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {quotations.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={7}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {quotation.quotation_no}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {quotation.subject}
-                                                </p>
-                                                {quotation.assigned_sales_user && (
-                                                    <p className="text-xs text-muted-foreground">
-                                                        Sales owner:{' '}
-                                                        {
-                                                            quotation.assigned_sales_user
-                                                        }
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </td>
+                                        No quotations matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
+                            {quotations.data.map((quotation) => (
+                                <tr
+                                    key={quotation.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {quotation.quotation_no}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {quotation.subject}
+                                            </p>
+                                            {quotation.assigned_sales_user && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    Sales owner:{' '}
                                                     {
-                                                        quotation.customer
-                                                            .customer_code
-                                                    }{' '}
-                                                    -{' '}
-                                                    {
-                                                        quotation.customer
-                                                            .company_name
+                                                        quotation.assigned_sales_user
                                                     }
                                                 </p>
-                                                <p>
-                                                    {quotation.site.site_name ??
-                                                        'No site linked'}
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    Quote:{' '}
-                                                    {formatDate(
-                                                        quotation.quotation_date,
-                                                    )}
-                                                </p>
-                                                <p>
-                                                    Valid until:{' '}
-                                                    {formatDate(
-                                                        quotation.valid_until,
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 font-medium">
-                                            {formatCurrency(
-                                                quotation.quotation_amount,
                                             )}
-                                        </td>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={statusBadgeClass(
-                                                    quotation.status,
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {
+                                                    quotation.customer
+                                                        .customer_code
+                                                }{' '}
+                                                -{' '}
+                                                {
+                                                    quotation.customer
+                                                        .company_name
+                                                }
+                                            </p>
+                                            <p>
+                                                {quotation.site.site_name ??
+                                                    'No site linked'}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                Quote:{' '}
+                                                {formatDate(
+                                                    quotation.quotation_date,
                                                 )}
-                                            >
-                                                {quotation.status_label}
-                                            </Badge>
-                                        </td>
+                                            </p>
+                                            <p>
+                                                Valid until:{' '}
+                                                {formatDate(
+                                                    quotation.valid_until,
+                                                )}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            {quotation.attachment_count}
-                                        </td>
+                                    <td className="px-6 py-4 font-medium">
+                                        {formatCurrency(
+                                            quotation.quotation_amount,
+                                        )}
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                {quotation.can.view && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={statusBadgeClass(
+                                                quotation.status,
+                                            )}
+                                        >
+                                            {quotation.status_label}
+                                        </Badge>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        {quotation.attachment_count}
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {quotation.can.view && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={quotationsShow(
+                                                            quotation.id,
+                                                        )}
                                                     >
-                                                        <Link
-                                                            href={quotationsShow(
-                                                                quotation.id,
-                                                            )}
-                                                        >
-                                                            Open
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
 
-                                                {quotation.can.update && (
-                                                    <Button size="sm" asChild>
-                                                        <Link
-                                                            href={quotationsEdit(
-                                                                quotation.id,
-                                                            )}
-                                                        >
-                                                            Edit
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={quotations} />
-                </Card>
+                                            {quotation.can.update && (
+                                                <Button size="sm" asChild>
+                                                    <Link
+                                                        href={quotationsEdit(
+                                                            quotation.id,
+                                                        )}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

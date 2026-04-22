@@ -11,8 +11,8 @@ import {
     index as inventoryCategoriesIndex,
 } from '@/routes/inventory-categories';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -149,10 +149,10 @@ export default function InventoryIndex({
                 <IndexFiltersCard
                     action={inventoryIndex()}
                     resetHref={inventoryIndex()}
+                    filters={filters}
                     exportHref={exportHref}
                     description="Search by SKU, code, item name, unit, or category, and optionally narrow the list to low-stock items only."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.3fr_1fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -190,147 +190,135 @@ export default function InventoryIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Inventory registry</CardTitle>
-                        <CardDescription>
-                            {inventoryItems.total} inventory records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Inventory registry"
+                    description={`${inventoryItems.total} inventory records`}
+                    pagination={inventoryItems}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">Item</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Category
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Balances
+                                </th>
+                                <th className="px-6 py-3 font-medium">Cost</th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Item
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Category
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Balances
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Cost
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {inventoryItems.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No inventory items matched the
-                                            current filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {inventoryItems.data.map((inventoryItem) => (
-                                    <tr
-                                        key={inventoryItem.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {inventoryItems.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {inventoryItem.item_code}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {inventoryItem.item_name}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {inventoryItem.sku ??
-                                                        'No SKU'}{' '}
-                                                    • Unit: {inventoryItem.unit}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No inventory items matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {inventoryItem.category.name ??
-                                                'Uncategorized'}
-                                        </td>
+                            {inventoryItems.data.map((inventoryItem) => (
+                                <tr
+                                    key={inventoryItem.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {inventoryItem.item_code}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {inventoryItem.item_name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {inventoryItem.sku ?? 'No SKU'}{' '}
+                                                • Unit: {inventoryItem.unit}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col gap-2">
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {inventoryItem.category.name ??
+                                            'Uncategorized'}
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col gap-2">
+                                            <Badge
+                                                variant="outline"
+                                                className={statusBadgeClass(
+                                                    inventoryItem.status,
+                                                )}
+                                            >
+                                                {inventoryItem.status_label}
+                                            </Badge>
+                                            {inventoryItem.is_low_stock && (
                                                 <Badge
                                                     variant="outline"
-                                                    className={statusBadgeClass(
-                                                        inventoryItem.status,
-                                                    )}
+                                                    className="border-amber-200 bg-amber-50 text-amber-700"
                                                 >
-                                                    {inventoryItem.status_label}
+                                                    Low stock
                                                 </Badge>
-                                                {inventoryItem.is_low_stock && (
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="border-amber-200 bg-amber-50 text-amber-700"
-                                                    >
-                                                        Low stock
-                                                    </Badge>
+                                            )}
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                On hand:{' '}
+                                                {inventoryItem.quantity_on_hand.toFixed(
+                                                    2,
                                                 )}
-                                            </div>
-                                        </td>
+                                            </p>
+                                            <p>
+                                                Reorder:{' '}
+                                                {inventoryItem.reorder_level.toFixed(
+                                                    2,
+                                                )}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    On hand:{' '}
-                                                    {inventoryItem.quantity_on_hand.toFixed(
-                                                        2,
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {formatCurrency(
+                                            inventoryItem.standard_cost,
+                                        )}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-right">
+                                        {inventoryItem.can.view && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                            >
+                                                <Link
+                                                    href={inventoryShow(
+                                                        inventoryItem.id,
                                                     )}
-                                                </p>
-                                                <p>
-                                                    Reorder:{' '}
-                                                    {inventoryItem.reorder_level.toFixed(
-                                                        2,
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {formatCurrency(
-                                                inventoryItem.standard_cost,
-                                            )}
-                                        </td>
-
-                                        <td className="px-6 py-4 text-right">
-                                            {inventoryItem.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
                                                 >
-                                                    <Link
-                                                        href={inventoryShow(
-                                                            inventoryItem.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={inventoryItems} />
-                </Card>
+                                                    Open
+                                                </Link>
+                                            </Button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

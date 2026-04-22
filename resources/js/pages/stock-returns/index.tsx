@@ -6,8 +6,8 @@ import {
     show as stockReturnsShow,
 } from '@/routes/stock-returns';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -73,9 +73,9 @@ export default function StockReturnsIndex({
                 <IndexFiltersCard
                     action={stockReturnsIndex()}
                     resetHref={stockReturnsIndex()}
+                    filters={filters}
                     description="Search returns by reference, warehouse, project, or work order."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[1.5fr_1.2fr_1.2fr_1.2fr]"
                 >
                     <Input
                         name="search"
@@ -120,135 +120,117 @@ export default function StockReturnsIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Return log</CardTitle>
-                        <CardDescription>
-                            {stockReturns.total} return records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Return log"
+                    description={`${stockReturns.total} return records`}
+                    pagination={stockReturns}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Return
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Warehouse
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Project / work order
+                                </th>
+                                <th className="px-6 py-3 font-medium">Items</th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Return
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Warehouse
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Project / work order
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Items
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {stockReturns.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={5}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No return records matched the
-                                            current filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {stockReturns.data.map((stockReturn) => (
-                                    <tr
-                                        key={stockReturn.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {stockReturns.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <p className="font-medium">
-                                                {stockReturn.return_no}
+                                        No return records matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
+
+                            {stockReturns.data.map((stockReturn) => (
+                                <tr
+                                    key={stockReturn.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <p className="font-medium">
+                                            {stockReturn.return_no}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                            {stockReturn.returned_date ??
+                                                'No date'}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {stockReturn.created_by ?? 'System'}
+                                        </p>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {stockReturn.warehouse.warehouse_code} -{' '}
+                                        {stockReturn.warehouse.warehouse_name}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {stockReturn.project
+                                                    .project_no ??
+                                                    'No project selected'}
                                             </p>
-                                            <p className="text-muted-foreground">
-                                                {stockReturn.returned_date ??
-                                                    'No date'}
+                                            <p>
+                                                {stockReturn.work_order
+                                                    .work_order_no ??
+                                                    'No work order selected'}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {stockReturn.created_by ??
-                                                    'System'}
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {stockReturn.item_count} lines
                                             </p>
-                                        </td>
+                                            <p>
+                                                {stockReturn.total_quantity.toFixed(
+                                                    2,
+                                                )}{' '}
+                                                total quantity
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {
-                                                stockReturn.warehouse
-                                                    .warehouse_code
-                                            }{' '}
-                                            -{' '}
-                                            {
-                                                stockReturn.warehouse
-                                                    .warehouse_name
-                                            }
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {stockReturn.project
-                                                        .project_no ??
-                                                        'No project selected'}
-                                                </p>
-                                                <p>
-                                                    {stockReturn.work_order
-                                                        .work_order_no ??
-                                                        'No work order selected'}
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {stockReturn.item_count}{' '}
-                                                    lines
-                                                </p>
-                                                <p>
-                                                    {stockReturn.total_quantity.toFixed(
-                                                        2,
-                                                    )}{' '}
-                                                    total quantity
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-right">
-                                            {stockReturn.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
+                                    <td className="px-6 py-4 text-right">
+                                        {stockReturn.can.view && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                            >
+                                                <Link
+                                                    href={stockReturnsShow(
+                                                        stockReturn.id,
+                                                    )}
                                                 >
-                                                    <Link
-                                                        href={stockReturnsShow(
-                                                            stockReturn.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={stockReturns} />
-                </Card>
+                                                    Open
+                                                </Link>
+                                            </Button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

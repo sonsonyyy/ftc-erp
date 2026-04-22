@@ -3,8 +3,8 @@ import { dashboard } from '@/routes';
 import { index as accountsReceivableIndex } from '@/routes/accounts-receivable';
 import { show as invoicesShow } from '@/routes/invoices';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -187,9 +187,9 @@ export default function AccountsReceivableIndex({
                 <IndexFiltersCard
                     action={accountsReceivableIndex()}
                     resetHref={accountsReceivableIndex()}
+                    filters={filters}
                     description="Filter the aging view by customer, billing status, and invoice date range."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.3fr_1fr_1fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -230,166 +230,153 @@ export default function AccountsReceivableIndex({
                     />
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Aging detail</CardTitle>
-                        <CardDescription>
-                            {report.total} billing rows in the current view
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Aging detail"
+                    description={`${report.total} billing rows in the current view`}
+                    pagination={report}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Invoice
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Customer
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Linked records
+                                </th>
+                                <th className="px-6 py-3 font-medium">Aging</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Amounts
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Invoice
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Customer
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Linked records
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Aging
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Amounts
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {report.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={7}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No AR rows matched the current
-                                            filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {report.data.map((row) => (
-                                    <tr
-                                        key={row.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {report.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={7}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {row.invoice_no}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {row.invoice_date ??
-                                                        'No invoice date'}{' '}
-                                                    • Due{' '}
-                                                    {row.due_date ?? 'Not set'}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No AR rows matched the current filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {row.customer.customer_code} -{' '}
-                                            {row.customer.company_name}
-                                        </td>
+                            {report.data.map((row) => (
+                                <tr
+                                    key={row.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {row.invoice_no}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {row.invoice_date ??
+                                                    'No invoice date'}{' '}
+                                                • Due{' '}
+                                                {row.due_date ?? 'Not set'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {row.project.project_no
-                                                        ? `Project: ${row.project.project_no}`
-                                                        : 'No project linked'}
-                                                </p>
-                                                <p>
-                                                    {row.work_order
-                                                        .work_order_no
-                                                        ? `Work order: ${row.work_order.work_order_no}`
-                                                        : 'No work order linked'}
-                                                </p>
-                                            </div>
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {row.customer.customer_code} -{' '}
+                                        {row.customer.company_name}
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {row.aging_bucket}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {row.age_days === null
-                                                        ? 'No overdue age'
-                                                        : `${row.age_days} day(s)`}
-                                                </p>
-                                            </div>
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {row.project.project_no
+                                                    ? `Project: ${row.project.project_no}`
+                                                    : 'No project linked'}
+                                            </p>
+                                            <p>
+                                                {row.work_order.work_order_no
+                                                    ? `Work order: ${row.work_order.work_order_no}`
+                                                    : 'No work order linked'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {formatCurrency(
-                                                        row.total_amount,
-                                                    )}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    Paid:{' '}
-                                                    {formatCurrency(
-                                                        row.paid_amount,
-                                                    )}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    Balance:{' '}
-                                                    {formatCurrency(
-                                                        row.balance_amount,
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </td>
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {row.aging_bucket}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {row.age_days === null
+                                                    ? 'No overdue age'
+                                                    : `${row.age_days} day(s)`}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={statusBadgeClass(
-                                                    row.status,
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {formatCurrency(
+                                                    row.total_amount,
                                                 )}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                Paid:{' '}
+                                                {formatCurrency(
+                                                    row.paid_amount,
+                                                )}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                Balance:{' '}
+                                                {formatCurrency(
+                                                    row.balance_amount,
+                                                )}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={statusBadgeClass(
+                                                row.status,
+                                            )}
+                                        >
+                                            {row.status_label}
+                                        </Badge>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
                                             >
-                                                {row.status_label}
-                                            </Badge>
-                                        </td>
-
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
+                                                <Link
+                                                    href={invoicesShow(row.id)}
                                                 >
-                                                    <Link
-                                                        href={invoicesShow(
-                                                            row.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={report} />
-                </Card>
+                                                    Open
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

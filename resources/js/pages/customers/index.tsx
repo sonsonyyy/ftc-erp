@@ -7,8 +7,8 @@ import {
     edit as customersEdit,
 } from '@/routes/customers';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -80,10 +80,10 @@ export default function CustomersIndex({
                 <IndexFiltersCard
                     action={customersIndex()}
                     resetHref={customersIndex()}
+                    filters={filters}
                     exportHref={exportHref}
                     description="Search by code, company, trade name, TIN, phone, or email."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="md:grid-cols-[2fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -101,141 +101,132 @@ export default function CustomersIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Customer list</CardTitle>
-                        <CardDescription>
-                            {customers.total} total customer records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Customer list"
+                    description={`${customers.total} total customer records`}
+                    pagination={customers}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Customer
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Contact
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 font-medium">Sites</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Attachments
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Customer
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Contact
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Sites
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Attachments
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {customers.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No customers matched the current
-                                            filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {customers.data.map((customer) => (
-                                    <tr
-                                        key={customer.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {customers.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {customer.company_name}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {customer.customer_code}
-                                                    {customer.trade_name &&
-                                                        ` • ${customer.trade_name}`}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No customers matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                {customer.phone && (
-                                                    <p>{customer.phone}</p>
-                                                )}
-                                                {customer.email && (
-                                                    <p>{customer.email}</p>
-                                                )}
-                                                {!customer.phone &&
-                                                    !customer.email &&
-                                                    'No contact details'}
-                                            </div>
-                                        </td>
+                            {customers.data.map((customer) => (
+                                <tr
+                                    key={customer.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {customer.company_name}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {customer.customer_code}
+                                                {customer.trade_name &&
+                                                    ` • ${customer.trade_name}`}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={statusBadgeClass(
-                                                    customer.status,
-                                                )}
-                                            >
-                                                {customer.status_label}
-                                            </Badge>
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            {customer.phone && (
+                                                <p>{customer.phone}</p>
+                                            )}
+                                            {customer.email && (
+                                                <p>{customer.email}</p>
+                                            )}
+                                            {!customer.phone &&
+                                                !customer.email &&
+                                                'No contact details'}
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            {customer.site_count}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {customer.attachment_count}
-                                        </td>
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={statusBadgeClass(
+                                                customer.status,
+                                            )}
+                                        >
+                                            {customer.status_label}
+                                        </Badge>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                {customer.can.view && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
+                                    <td className="px-6 py-4">
+                                        {customer.site_count}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {customer.attachment_count}
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {customer.can.view && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={customersShow(
+                                                            customer.id,
+                                                        )}
                                                     >
-                                                        <Link
-                                                            href={customersShow(
-                                                                customer.id,
-                                                            )}
-                                                        >
-                                                            Open
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
 
-                                                {customer.can.update && (
-                                                    <Button size="sm" asChild>
-                                                        <Link
-                                                            href={customersEdit(
-                                                                customer.id,
-                                                            )}
-                                                        >
-                                                            Edit
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={customers} />
-                </Card>
+                                            {customer.can.update && (
+                                                <Button size="sm" asChild>
+                                                    <Link
+                                                        href={customersEdit(
+                                                            customer.id,
+                                                        )}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

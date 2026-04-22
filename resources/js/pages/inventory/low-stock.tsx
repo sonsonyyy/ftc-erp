@@ -6,8 +6,8 @@ import {
     show as inventoryShow,
 } from '@/routes/inventory';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -65,9 +65,9 @@ export default function InventoryLowStock({
                 <IndexFiltersCard
                     action={inventoryLowStock()}
                     resetHref={inventoryLowStock()}
+                    filters={filters}
                     description="Filter the low-stock view by item search, category, or warehouse."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.3fr_1.3fr]"
                 >
                     <Input
                         name="search"
@@ -100,110 +100,100 @@ export default function InventoryLowStock({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Low-stock list</CardTitle>
-                        <CardDescription>
-                            {lowStockItems.total} low-stock records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Low-stock list"
+                    description={`${lowStockItems.total} low-stock records`}
+                    pagination={lowStockItems}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">Item</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Category
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    On hand
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Reorder level
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Shortage
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Item
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Category
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        On hand
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Reorder level
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Shortage
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {lowStockItems.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No low-stock items matched the
-                                            current filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {lowStockItems.data.map((item) => (
-                                    <tr
-                                        key={item.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {lowStockItems.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {item.item_code}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {item.item_name}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {item.sku ?? 'No SKU'} •{' '}
-                                                    {item.unit}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No low-stock items matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {item.category.name ??
-                                                'Uncategorized'}
-                                        </td>
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {item.quantity_on_hand.toFixed(2)}
-                                        </td>
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {item.reorder_level.toFixed(2)}
-                                        </td>
-                                        <td className="px-6 py-4 font-medium text-amber-700">
-                                            {item.shortage.toFixed(2)}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            {item.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
+                            {lowStockItems.data.map((item) => (
+                                <tr
+                                    key={item.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {item.item_code}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {item.item_name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {item.sku ?? 'No SKU'} •{' '}
+                                                {item.unit}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {item.category.name ?? 'Uncategorized'}
+                                    </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {item.quantity_on_hand.toFixed(2)}
+                                    </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {item.reorder_level.toFixed(2)}
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-amber-700">
+                                        {item.shortage.toFixed(2)}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        {item.can.view && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                            >
+                                                <Link
+                                                    href={inventoryShow(
+                                                        item.id,
+                                                    )}
                                                 >
-                                                    <Link
-                                                        href={inventoryShow(
-                                                            item.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={lowStockItems} />
-                </Card>
+                                                    Open
+                                                </Link>
+                                            </Button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

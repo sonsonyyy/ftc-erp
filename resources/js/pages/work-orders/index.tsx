@@ -6,8 +6,8 @@ import {
     show as workOrdersShow,
 } from '@/routes/work-orders';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -122,10 +122,10 @@ export default function WorkOrdersIndex({
                 <IndexFiltersCard
                     action={workOrdersIndex()}
                     resetHref={workOrdersIndex()}
+                    filters={filters}
                     exportHref={exportHref}
                     description="Search by work order number, summary, customer, site, quotation, or project."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.4fr_1.4fr_1fr_1fr_1.4fr]"
                 >
                     <Input
                         name="search"
@@ -191,165 +191,155 @@ export default function WorkOrdersIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Work order registry</CardTitle>
-                        <CardDescription>
-                            {workOrders.total} work order records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Work order registry"
+                    description={`${workOrders.total} work order records`}
+                    pagination={workOrders}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Work order
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Customer / site
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Schedule
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Priority
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Work order
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Customer / site
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Schedule
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Priority
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {workOrders.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No work orders matched the current
-                                            filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {workOrders.data.map((workOrder) => (
-                                    <tr
-                                        key={workOrder.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {workOrders.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {workOrder.work_order_no}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {workOrder.summary}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
+                                        No work orders matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
+
+                            {workOrders.data.map((workOrder) => (
+                                <tr
+                                    key={workOrder.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {workOrder.work_order_no}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {workOrder.summary}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {workOrder.service_type_label}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {
+                                                    workOrder.customer
+                                                        .customer_code
+                                                }{' '}
+                                                -{' '}
+                                                {
+                                                    workOrder.customer
+                                                        .company_name
+                                                }
+                                            </p>
+                                            <p>
+                                                {workOrder.site.site_name ??
+                                                    'No site linked'}
+                                            </p>
+                                            {workOrder.project.project_no && (
+                                                <p className="text-xs">
+                                                    Project:{' '}
                                                     {
-                                                        workOrder.service_type_label
+                                                        workOrder.project
+                                                            .project_no
                                                     }
                                                 </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {
-                                                        workOrder.customer
-                                                            .customer_code
-                                                    }{' '}
-                                                    -{' '}
-                                                    {
-                                                        workOrder.customer
-                                                            .company_name
-                                                    }
-                                                </p>
-                                                <p>
-                                                    {workOrder.site.site_name ??
-                                                        'No site linked'}
-                                                </p>
-                                                {workOrder.project
-                                                    .project_no && (
-                                                    <p className="text-xs">
-                                                        Project:{' '}
-                                                        {
-                                                            workOrder.project
-                                                                .project_no
-                                                        }
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    Scheduled:{' '}
-                                                    {formatDate(
-                                                        workOrder.scheduled_date,
-                                                    )}
-                                                </p>
-                                                <p>
-                                                    {workOrder.attachment_count}{' '}
-                                                    attachments
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={priorityBadgeClass(
-                                                    workOrder.priority,
-                                                )}
-                                            >
-                                                {workOrder.priority_label}
-                                            </Badge>
-                                        </td>
-
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={statusBadgeClass(
-                                                    workOrder.status,
-                                                )}
-                                            >
-                                                {workOrder.status_label}
-                                            </Badge>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-right">
-                                            {workOrder.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link
-                                                        href={workOrdersShow(
-                                                            workOrder.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
                                             )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
+                                        </div>
+                                    </td>
 
-                    <PaginationLinks pagination={workOrders} />
-                </Card>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                Scheduled:{' '}
+                                                {formatDate(
+                                                    workOrder.scheduled_date,
+                                                )}
+                                            </p>
+                                            <p>
+                                                {workOrder.attachment_count}{' '}
+                                                attachments
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={priorityBadgeClass(
+                                                workOrder.priority,
+                                            )}
+                                        >
+                                            {workOrder.priority_label}
+                                        </Badge>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={statusBadgeClass(
+                                                workOrder.status,
+                                            )}
+                                        >
+                                            {workOrder.status_label}
+                                        </Badge>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-right">
+                                        {workOrder.can.view && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                            >
+                                                <Link
+                                                    href={workOrdersShow(
+                                                        workOrder.id,
+                                                    )}
+                                                >
+                                                    Open
+                                                </Link>
+                                            </Button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

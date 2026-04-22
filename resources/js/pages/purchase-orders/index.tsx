@@ -7,8 +7,8 @@ import {
     show as purchaseOrdersShow,
 } from '@/routes/purchase-orders';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -93,10 +93,10 @@ export default function PurchaseOrdersIndex({
                 <IndexFiltersCard
                     action={purchaseOrdersIndex()}
                     resetHref={purchaseOrdersIndex()}
+                    filters={filters}
                     exportHref={exportHref}
                     description="Search by PO number, supplier reference, supplier, request, project, or work order."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.2fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -126,185 +126,170 @@ export default function PurchaseOrdersIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Purchase-order registry</CardTitle>
-                        <CardDescription>
-                            {purchaseOrders.total} purchase orders
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Purchase-order registry"
+                    description={`${purchaseOrders.total} purchase orders`}
+                    pagination={purchaseOrders}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">PO</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Supplier / linkage
+                                </th>
+                                <th className="px-6 py-3 font-medium">Dates</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Receiving
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        PO
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Supplier / linkage
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Dates
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Receiving
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {purchaseOrders.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No purchase orders matched the
-                                            current filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {purchaseOrders.data.map((purchaseOrder) => (
-                                    <tr
-                                        key={purchaseOrder.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {purchaseOrders.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {purchaseOrder.po_no}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {purchaseOrder.supplier_reference ??
-                                                        'No supplier reference'}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No purchase orders matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {purchaseOrder.supplier
-                                                        .company_name
-                                                        ? `${purchaseOrder.supplier.supplier_code} - ${purchaseOrder.supplier.company_name}`
-                                                        : 'No supplier'}
-                                                </p>
-                                                <p>
-                                                    {purchaseOrder
-                                                        .purchase_request
-                                                        .request_no
-                                                        ? `PR: ${purchaseOrder.purchase_request.request_no}`
-                                                        : 'No purchase request'}
-                                                </p>
-                                                <p>
-                                                    {purchaseOrder.project
-                                                        .project_no
-                                                        ? `${purchaseOrder.project.project_no} - ${purchaseOrder.project.title}`
-                                                        : purchaseOrder
-                                                                .work_order
-                                                                .work_order_no
-                                                          ? `${purchaseOrder.work_order.work_order_no} - ${purchaseOrder.work_order.summary}`
-                                                          : 'No project / work order'}
-                                                </p>
-                                            </div>
-                                        </td>
+                            {purchaseOrders.data.map((purchaseOrder) => (
+                                <tr
+                                    key={purchaseOrder.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {purchaseOrder.po_no}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {purchaseOrder.supplier_reference ??
+                                                    'No supplier reference'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    Order date:{' '}
-                                                    {purchaseOrder.order_date ??
-                                                        'Not set'}
-                                                </p>
-                                                <p>
-                                                    Expected:{' '}
-                                                    {purchaseOrder.expected_date ??
-                                                        'Not set'}
-                                                </p>
-                                            </div>
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {purchaseOrder.supplier
+                                                    .company_name
+                                                    ? `${purchaseOrder.supplier.supplier_code} - ${purchaseOrder.supplier.company_name}`
+                                                    : 'No supplier'}
+                                            </p>
+                                            <p>
+                                                {purchaseOrder.purchase_request
+                                                    .request_no
+                                                    ? `PR: ${purchaseOrder.purchase_request.request_no}`
+                                                    : 'No purchase request'}
+                                            </p>
+                                            <p>
+                                                {purchaseOrder.project
+                                                    .project_no
+                                                    ? `${purchaseOrder.project.project_no} - ${purchaseOrder.project.title}`
+                                                    : purchaseOrder.work_order
+                                                            .work_order_no
+                                                      ? `${purchaseOrder.work_order.work_order_no} - ${purchaseOrder.work_order.summary}`
+                                                      : 'No project / work order'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={statusBadgeClass(
-                                                    purchaseOrder.status,
-                                                )}
-                                            >
-                                                {purchaseOrder.status_label}
-                                            </Badge>
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                Order date:{' '}
+                                                {purchaseOrder.order_date ??
+                                                    'Not set'}
+                                            </p>
+                                            <p>
+                                                Expected:{' '}
+                                                {purchaseOrder.expected_date ??
+                                                    'Not set'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    Ordered:{' '}
-                                                    {
-                                                        purchaseOrder.ordered_quantity_total
-                                                    }
-                                                </p>
-                                                <p>
-                                                    Received:{' '}
-                                                    {
-                                                        purchaseOrder.received_quantity_total
-                                                    }
-                                                </p>
-                                                <p>
-                                                    {
-                                                        purchaseOrder.receipt_count
-                                                    }{' '}
-                                                    receipts
-                                                </p>
-                                            </div>
-                                        </td>
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={statusBadgeClass(
+                                                purchaseOrder.status,
+                                            )}
+                                        >
+                                            {purchaseOrder.status_label}
+                                        </Badge>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                {purchaseOrder.can.view && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                Ordered:{' '}
+                                                {
+                                                    purchaseOrder.ordered_quantity_total
+                                                }
+                                            </p>
+                                            <p>
+                                                Received:{' '}
+                                                {
+                                                    purchaseOrder.received_quantity_total
+                                                }
+                                            </p>
+                                            <p>
+                                                {purchaseOrder.receipt_count}{' '}
+                                                receipts
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {purchaseOrder.can.view && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={purchaseOrdersShow(
+                                                            purchaseOrder.id,
+                                                        )}
                                                     >
-                                                        <Link
-                                                            href={purchaseOrdersShow(
-                                                                purchaseOrder.id,
-                                                            )}
-                                                        >
-                                                            Open
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
 
-                                                {purchaseOrder.can.update && (
-                                                    <Button size="sm" asChild>
-                                                        <Link
-                                                            href={purchaseOrdersEdit(
-                                                                purchaseOrder.id,
-                                                            )}
-                                                        >
-                                                            Edit
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={purchaseOrders} />
-                </Card>
+                                            {purchaseOrder.can.update && (
+                                                <Button size="sm" asChild>
+                                                    <Link
+                                                        href={purchaseOrdersEdit(
+                                                            purchaseOrder.id,
+                                                        )}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

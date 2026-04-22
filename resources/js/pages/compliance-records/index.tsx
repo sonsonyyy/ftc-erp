@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
 import {
     calendar as complianceRecordsCalendar,
@@ -9,7 +10,6 @@ import {
     show as complianceRecordsShow,
 } from '@/routes/compliance-records';
 import { index as complianceAlertsIndex } from '@/routes/compliance-alerts';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -176,10 +176,10 @@ export default function ComplianceRecordsIndex({
                     <IndexFiltersCard
                         action={complianceRecordsIndex()}
                         resetHref={complianceRecordsIndex()}
+                        filters={filters}
                         exportHref={exportHref}
                         description="Search by record number, title, agency, or notes, then narrow by status and owner."
                         activeFilterCount={activeFilterCount}
-                        fieldsClassName="xl:grid-cols-[2fr_1fr_1fr_1fr]"
                     >
                         <Input
                             name="search"
@@ -277,155 +277,141 @@ export default function ComplianceRecordsIndex({
                     </Card>
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Compliance registry</CardTitle>
-                        <CardDescription>
-                            {complianceRecords.total} compliance records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Compliance registry"
+                    description={`${complianceRecords.total} compliance records`}
+                    pagination={complianceRecords}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Record
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Agency / category
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Next deadline
+                                </th>
+                                <th className="px-6 py-3 font-medium">Owner</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Signals
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Record
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Agency / category
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Next deadline
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Owner
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Signals
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {complianceRecords.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No compliance records matched the
-                                            current filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {complianceRecords.data.map((record) => (
-                                    <tr
-                                        key={record.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {complianceRecords.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {record.record_no}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {record.title}
-                                                </p>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={statusBadgeClass(
-                                                        record.status,
+                                        No compliance records matched the
+                                        current filters.
+                                    </td>
+                                </tr>
+                            )}
+
+                            {complianceRecords.data.map((record) => (
+                                <tr
+                                    key={record.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {record.record_no}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {record.title}
+                                            </p>
+                                            <Badge
+                                                variant="outline"
+                                                className={statusBadgeClass(
+                                                    record.status,
+                                                )}
+                                            >
+                                                {record.status_label}
+                                            </Badge>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>{record.agency}</p>
+                                            <p>
+                                                {record.category ??
+                                                    'No category'}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {record.next_deadline_type
+                                                    ? `${record.next_deadline_type} • ${formatDate(record.next_deadline_date)}`
+                                                    : 'No deadline'}
+                                            </p>
+                                            <p className="text-xs">
+                                                Due:{' '}
+                                                {formatDate(record.due_date)}
+                                            </p>
+                                            <p className="text-xs">
+                                                Expiry:{' '}
+                                                {formatDate(record.expiry_date)}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {record.assigned_user ?? 'Unassigned'}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {record.submission_count}{' '}
+                                                submissions
+                                            </p>
+                                            <p>
+                                                {record.open_alert_count} open
+                                                alerts
+                                            </p>
+                                            <p>
+                                                {record.attachment_count}{' '}
+                                                attachments
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-right">
+                                        {record.can.view && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                            >
+                                                <Link
+                                                    href={complianceRecordsShow(
+                                                        record.id,
                                                     )}
                                                 >
-                                                    {record.status_label}
-                                                </Badge>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>{record.agency}</p>
-                                                <p>
-                                                    {record.category ??
-                                                        'No category'}
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {record.next_deadline_type
-                                                        ? `${record.next_deadline_type} • ${formatDate(record.next_deadline_date)}`
-                                                        : 'No deadline'}
-                                                </p>
-                                                <p className="text-xs">
-                                                    Due:{' '}
-                                                    {formatDate(
-                                                        record.due_date,
-                                                    )}
-                                                </p>
-                                                <p className="text-xs">
-                                                    Expiry:{' '}
-                                                    {formatDate(
-                                                        record.expiry_date,
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {record.assigned_user ??
-                                                'Unassigned'}
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {record.submission_count}{' '}
-                                                    submissions
-                                                </p>
-                                                <p>
-                                                    {record.open_alert_count}{' '}
-                                                    open alerts
-                                                </p>
-                                                <p>
-                                                    {record.attachment_count}{' '}
-                                                    attachments
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-right">
-                                            {record.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link
-                                                        href={complianceRecordsShow(
-                                                            record.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={complianceRecords} />
-                </Card>
+                                                    Open
+                                                </Link>
+                                            </Button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

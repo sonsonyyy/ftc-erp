@@ -6,8 +6,8 @@ import {
     show as stockIssuancesShow,
 } from '@/routes/stock-issuances';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -75,9 +75,9 @@ export default function StockIssuancesIndex({
                 <IndexFiltersCard
                     action={stockIssuancesIndex()}
                     resetHref={stockIssuancesIndex()}
+                    filters={filters}
                     description="Search issuances by reference, warehouse, project, or work order."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[1.5fr_1.2fr_1.2fr_1.2fr]"
                 >
                     <Input
                         name="search"
@@ -122,128 +122,113 @@ export default function StockIssuancesIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Issuance log</CardTitle>
-                        <CardDescription>
-                            {stockIssuances.total} issuance records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Issuance log"
+                    description={`${stockIssuances.total} issuance records`}
+                    pagination={stockIssuances}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Issuance
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Warehouse
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Project / work order
+                                </th>
+                                <th className="px-6 py-3 font-medium">Items</th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Issuance
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Warehouse
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Project / work order
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Items
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {stockIssuances.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={5}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No issuance records matched the
-                                            current filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {stockIssuances.data.map((issuance) => (
-                                    <tr
-                                        key={issuance.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {stockIssuances.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <p className="font-medium">
-                                                {issuance.issuance_no}
+                                        No issuance records matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
+
+                            {stockIssuances.data.map((issuance) => (
+                                <tr
+                                    key={issuance.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <p className="font-medium">
+                                            {issuance.issuance_no}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                            {issuance.issued_date ?? 'No date'}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {issuance.created_by ?? 'System'}
+                                        </p>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {issuance.warehouse.warehouse_code} -{' '}
+                                        {issuance.warehouse.warehouse_name}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {issuance.project.project_no ??
+                                                    'No project selected'}
                                             </p>
-                                            <p className="text-muted-foreground">
-                                                {issuance.issued_date ??
-                                                    'No date'}
+                                            <p>
+                                                {issuance.work_order
+                                                    .work_order_no ??
+                                                    'No work order selected'}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {issuance.created_by ??
-                                                    'System'}
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>{issuance.item_count} lines</p>
+                                            <p>
+                                                {issuance.total_quantity.toFixed(
+                                                    2,
+                                                )}{' '}
+                                                total quantity
                                             </p>
-                                        </td>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {issuance.warehouse.warehouse_code}{' '}
-                                            -{' '}
-                                            {issuance.warehouse.warehouse_name}
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {issuance.project
-                                                        .project_no ??
-                                                        'No project selected'}
-                                                </p>
-                                                <p>
-                                                    {issuance.work_order
-                                                        .work_order_no ??
-                                                        'No work order selected'}
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {issuance.item_count} lines
-                                                </p>
-                                                <p>
-                                                    {issuance.total_quantity.toFixed(
-                                                        2,
-                                                    )}{' '}
-                                                    total quantity
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4 text-right">
-                                            {issuance.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
+                                    <td className="px-6 py-4 text-right">
+                                        {issuance.can.view && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                            >
+                                                <Link
+                                                    href={stockIssuancesShow(
+                                                        issuance.id,
+                                                    )}
                                                 >
-                                                    <Link
-                                                        href={stockIssuancesShow(
-                                                            issuance.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={stockIssuances} />
-                </Card>
+                                                    Open
+                                                </Link>
+                                            </Button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

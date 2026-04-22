@@ -8,8 +8,8 @@ import {
 } from '@/routes/invoices';
 import { create as paymentsCreate } from '@/routes/payments';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -112,10 +112,10 @@ export default function InvoicesIndex({
                 <IndexFiltersCard
                     action={invoicesIndex()}
                     resetHref={invoicesIndex()}
+                    filters={filters}
                     exportHref={exportHref}
                     description="Search by invoice number, customer, quotation, project, work order, or billing remarks."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.3fr_1fr_1fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -156,214 +156,192 @@ export default function InvoicesIndex({
                     />
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Invoice list</CardTitle>
-                        <CardDescription>
-                            {invoices.total} invoice records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Invoice list"
+                    description={`${invoices.total} invoice records`}
+                    pagination={invoices}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Invoice
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Linked records
+                                </th>
+                                <th className="px-6 py-3 font-medium">Dates</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Amounts
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Invoice
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Linked records
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Dates
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Amounts
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {invoices.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No invoices matched the current
-                                            filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {invoices.data.map((invoice) => (
-                                    <tr
-                                        key={invoice.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {invoices.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {invoice.invoice_no}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {
-                                                        invoice.customer
-                                                            .customer_code
-                                                    }{' '}
-                                                    -{' '}
-                                                    {
-                                                        invoice.customer
-                                                            .company_name
-                                                    }
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {invoice.payment_count}{' '}
-                                                    payments •{' '}
-                                                    {invoice.attachment_count}{' '}
-                                                    attachments
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No invoices matched the current filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    {invoice.quotation
-                                                        .quotation_no
-                                                        ? `Quotation: ${invoice.quotation.quotation_no}`
-                                                        : 'No quotation linked'}
-                                                </p>
-                                                <p>
-                                                    {invoice.project.project_no
-                                                        ? `Project: ${invoice.project.project_no}`
-                                                        : 'No project linked'}
-                                                </p>
-                                                <p>
-                                                    {invoice.work_order
-                                                        .work_order_no
-                                                        ? `Work order: ${invoice.work_order.work_order_no}`
-                                                        : 'No work order linked'}
-                                                </p>
-                                            </div>
-                                        </td>
+                            {invoices.data.map((invoice) => (
+                                <tr
+                                    key={invoice.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {invoice.invoice_no}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {invoice.customer.customer_code}{' '}
+                                                -{' '}
+                                                {invoice.customer.company_name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {invoice.payment_count} payments
+                                                • {invoice.attachment_count}{' '}
+                                                attachments
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            <div className="space-y-1">
-                                                <p>
-                                                    Invoice:{' '}
-                                                    {formatDate(
-                                                        invoice.invoice_date,
-                                                    )}
-                                                </p>
-                                                <p>
-                                                    Due:{' '}
-                                                    {formatDate(
-                                                        invoice.due_date,
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {invoice.quotation.quotation_no
+                                                    ? `Quotation: ${invoice.quotation.quotation_no}`
+                                                    : 'No quotation linked'}
+                                            </p>
+                                            <p>
+                                                {invoice.project.project_no
+                                                    ? `Project: ${invoice.project.project_no}`
+                                                    : 'No project linked'}
+                                            </p>
+                                            <p>
+                                                {invoice.work_order
+                                                    .work_order_no
+                                                    ? `Work order: ${invoice.work_order.work_order_no}`
+                                                    : 'No work order linked'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {formatCurrency(
-                                                        invoice.total_amount,
-                                                    )}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    Paid:{' '}
-                                                    {formatCurrency(
-                                                        invoice.paid_amount,
-                                                    )}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    Balance:{' '}
-                                                    {formatCurrency(
-                                                        invoice.balance_amount,
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </td>
-
-                                        <td className="px-6 py-4">
-                                            <Badge
-                                                variant="outline"
-                                                className={statusBadgeClass(
-                                                    invoice.status,
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                Invoice:{' '}
+                                                {formatDate(
+                                                    invoice.invoice_date,
                                                 )}
-                                            >
-                                                {invoice.status_label}
-                                            </Badge>
-                                        </td>
+                                            </p>
+                                            <p>
+                                                Due:{' '}
+                                                {formatDate(invoice.due_date)}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                {invoice.can.record_payment && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {formatCurrency(
+                                                    invoice.total_amount,
+                                                )}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                Paid:{' '}
+                                                {formatCurrency(
+                                                    invoice.paid_amount,
+                                                )}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                Balance:{' '}
+                                                {formatCurrency(
+                                                    invoice.balance_amount,
+                                                )}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={statusBadgeClass(
+                                                invoice.status,
+                                            )}
+                                        >
+                                            {invoice.status_label}
+                                        </Badge>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {invoice.can.record_payment && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={paymentsCreate({
+                                                            query: {
+                                                                invoice:
+                                                                    invoice.id,
+                                                            },
+                                                        })}
                                                     >
-                                                        <Link
-                                                            href={paymentsCreate(
-                                                                {
-                                                                    query: {
-                                                                        invoice:
-                                                                            invoice.id,
-                                                                    },
-                                                                },
-                                                            )}
-                                                        >
-                                                            Collect
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                        Collect
+                                                    </Link>
+                                                </Button>
+                                            )}
 
-                                                {invoice.can.view && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
+                                            {invoice.can.view && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={invoicesShow(
+                                                            invoice.id,
+                                                        )}
                                                     >
-                                                        <Link
-                                                            href={invoicesShow(
-                                                                invoice.id,
-                                                            )}
-                                                        >
-                                                            Open
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
 
-                                                {invoice.can.update && (
-                                                    <Button size="sm" asChild>
-                                                        <Link
-                                                            href={invoicesEdit(
-                                                                invoice.id,
-                                                            )}
-                                                        >
-                                                            Edit
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={invoices} />
-                </Card>
+                                            {invoice.can.update && (
+                                                <Button size="sm" asChild>
+                                                    <Link
+                                                        href={invoicesEdit(
+                                                            invoice.id,
+                                                        )}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

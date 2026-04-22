@@ -5,8 +5,8 @@ import {
     show as purchaseReceiptsShow,
 } from '@/routes/purchase-receipts';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -57,9 +57,9 @@ export default function PurchaseReceiptsIndex({
                 <IndexFiltersCard
                     action={purchaseReceiptsIndex()}
                     resetHref={purchaseReceiptsIndex()}
+                    filters={filters}
                     description="Search by receipt number, PO number, supplier reference, supplier, or warehouse."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.2fr_1.2fr]"
                 >
                     <Input
                         name="search"
@@ -92,164 +92,145 @@ export default function PurchaseReceiptsIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Receipt registry</CardTitle>
-                        <CardDescription>
-                            {purchaseReceipts.total} receipt records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Receipt registry"
+                    description={`${purchaseReceipts.total} receipt records`}
+                    pagination={purchaseReceipts}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Receipt
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    PO / supplier
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Warehouse
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Quantity
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Received by
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Receipt
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        PO / supplier
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Warehouse
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Quantity
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Received by
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
+                        <tbody>
+                            {purchaseReceipts.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
+                                    >
+                                        No purchase receipts matched the current
+                                        filters.
+                                    </td>
                                 </tr>
-                            </thead>
+                            )}
 
-                            <tbody>
-                                {purchaseReceipts.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No purchase receipts matched the
-                                            current filters.
-                                        </td>
-                                    </tr>
-                                )}
+                            {purchaseReceipts.data.map((purchaseReceipt) => (
+                                <tr
+                                    key={purchaseReceipt.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {purchaseReceipt.receipt_no}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {purchaseReceipt.received_date ??
+                                                    'No date'}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {purchaseReceipt.supplier_reference ??
+                                                    'No supplier reference'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                {purchaseReceipts.data.map(
-                                    (purchaseReceipt) => (
-                                        <tr
-                                            key={purchaseReceipt.id}
-                                            className="border-b align-top last:border-0"
-                                        >
-                                            <td className="px-6 py-4">
-                                                <div className="space-y-1">
-                                                    <p className="font-medium">
-                                                        {
-                                                            purchaseReceipt.receipt_no
-                                                        }
-                                                    </p>
-                                                    <p className="text-muted-foreground">
-                                                        {purchaseReceipt.received_date ??
-                                                            'No date'}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {purchaseReceipt.supplier_reference ??
-                                                            'No supplier reference'}
-                                                    </p>
-                                                </div>
-                                            </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {purchaseReceipt.purchase_order
+                                                    .po_no ?? 'No PO linked'}
+                                            </p>
+                                            <p>
+                                                {purchaseReceipt.supplier
+                                                    .company_name
+                                                    ? `${purchaseReceipt.supplier.supplier_code} - ${purchaseReceipt.supplier.company_name}`
+                                                    : 'No supplier'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                <div className="space-y-1">
-                                                    <p>
-                                                        {purchaseReceipt
-                                                            .purchase_order
-                                                            .po_no ??
-                                                            'No PO linked'}
-                                                    </p>
-                                                    <p>
-                                                        {purchaseReceipt
-                                                            .supplier
-                                                            .company_name
-                                                            ? `${purchaseReceipt.supplier.supplier_code} - ${purchaseReceipt.supplier.company_name}`
-                                                            : 'No supplier'}
-                                                    </p>
-                                                </div>
-                                            </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {
+                                                    purchaseReceipt.warehouse
+                                                        .warehouse_code
+                                                }
+                                            </p>
+                                            <p>
+                                                {
+                                                    purchaseReceipt.warehouse
+                                                        .warehouse_name
+                                                }
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                <div className="space-y-1">
-                                                    <p>
-                                                        {
-                                                            purchaseReceipt
-                                                                .warehouse
-                                                                .warehouse_code
-                                                        }
-                                                    </p>
-                                                    <p>
-                                                        {
-                                                            purchaseReceipt
-                                                                .warehouse
-                                                                .warehouse_name
-                                                        }
-                                                    </p>
-                                                </div>
-                                            </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {
+                                                    purchaseReceipt.received_quantity_total
+                                                }{' '}
+                                                total
+                                            </p>
+                                            <p>
+                                                {purchaseReceipt.item_count}{' '}
+                                                items
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                <div className="space-y-1">
-                                                    <p>
-                                                        {
-                                                            purchaseReceipt.received_quantity_total
-                                                        }{' '}
-                                                        total
-                                                    </p>
-                                                    <p>
-                                                        {
-                                                            purchaseReceipt.item_count
-                                                        }{' '}
-                                                        items
-                                                    </p>
-                                                </div>
-                                            </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {purchaseReceipt.received_by ??
+                                            'Not recorded'}
+                                    </td>
 
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                {purchaseReceipt.received_by ??
-                                                    'Not recorded'}
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                <div className="flex justify-end gap-2">
-                                                    {purchaseReceipt.can
-                                                        .view && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            asChild
-                                                        >
-                                                            <Link
-                                                                href={purchaseReceiptsShow(
-                                                                    purchaseReceipt.id,
-                                                                )}
-                                                            >
-                                                                Open
-                                                            </Link>
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ),
-                                )}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={purchaseReceipts} />
-                </Card>
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {purchaseReceipt.can.view && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={purchaseReceiptsShow(
+                                                            purchaseReceipt.id,
+                                                        )}
+                                                    >
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

@@ -7,8 +7,8 @@ import {
     show as purchaseRequestsShow,
 } from '@/routes/purchase-requests';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -85,9 +85,9 @@ export default function PurchaseRequestsIndex({
                 <IndexFiltersCard
                     action={purchaseRequestsIndex()}
                     resetHref={purchaseRequestsIndex()}
+                    filters={filters}
                     description="Search by request number, purpose, supplier, project, or work order."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.2fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -117,188 +117,160 @@ export default function PurchaseRequestsIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Request registry</CardTitle>
-                        <CardDescription>
-                            {purchaseRequests.total} purchase requests
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Request registry"
+                    description={`${purchaseRequests.total} purchase requests`}
+                    pagination={purchaseRequests}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Request
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Supplier / context
+                                </th>
+                                <th className="px-6 py-3 font-medium">Dates</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 font-medium">Lines</th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Request
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Supplier / context
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Dates
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Lines
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
+                        <tbody>
+                            {purchaseRequests.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
+                                    >
+                                        No purchase requests matched the current
+                                        filters.
+                                    </td>
                                 </tr>
-                            </thead>
+                            )}
 
-                            <tbody>
-                                {purchaseRequests.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
+                            {purchaseRequests.data.map((purchaseRequest) => (
+                                <tr
+                                    key={purchaseRequest.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {purchaseRequest.request_no}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {purchaseRequest.purpose}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {purchaseRequest.supplier
+                                                    .company_name
+                                                    ? `${purchaseRequest.supplier.supplier_code} - ${purchaseRequest.supplier.company_name}`
+                                                    : 'No supplier selected'}
+                                            </p>
+                                            <p>
+                                                {purchaseRequest.project
+                                                    .project_no
+                                                    ? `${purchaseRequest.project.project_no} - ${purchaseRequest.project.title}`
+                                                    : 'No project'}
+                                            </p>
+                                            <p>
+                                                {purchaseRequest.work_order
+                                                    .work_order_no
+                                                    ? `${purchaseRequest.work_order.work_order_no} - ${purchaseRequest.work_order.summary}`
+                                                    : 'No work order'}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                Requested:{' '}
+                                                {purchaseRequest.request_date ??
+                                                    'Not set'}
+                                            </p>
+                                            <p>
+                                                Needed by:{' '}
+                                                {purchaseRequest.needed_by ??
+                                                    'Not set'}
+                                            </p>
+                                        </div>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className={statusBadgeClass(
+                                                purchaseRequest.status,
+                                            )}
                                         >
-                                            No purchase requests matched the
-                                            current filters.
-                                        </td>
-                                    </tr>
-                                )}
+                                            {purchaseRequest.status_label}
+                                        </Badge>
+                                    </td>
 
-                                {purchaseRequests.data.map(
-                                    (purchaseRequest) => (
-                                        <tr
-                                            key={purchaseRequest.id}
-                                            className="border-b align-top last:border-0"
-                                        >
-                                            <td className="px-6 py-4">
-                                                <div className="space-y-1">
-                                                    <p className="font-medium">
-                                                        {
-                                                            purchaseRequest.request_no
-                                                        }
-                                                    </p>
-                                                    <p className="text-muted-foreground">
-                                                        {
-                                                            purchaseRequest.purpose
-                                                        }
-                                                    </p>
-                                                </div>
-                                            </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        <div className="space-y-1">
+                                            <p>
+                                                {purchaseRequest.item_count}{' '}
+                                                items
+                                            </p>
+                                            <p>
+                                                {
+                                                    purchaseRequest.purchase_order_count
+                                                }{' '}
+                                                orders
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                <div className="space-y-1">
-                                                    <p>
-                                                        {purchaseRequest
-                                                            .supplier
-                                                            .company_name
-                                                            ? `${purchaseRequest.supplier.supplier_code} - ${purchaseRequest.supplier.company_name}`
-                                                            : 'No supplier selected'}
-                                                    </p>
-                                                    <p>
-                                                        {purchaseRequest.project
-                                                            .project_no
-                                                            ? `${purchaseRequest.project.project_no} - ${purchaseRequest.project.title}`
-                                                            : 'No project'}
-                                                    </p>
-                                                    <p>
-                                                        {purchaseRequest
-                                                            .work_order
-                                                            .work_order_no
-                                                            ? `${purchaseRequest.work_order.work_order_no} - ${purchaseRequest.work_order.summary}`
-                                                            : 'No work order'}
-                                                    </p>
-                                                </div>
-                                            </td>
-
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                <div className="space-y-1">
-                                                    <p>
-                                                        Requested:{' '}
-                                                        {purchaseRequest.request_date ??
-                                                            'Not set'}
-                                                    </p>
-                                                    <p>
-                                                        Needed by:{' '}
-                                                        {purchaseRequest.needed_by ??
-                                                            'Not set'}
-                                                    </p>
-                                                </div>
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                <Badge
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {purchaseRequest.can.view && (
+                                                <Button
                                                     variant="outline"
-                                                    className={statusBadgeClass(
-                                                        purchaseRequest.status,
-                                                    )}
+                                                    size="sm"
+                                                    asChild
                                                 >
-                                                    {
-                                                        purchaseRequest.status_label
-                                                    }
-                                                </Badge>
-                                            </td>
+                                                    <Link
+                                                        href={purchaseRequestsShow(
+                                                            purchaseRequest.id,
+                                                        )}
+                                                    >
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
 
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                <div className="space-y-1">
-                                                    <p>
-                                                        {
-                                                            purchaseRequest.item_count
-                                                        }{' '}
-                                                        items
-                                                    </p>
-                                                    <p>
-                                                        {
-                                                            purchaseRequest.purchase_order_count
-                                                        }{' '}
-                                                        orders
-                                                    </p>
-                                                </div>
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                <div className="flex justify-end gap-2">
-                                                    {purchaseRequest.can
-                                                        .view && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            asChild
-                                                        >
-                                                            <Link
-                                                                href={purchaseRequestsShow(
-                                                                    purchaseRequest.id,
-                                                                )}
-                                                            >
-                                                                Open
-                                                            </Link>
-                                                        </Button>
-                                                    )}
-
-                                                    {purchaseRequest.can
-                                                        .update && (
-                                                        <Button
-                                                            size="sm"
-                                                            asChild
-                                                        >
-                                                            <Link
-                                                                href={purchaseRequestsEdit(
-                                                                    purchaseRequest.id,
-                                                                )}
-                                                            >
-                                                                Edit
-                                                            </Link>
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ),
-                                )}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={purchaseRequests} />
-                </Card>
+                                            {purchaseRequest.can.update && (
+                                                <Button size="sm" asChild>
+                                                    <Link
+                                                        href={purchaseRequestsEdit(
+                                                            purchaseRequest.id,
+                                                        )}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

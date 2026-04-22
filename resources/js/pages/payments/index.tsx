@@ -6,8 +6,8 @@ import {
     show as paymentsShow,
 } from '@/routes/payments';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -76,9 +76,9 @@ export default function PaymentsIndex({
                 <IndexFiltersCard
                     action={paymentsIndex()}
                     resetHref={paymentsIndex()}
+                    filters={filters}
                     description="Search by payment number, customer, reference number, or invoice number."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.3fr_1fr_1fr]"
                 >
                     <Input
                         name="search"
@@ -110,114 +110,106 @@ export default function PaymentsIndex({
                     />
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Payment list</CardTitle>
-                        <CardDescription>
-                            {payments.total} payment records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Payment list"
+                    description={`${payments.total} payment records`}
+                    pagination={payments}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Payment
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Customer
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Amount
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Allocations
+                                </th>
+                                <th className="px-6 py-3 text-right font-medium">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Payment
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Customer
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Amount
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Allocations
-                                    </th>
-                                    <th className="px-6 py-3 text-right font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {payments.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={5}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No payments matched the current
-                                            filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {payments.data.map((payment) => (
-                                    <tr
-                                        key={payment.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {payments.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <p className="font-medium">
-                                                    {payment.payment_no}
-                                                </p>
-                                                <p className="text-muted-foreground">
-                                                    {payment.payment_method}
-                                                    {payment.reference_no &&
-                                                        ` • ${payment.reference_no}`}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {payment.payment_date ??
-                                                        'No date'}{' '}
-                                                    •{' '}
-                                                    {payment.recorded_by ??
-                                                        'No recorder'}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No payments matched the current filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {payment.customer.customer_code} -{' '}
-                                            {payment.customer.company_name}
-                                        </td>
+                            {payments.data.map((payment) => (
+                                <tr
+                                    key={payment.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <p className="font-medium">
+                                                {payment.payment_no}
+                                            </p>
+                                            <p className="text-muted-foreground">
+                                                {payment.payment_method}
+                                                {payment.reference_no &&
+                                                    ` • ${payment.reference_no}`}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {payment.payment_date ??
+                                                    'No date'}{' '}
+                                                •{' '}
+                                                {payment.recorded_by ??
+                                                    'No recorder'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 font-medium">
-                                            {formatCurrency(payment.amount)}
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {payment.customer.customer_code} -{' '}
+                                        {payment.customer.company_name}
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            {payment.allocation_count}
-                                        </td>
+                                    <td className="px-6 py-4 font-medium">
+                                        {formatCurrency(payment.amount)}
+                                    </td>
 
-                                        <td className="px-6 py-4">
-                                            <div className="flex justify-end gap-2">
-                                                {payment.can.view && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
+                                    <td className="px-6 py-4">
+                                        {payment.allocation_count}
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            {payment.can.view && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={paymentsShow(
+                                                            payment.id,
+                                                        )}
                                                     >
-                                                        <Link
-                                                            href={paymentsShow(
-                                                                payment.id,
-                                                            )}
-                                                        >
-                                                            Open
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
-
-                    <PaginationLinks pagination={payments} />
-                </Card>
+                                                        Open
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );

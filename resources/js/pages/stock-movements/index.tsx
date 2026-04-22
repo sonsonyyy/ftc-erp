@@ -5,8 +5,8 @@ import {
     index as stockMovementsIndex,
 } from '@/routes/stock-movements';
 import { FilterSelect } from '@/components/filter-select';
+import { DataTableCard } from '@/components/data-table-card';
 import { IndexFiltersCard } from '@/components/index-filters-card';
-import { PaginationLinks } from '@/components/pagination-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -74,9 +74,9 @@ export default function StockMovementsIndex({
                 <IndexFiltersCard
                     action={stockMovementsIndex()}
                     resetHref={stockMovementsIndex()}
+                    filters={filters}
                     description="Search by reference, warehouse, item, or movement type."
                     activeFilterCount={activeFilterCount}
-                    fieldsClassName="xl:grid-cols-[2fr_1.2fr_1.4fr_1.2fr]"
                 >
                     <Input
                         name="search"
@@ -115,105 +115,91 @@ export default function StockMovementsIndex({
                     </FilterSelect>
                 </IndexFiltersCard>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Movement log</CardTitle>
-                        <CardDescription>
-                            {movements.total} movement records
-                        </CardDescription>
-                    </CardHeader>
+                <DataTableCard
+                    title="Movement log"
+                    description={`${movements.total} movement records`}
+                    pagination={movements}
+                >
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b text-left text-muted-foreground">
+                                <th className="px-6 py-3 font-medium">
+                                    Movement
+                                </th>
+                                <th className="px-6 py-3 font-medium">Item</th>
+                                <th className="px-6 py-3 font-medium">
+                                    Warehouse
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Quantity
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Balance after
+                                </th>
+                                <th className="px-6 py-3 font-medium">
+                                    Recorded
+                                </th>
+                            </tr>
+                        </thead>
 
-                    <CardContent className="overflow-x-auto px-0">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                                <tr className="border-b text-left text-muted-foreground">
-                                    <th className="px-6 py-3 font-medium">
-                                        Movement
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Item
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Warehouse
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Quantity
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Balance after
-                                    </th>
-                                    <th className="px-6 py-3 font-medium">
-                                        Recorded
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {movements.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-10 text-center text-muted-foreground"
-                                        >
-                                            No movement records matched the
-                                            current filters.
-                                        </td>
-                                    </tr>
-                                )}
-
-                                {movements.data.map((movement) => (
-                                    <tr
-                                        key={movement.id}
-                                        className="border-b align-top last:border-0"
+                        <tbody>
+                            {movements.data.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-10 text-center text-muted-foreground"
                                     >
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1">
-                                                <Badge variant="outline">
-                                                    {
-                                                        movement.movement_type_label
-                                                    }
-                                                </Badge>
-                                                <p className="text-muted-foreground">
-                                                    {movement.reference_number ??
-                                                        'No reference number'}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {movement.remarks ??
-                                                        'No remarks'}
-                                                </p>
-                                            </div>
-                                        </td>
+                                        No movement records matched the current
+                                        filters.
+                                    </td>
+                                </tr>
+                            )}
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {movement.inventory_item.item_code}{' '}
-                                            -{' '}
-                                            {movement.inventory_item.item_name}
-                                        </td>
+                            {movements.data.map((movement) => (
+                                <tr
+                                    key={movement.id}
+                                    className="border-b align-top last:border-0"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="space-y-1">
+                                            <Badge variant="outline">
+                                                {movement.movement_type_label}
+                                            </Badge>
+                                            <p className="text-muted-foreground">
+                                                {movement.reference_number ??
+                                                    'No reference number'}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {movement.remarks ??
+                                                    'No remarks'}
+                                            </p>
+                                        </div>
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {movement.warehouse.warehouse_code}{' '}
-                                            -{' '}
-                                            {movement.warehouse.warehouse_name}
-                                        </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {movement.inventory_item.item_code} -{' '}
+                                        {movement.inventory_item.item_name}
+                                    </td>
 
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {movement.quantity.toFixed(2)}
-                                        </td>
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {movement.balance_after.toFixed(2)}
-                                        </td>
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {movement.movement_date ??
-                                                'No date'}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </CardContent>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {movement.warehouse.warehouse_code} -{' '}
+                                        {movement.warehouse.warehouse_name}
+                                    </td>
 
-                    <PaginationLinks pagination={movements} />
-                </Card>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {movement.quantity.toFixed(2)}
+                                    </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {movement.balance_after.toFixed(2)}
+                                    </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                        {movement.movement_date ?? 'No date'}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </DataTableCard>
             </div>
         </>
     );
