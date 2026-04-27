@@ -1,6 +1,10 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { calendar as complianceRecordsCalendar, index as complianceRecordsIndex, show as complianceRecordsShow } from '@/routes/compliance-records';
+import {
+    calendar as complianceRecordsCalendar,
+    index as complianceRecordsIndex,
+    show as complianceRecordsShow,
+} from '@/routes/compliance-records';
 import { index as complianceAlertsIndex } from '@/routes/compliance-alerts';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,19 +48,21 @@ function formatDate(date: string | null): string {
 }
 
 function statusBadgeClass(status: string): string {
-    return {
-        draft: 'border-slate-200 bg-slate-100 text-slate-700',
-        active: 'border-sky-200 bg-sky-50 text-sky-700',
-        due_soon: 'border-amber-200 bg-amber-50 text-amber-700',
-        for_renewal: 'border-violet-200 bg-violet-50 text-violet-700',
-        for_filing: 'border-cyan-200 bg-cyan-50 text-cyan-700',
-        in_progress: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-        submitted: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        renewed: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        expired: 'border-rose-200 bg-rose-50 text-rose-700',
-        overdue: 'border-rose-200 bg-rose-50 text-rose-700',
-        archived: 'border-stone-200 bg-stone-100 text-stone-700',
-    }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700';
+    return (
+        {
+            draft: 'border-slate-200 bg-slate-100 text-slate-700',
+            active: 'border-sky-200 bg-sky-50 text-sky-700',
+            due_soon: 'border-amber-200 bg-amber-50 text-amber-700',
+            for_renewal: 'border-violet-200 bg-violet-50 text-violet-700',
+            for_filing: 'border-cyan-200 bg-cyan-50 text-cyan-700',
+            in_progress: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+            submitted: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+            renewed: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+            expired: 'border-rose-200 bg-rose-50 text-rose-700',
+            overdue: 'border-rose-200 bg-rose-50 text-rose-700',
+            archived: 'border-stone-200 bg-stone-100 text-stone-700',
+        }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700'
+    );
 }
 
 export default function ComplianceCalendar({
@@ -68,7 +74,9 @@ export default function ComplianceCalendar({
     statusOptions,
     agencyOptions,
 }: Props) {
-    const groupedEvents = events.reduce<Record<string, ComplianceCalendarEvent[]>>((carry, event) => {
+    const groupedEvents = events.reduce<
+        Record<string, ComplianceCalendarEvent[]>
+    >((carry, event) => {
         carry[event.date] = carry[event.date] ?? [];
         carry[event.date].push(event);
 
@@ -79,12 +87,15 @@ export default function ComplianceCalendar({
         <>
             <Head title="Compliance Calendar" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div className="space-y-1">
-                        <h1 className="text-2xl font-semibold tracking-tight">Compliance calendar</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Compliance calendar
+                        </h1>
                         <p className="text-sm text-muted-foreground">
-                            Review upcoming due dates, expiring permits, and overdue filings in a readable schedule.
+                            Review upcoming due dates, expiring permits, and
+                            overdue filings in a readable schedule.
                         </p>
                     </div>
 
@@ -94,7 +105,9 @@ export default function ComplianceCalendar({
                         </Button>
 
                         <Button variant="outline" asChild>
-                            <Link href={complianceRecordsIndex()}>Registry</Link>
+                            <Link href={complianceRecordsIndex()}>
+                                Registry
+                            </Link>
                         </Button>
                     </div>
                 </div>
@@ -133,7 +146,8 @@ export default function ComplianceCalendar({
                     <CardHeader>
                         <CardTitle>Calendar filters</CardTitle>
                         <CardDescription>
-                            Showing deadlines between {formatDate(window.from)} and {formatDate(window.to)}.
+                            Showing deadlines between {formatDate(window.from)}{' '}
+                            and {formatDate(window.to)}.
                         </CardDescription>
                     </CardHeader>
 
@@ -147,11 +161,14 @@ export default function ComplianceCalendar({
                             <select
                                 name="agency"
                                 defaultValue={filters.agency}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">All agencies</option>
                                 {agencyOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
@@ -160,23 +177,36 @@ export default function ComplianceCalendar({
                             <select
                                 name="status"
                                 defaultValue={filters.status}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">All statuses</option>
                                 {statusOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
                             </select>
 
-                            <Input name="from" type="date" defaultValue={filters.from} />
-                            <Input name="to" type="date" defaultValue={filters.to} />
+                            <Input
+                                name="from"
+                                type="date"
+                                defaultValue={filters.from}
+                            />
+                            <Input
+                                name="to"
+                                type="date"
+                                defaultValue={filters.to}
+                            />
 
                             <Button type="submit">Apply</Button>
 
                             <Button variant="outline" asChild>
-                                <Link href={complianceRecordsCalendar()}>Reset</Link>
+                                <Link href={complianceRecordsCalendar()}>
+                                    Reset
+                                </Link>
                             </Button>
                         </Form>
                     </CardContent>
@@ -194,61 +224,90 @@ export default function ComplianceCalendar({
                         <CardContent className="space-y-4">
                             {Object.keys(groupedEvents).length === 0 && (
                                 <div className="rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
-                                    No deadline events matched the selected window.
+                                    No deadline events matched the selected
+                                    window.
                                 </div>
                             )}
 
-                            {Object.entries(groupedEvents).map(([date, dateEvents]) => (
-                                <div key={date} className="rounded-xl border">
-                                    <div className="border-b bg-muted/20 px-4 py-3">
-                                        <p className="font-medium">{formatDate(date)}</p>
-                                    </div>
+                            {Object.entries(groupedEvents).map(
+                                ([date, dateEvents]) => (
+                                    <div
+                                        key={date}
+                                        className="rounded-xl border"
+                                    >
+                                        <div className="border-b bg-muted/20 px-4 py-3">
+                                            <p className="font-medium">
+                                                {formatDate(date)}
+                                            </p>
+                                        </div>
 
-                                    <div className="space-y-3 p-4">
-                                        {dateEvents.map((event) => (
-                                            <div key={`${event.id}-${event.deadline_type}-${event.date}`} className="rounded-lg border px-4 py-3">
-                                                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                                                    <div className="space-y-2">
-                                                        <div className="flex flex-wrap items-center gap-2">
-                                                            <p className="font-medium">
-                                                                {event.record_no}
+                                        <div className="space-y-3 p-4">
+                                            {dateEvents.map((event) => (
+                                                <div
+                                                    key={`${event.id}-${event.deadline_type}-${event.date}`}
+                                                    className="rounded-lg border px-4 py-3"
+                                                >
+                                                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                                        <div className="space-y-2">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <p className="font-medium">
+                                                                    {
+                                                                        event.record_no
+                                                                    }
+                                                                </p>
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className={statusBadgeClass(
+                                                                        event.display_status,
+                                                                    )}
+                                                                >
+                                                                    {
+                                                                        event.display_status_label
+                                                                    }
+                                                                </Badge>
+                                                            </div>
+
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {event.title}
                                                             </p>
-                                                            <Badge
-                                                                variant="outline"
-                                                                className={statusBadgeClass(event.display_status)}
-                                                            >
-                                                                {event.display_status_label}
-                                                            </Badge>
+
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {event.agency}
+                                                                {event.category &&
+                                                                    ` • ${event.category}`}
+                                                                {event.assigned_user &&
+                                                                    ` • ${event.assigned_user}`}
+                                                            </p>
                                                         </div>
 
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {event.title}
-                                                        </p>
+                                                        <div className="flex flex-col items-start gap-2 md:items-end">
+                                                            <Badge variant="secondary">
+                                                                {
+                                                                    event.deadline_type_label
+                                                                }
+                                                            </Badge>
 
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {event.agency}
-                                                            {event.category && ` • ${event.category}`}
-                                                            {event.assigned_user && ` • ${event.assigned_user}`}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="flex flex-col items-start gap-2 md:items-end">
-                                                        <Badge variant="secondary">
-                                                            {event.deadline_type_label}
-                                                        </Badge>
-
-                                                        <Button variant="outline" size="sm" asChild>
-                                                            <Link href={complianceRecordsShow(event.id)}>
-                                                                Open
-                                                            </Link>
-                                                        </Button>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                asChild
+                                                            >
+                                                                <Link
+                                                                    href={complianceRecordsShow(
+                                                                        event.id,
+                                                                    )}
+                                                                >
+                                                                    Open
+                                                                </Link>
+                                                            </Button>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ),
+                            )}
                         </CardContent>
                     </Card>
 
@@ -256,38 +315,61 @@ export default function ComplianceCalendar({
                         <CardHeader>
                             <CardTitle>Overdue and expired</CardTitle>
                             <CardDescription>
-                                Items already past deadline and needing immediate attention.
+                                Items already past deadline and needing
+                                immediate attention.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-3">
                             {overdueItems.length === 0 && (
                                 <div className="rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
-                                    No overdue or expired items under the current filters.
+                                    No overdue or expired items under the
+                                    current filters.
                                 </div>
                             )}
 
                             {overdueItems.map((item) => (
-                                <div key={item.id} className="rounded-lg border px-4 py-3">
+                                <div
+                                    key={item.id}
+                                    className="rounded-lg border px-4 py-3"
+                                >
                                     <div className="flex flex-col gap-3">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <p className="font-medium">{item.record_no}</p>
+                                            <p className="font-medium">
+                                                {item.record_no}
+                                            </p>
                                             <Badge
                                                 variant="outline"
-                                                className={statusBadgeClass(item.display_status)}
+                                                className={statusBadgeClass(
+                                                    item.display_status,
+                                                )}
                                             >
                                                 {item.display_status_label}
                                             </Badge>
                                         </div>
 
-                                        <p className="text-sm text-muted-foreground">{item.title}</p>
-
-                                        <p className="text-xs text-muted-foreground">
-                                            Due: {formatDate(item.due_date)} • Expiry: {formatDate(item.expiry_date)}
+                                        <p className="text-sm text-muted-foreground">
+                                            {item.title}
                                         </p>
 
-                                        <Button variant="outline" size="sm" asChild>
-                                            <Link href={complianceRecordsShow(item.id)}>Open</Link>
+                                        <p className="text-xs text-muted-foreground">
+                                            Due: {formatDate(item.due_date)} •
+                                            Expiry:{' '}
+                                            {formatDate(item.expiry_date)}
+                                        </p>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            asChild
+                                        >
+                                            <Link
+                                                href={complianceRecordsShow(
+                                                    item.id,
+                                                )}
+                                            >
+                                                Open
+                                            </Link>
                                         </Button>
                                     </div>
                                 </div>

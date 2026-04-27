@@ -13,6 +13,10 @@ use Inertia\Response;
 
 class AccountsReceivableController extends Controller
 {
+    private const PER_PAGE = 15;
+
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display the accounts-receivable aging view.
      */
@@ -25,6 +29,7 @@ class AccountsReceivableController extends Controller
         $status = $request->string('status')->toString();
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
+        $perPage = $this->resolvePerPage($request);
 
         $baseQuery = Invoice::query()
             ->with([
@@ -47,7 +52,7 @@ class AccountsReceivableController extends Controller
         $reportData = (clone $baseQuery)
             ->orderByDesc('invoice_date')
             ->orderByDesc('id')
-            ->paginate(15)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Invoice $invoice) => $this->reportRow($invoice));
 
@@ -62,6 +67,7 @@ class AccountsReceivableController extends Controller
                 'status' => $status,
                 'from' => $from,
                 'to' => $to,
+                'per_page' => $perPage,
             ],
             'customerOptions' => $this->customerOptions(),
             'statusOptions' => $this->statusOptions(),
@@ -269,5 +275,17 @@ class AccountsReceivableController extends Controller
     private function normalizeDateFilter(string $value): ?string
     {
         return filled($value) ? $value : null;
+    }
+
+    /**
+     * Resolve a supported page size for paginated listings.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

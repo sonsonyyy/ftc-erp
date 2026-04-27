@@ -93,14 +93,18 @@ class Warehouse extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('warehouse_code', 'like', "%{$term}%")
-                ->orWhere('warehouse_name', 'like', "%{$term}%")
-                ->orWhere('address', 'like', "%{$term}%")
-                ->orWhere('contact_person', 'like', "%{$term}%")
-                ->orWhere('contact_no', 'like', "%{$term}%")
-                ->orWhere('notes', 'like', "%{$term}%");
+                ->where('warehouse_code', $operator, "%{$term}%")
+                ->orWhere('warehouse_name', $operator, "%{$term}%")
+                ->orWhere('address', $operator, "%{$term}%")
+                ->orWhere('contact_person', $operator, "%{$term}%")
+                ->orWhere('contact_no', $operator, "%{$term}%")
+                ->orWhere('notes', $operator, "%{$term}%");
         });
     }
 

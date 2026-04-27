@@ -1,8 +1,15 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { create as payrollRunsCreate, index as payrollRunsIndex } from '@/routes/payroll-runs';
+import {
+    create as payrollRunsCreate,
+    index as payrollRunsIndex,
+} from '@/routes/payroll-runs';
 import { PayrollRunForm } from '@/components/payroll/payroll-run-form';
-import type { PayrollEmployeeOption, PayrollRunFormDefaults, SelectOption } from '@/types';
+import type {
+    PayrollEmployeeOption,
+    PayrollRunFormDefaults,
+    SelectOption,
+} from '@/types';
 
 type Props = {
     employeeOptions: PayrollEmployeeOption[];
@@ -19,7 +26,7 @@ export default function PayrollRunsCreate({
         <>
             <Head title="New Payroll Run" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <PayrollRunForm
                     employeeOptions={employeeOptions}
                     statusOptions={statusOptions}

@@ -1,84 +1,149 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Archive, Pencil, Plus, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     create as inventoryCategoriesCreate,
+    destroy as inventoryCategoriesDestroy,
     edit as inventoryCategoriesEdit,
     index as inventoryCategoriesIndex,
 } from '@/routes/inventory-categories';
-import { DataTableCard } from '@/components/data-table-card';
-import { IndexFiltersCard } from '@/components/index-filters-card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import type { InventoryCategoryListItem, PaginatedData } from '@/types';
+import type {
+    InventoryCategoryFilters,
+    InventoryCategoryListItem,
+    PaginatedData,
+} from '@/types';
 
 type Props = {
     categories: PaginatedData<InventoryCategoryListItem>;
-    filters: {
-        search: string;
-    };
+    filters: InventoryCategoryFilters;
     can: {
         create: boolean;
     };
 };
+
+const categoryBreadcrumbs = [
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+    },
+    {
+        title: 'Categories',
+        href: inventoryCategoriesIndex(),
+    },
+];
+
+const perPageOptions = ['5', '10', '15', '25'];
 
 export default function InventoryCategoriesIndex({
     categories,
     filters,
     can,
 }: Props) {
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [perPage, setPerPage] = useState(String(filters.per_page));
+
+    useEffect(() => {
+        const nextPerPage = String(filters.per_page);
+
+        setPerPage((currentPerPage) =>
+            currentPerPage === nextPerPage ? currentPerPage : nextPerPage,
+        );
+    }, [filters.per_page]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentPerPage = String(filters.per_page);
+
+        if (normalizedSearch === filters.search && perPage === currentPerPage) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(inventoryCategoriesIndex()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    per_page: Number(perPage),
+                    page: 1,
+                }),
+                {
+                    only: ['categories', 'filters'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [filters.per_page, filters.search, perPage, searchInput]);
+
     return (
         <>
-            <Head title="Inventory Categories" />
+            <Head title="Categories" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
-                            Inventory Categories
+                            Categories
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Keep item classification clean so inventory
-                            reporting and low-stock review stay readable.
+                            Keep inventory classification clear and consistent.
                         </p>
                     </div>
 
                     {can.create && (
                         <Button asChild>
                             <Link href={inventoryCategoriesCreate()}>
+                                <Plus />
                                 New category
                             </Link>
                         </Button>
                     )}
                 </div>
 
-                <IndexFiltersCard
-                    action={inventoryCategoriesIndex()}
-                    resetHref={inventoryCategoriesIndex()}
-                    filters={filters}
-                    description="Search inventory categories by name or description."
-                >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search categories"
-                    />
-                </IndexFiltersCard>
+                <div className="flex flex-col gap-3">
+                    <div className="relative w-full sm:max-w-sm">
+                        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            value={searchInput}
+                            onChange={(event) =>
+                                setSearchInput(event.currentTarget.value)
+                            }
+                            placeholder="Search categories"
+                            className="h-9 pl-9"
+                        />
+                    </div>
+                </div>
 
-                <DataTableCard
-                    title="Category registry"
-                    description={`${categories.total} category records`}
-                    pagination={categories}
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={categories}
+                            perPage={perPage}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setPerPage(value);
+                            }}
+                        />
+                    }
                 >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">
-                                    Category
-                                </th>
-                                <th className="px-6 py-3 font-medium">Items</th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>Category</th>
+                                <th className="text-right">Items</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
 
@@ -87,63 +152,85 @@ export default function InventoryCategoriesIndex({
                                 <tr>
                                     <td
                                         colSpan={3}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No categories matched the current
-                                        filters.
+                                        search.
                                     </td>
                                 </tr>
                             )}
 
                             {categories.data.map((category) => (
-                                <tr
-                                    key={category.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
-                                        <p className="font-medium">
-                                            {category.name}
-                                        </p>
-                                        <p className="mt-1 text-muted-foreground">
-                                            {category.description ??
-                                                'No description'}
-                                        </p>
+                                <tr key={category.id}>
+                                    <td>
+                                        <div className="space-y-0.5">
+                                            <p className="max-w-[18rem] truncate font-semibold text-foreground">
+                                                {category.name}
+                                            </p>
+                                            <p className="max-w-[24rem] truncate text-[13px] text-muted-foreground">
+                                                {category.description ??
+                                                    'No description'}
+                                            </p>
+                                        </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
+                                    <td className="text-right font-medium tabular-nums">
                                         {category.item_count}
                                     </td>
 
-                                    <td className="px-6 py-4 text-right">
-                                        {category.can.update && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                asChild
-                                            >
-                                                <Link
-                                                    href={inventoryCategoriesEdit(
-                                                        category.id,
-                                                    )}
-                                                >
-                                                    Edit
-                                                </Link>
-                                            </Button>
-                                        )}
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={[
+                                                    ...(category.can.update
+                                                        ? [
+                                                              {
+                                                                  key: 'edit',
+                                                                  label: 'Edit',
+                                                                  icon: Pencil,
+                                                                  href: inventoryCategoriesEdit(
+                                                                      category.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(category.can.delete
+                                                        ? [
+                                                              {
+                                                                  key: 'archive',
+                                                                  label: 'Archive',
+                                                                  icon: Archive,
+                                                                  destructive: true,
+                                                                  onSelect:
+                                                                      () =>
+                                                                          router.delete(
+                                                                              toUrl(
+                                                                                  inventoryCategoriesDestroy(
+                                                                                      category.id,
+                                                                                  ),
+                                                                              ),
+                                                                              {
+                                                                                  preserveScroll: true,
+                                                                              },
+                                                                          ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                ]}
+                                                label={`Open actions for ${category.name}`}
+                                            />
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );
 }
 
 InventoryCategoriesIndex.layout = {
-    breadcrumbs: [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Inventory Categories', href: inventoryCategoriesIndex() },
-    ],
+    breadcrumbs: categoryBreadcrumbs,
 };

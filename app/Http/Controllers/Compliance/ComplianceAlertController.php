@@ -15,6 +15,8 @@ class ComplianceAlertController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of compliance alerts.
      */
@@ -26,20 +28,24 @@ class ComplianceAlertController extends Controller
         $type = $request->string('type')->toString();
         $acknowledged = $request->string('acknowledged')->toString();
         $agency = $request->string('agency')->toString();
+        $perPage = $this->resolvePerPage($request);
+        $operator = ComplianceAlert::query()->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
 
         $alerts = ComplianceAlert::query()
             ->with([
                 'acknowledgedBy:id,name',
                 'complianceRecord:id,record_no,title,agency',
             ])
-            ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($builder) use ($search): void {
+            ->when($search !== '', function ($query) use ($search, $operator): void {
+                $query->where(function ($builder) use ($search, $operator): void {
                     $builder
-                        ->where('message', 'like', "%{$search}%")
-                        ->orWhereHas('complianceRecord', function ($recordQuery) use ($search): void {
+                        ->where('message', $operator, "%{$search}%")
+                        ->orWhereHas('complianceRecord', function ($recordQuery) use ($search, $operator): void {
                             $recordQuery
-                                ->where('record_no', 'like', "%{$search}%")
-                                ->orWhere('title', 'like', "%{$search}%");
+                                ->where('record_no', $operator, "%{$search}%")
+                                ->orWhere('title', $operator, "%{$search}%");
                         });
                 });
             })
@@ -53,7 +59,7 @@ class ComplianceAlertController extends Controller
             ->orderByRaw('acknowledged_at is not null')
             ->orderBy('scheduled_for')
             ->orderByDesc('id')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (ComplianceAlert $alert) => $this->alertListItem($request, $alert));
 
@@ -64,6 +70,7 @@ class ComplianceAlertController extends Controller
                 'type' => $type,
                 'acknowledged' => $acknowledged,
                 'agency' => $agency,
+                'per_page' => $perPage,
             ],
             'typeOptions' => collect(ComplianceAlertType::cases())
                 ->map(fn (ComplianceAlertType $alertType) => [
@@ -149,5 +156,17 @@ class ComplianceAlertController extends Controller
                 'value' => $agency,
                 'label' => $agency,
             ])->all();
+    }
+
+    /**
+     * Resolve the validated page size for the compliance alerts table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

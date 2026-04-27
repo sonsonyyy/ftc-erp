@@ -20,6 +20,12 @@ export type SupplierListItem = {
     };
 };
 
+export type SupplierFilters = {
+    search: string;
+    activity: string;
+    per_page: number;
+};
+
 export type SupplierPurchaseRequestSnippet = {
     id: number;
     request_no: string;
@@ -83,6 +89,7 @@ export type PurchaseRequestFilters = {
     search: string;
     supplier: number | null;
     status: string;
+    per_page: number;
 };
 
 export type PurchaseRequestLineInput = {
@@ -228,6 +235,7 @@ export type PurchaseOrderFilters = {
     search: string;
     supplier: number | null;
     status: string;
+    per_page: number;
 };
 
 export type PurchaseOrderRequestLinePreset = {
@@ -409,6 +417,7 @@ export type PurchaseReceiptFilters = {
     search: string;
     supplier: number | null;
     warehouse: number | null;
+    per_page: number;
 };
 
 export type PurchaseReceiptFormDefaults = {

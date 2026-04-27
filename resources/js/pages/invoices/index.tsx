@@ -1,4 +1,36 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    ChevronDown,
+    CreditCard,
+    Download,
+    Ellipsis,
+    Eye,
+    Pencil,
+    Plus,
+    Search,
+    SlidersHorizontal,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     create as invoicesCreate,
@@ -7,20 +39,6 @@ import {
     show as invoicesShow,
 } from '@/routes/invoices';
 import { create as paymentsCreate } from '@/routes/payments';
-import { FilterSelect } from '@/components/filter-select';
-import { DataTableCard } from '@/components/data-table-card';
-import { IndexFiltersCard } from '@/components/index-filters-card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { cleanQueryParams, countActiveFilters } from '@/lib/utils';
 import type {
     InvoiceFilters,
     InvoiceListItem,
@@ -37,6 +55,19 @@ type Props = {
         create: boolean;
     };
 };
+
+const invoiceBreadcrumbs = [
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+    },
+    {
+        title: 'Invoices',
+        href: invoicesIndex(),
+    },
+];
+
+const perPageOptions = ['5', '10', '15', '25'];
 
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {
@@ -78,10 +109,115 @@ export default function InvoicesIndex({
     statusOptions,
     can,
 }: Props) {
-    const activeFilterCount = countActiveFilters(filters);
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [tableFilters, setTableFilters] = useState({
+        customer: filters.customer === null ? '' : String(filters.customer),
+        status: filters.status,
+        from: filters.from ?? '',
+        to: filters.to ?? '',
+        per_page: String(filters.per_page),
+    });
+
+    useEffect(() => {
+        setTableFilters((currentFilters) => {
+            const nextFilters = {
+                customer:
+                    filters.customer === null ? '' : String(filters.customer),
+                status: filters.status,
+                from: filters.from ?? '',
+                to: filters.to ?? '',
+                per_page: String(filters.per_page),
+            };
+
+            if (
+                currentFilters.customer === nextFilters.customer &&
+                currentFilters.status === nextFilters.status &&
+                currentFilters.from === nextFilters.from &&
+                currentFilters.to === nextFilters.to &&
+                currentFilters.per_page === nextFilters.per_page
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [
+        filters.customer,
+        filters.from,
+        filters.per_page,
+        filters.status,
+        filters.to,
+    ]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentCustomer =
+            filters.customer === null ? '' : String(filters.customer);
+        const currentPerPage = String(filters.per_page);
+
+        if (
+            normalizedSearch === filters.search &&
+            tableFilters.customer === currentCustomer &&
+            tableFilters.status === filters.status &&
+            tableFilters.from === (filters.from ?? '') &&
+            tableFilters.to === (filters.to ?? '') &&
+            tableFilters.per_page === currentPerPage
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(invoicesIndex()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    customer:
+                        tableFilters.customer === ''
+                            ? undefined
+                            : Number(tableFilters.customer),
+                    status: tableFilters.status,
+                    from: tableFilters.from,
+                    to: tableFilters.to,
+                    per_page: Number(tableFilters.per_page),
+                    page: 1,
+                }),
+                {
+                    only: ['invoices', 'filters'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.customer,
+        filters.from,
+        filters.per_page,
+        filters.search,
+        filters.status,
+        filters.to,
+        searchInput,
+        tableFilters,
+    ]);
+
+    const activeFilterCount =
+        (tableFilters.customer === '' ? 0 : 1) +
+        (tableFilters.status === '' ? 0 : 1) +
+        (tableFilters.from === '' ? 0 : 1) +
+        (tableFilters.to === '' ? 0 : 1);
     const exportHref = invoicesIndex({
         query: cleanQueryParams({
-            ...filters,
+            search: searchInput.trim(),
+            customer:
+                tableFilters.customer === ''
+                    ? undefined
+                    : Number(tableFilters.customer),
+            status: tableFilters.status,
+            from: tableFilters.from,
+            to: tableFilters.to,
             export: 'csv',
         }),
     });
@@ -90,96 +226,225 @@ export default function InvoicesIndex({
         <>
             <Head title="Invoices" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Invoices
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Manage customer billings, linked operational
-                            references, and receivable balances in one place.
+                            Billing records and receivable balances.
                         </p>
                     </div>
 
                     {can.create && (
                         <Button asChild>
-                            <Link href={invoicesCreate()}>New invoice</Link>
+                            <Link href={invoicesCreate()}>
+                                <Plus />
+                                New invoice
+                            </Link>
                         </Button>
                     )}
                 </div>
 
-                <IndexFiltersCard
-                    action={invoicesIndex()}
-                    resetHref={invoicesIndex()}
-                    filters={filters}
-                    exportHref={exportHref}
-                    description="Search by invoice number, customer, quotation, project, work order, or billing remarks."
-                    activeFilterCount={activeFilterCount}
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={searchInput}
+                                onChange={(event) =>
+                                    setSearchInput(event.currentTarget.value)
+                                }
+                                placeholder="Search invoices"
+                                className="h-9 pl-9"
+                            />
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <SlidersHorizontal />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                    <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="start" className="w-72">
+                                <DropdownMenuLabel>Status</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuRadioGroup
+                                    value={
+                                        tableFilters.status === ''
+                                            ? 'all'
+                                            : tableFilters.status
+                                    }
+                                    onValueChange={(value) => {
+                                        router.cancelAll();
+                                        setTableFilters((currentFilters) => ({
+                                            ...currentFilters,
+                                            status:
+                                                value === 'all' ? '' : value,
+                                        }));
+                                    }}
+                                >
+                                    <DropdownMenuRadioItem value="all">
+                                        All statuses
+                                    </DropdownMenuRadioItem>
+                                    {statusOptions.map((option) => (
+                                        <DropdownMenuRadioItem
+                                            key={option.value}
+                                            value={String(option.value)}
+                                        >
+                                            {option.label}
+                                        </DropdownMenuRadioItem>
+                                    ))}
+                                </DropdownMenuRadioGroup>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Customer
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.customer === ''
+                                                    ? 'all'
+                                                    : tableFilters.customer
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        customer:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All customers
+                                            </DropdownMenuRadioItem>
+                                            {customerOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <div className="space-y-3 p-2">
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            Invoice date from
+                                        </p>
+                                        <Input
+                                            type="date"
+                                            value={tableFilters.from}
+                                            onChange={(event) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        from: event
+                                                            .currentTarget
+                                                            .value,
+                                                    }),
+                                                );
+                                            }}
+                                            className="h-9"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            Invoice date to
+                                        </p>
+                                        <Input
+                                            type="date"
+                                            value={tableFilters.to}
+                                            onChange={(event) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        to: event.currentTarget
+                                                            .value,
+                                                    }),
+                                                );
+                                            }}
+                                            className="h-9"
+                                        />
+                                    </div>
+                                </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 bg-background"
+                            >
+                                <Ellipsis />
+                                Actions
+                                <ChevronDown />
+                            </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem asChild>
+                                <a href={toUrl(exportHref)}>
+                                    <Download />
+                                    Export CSV
+                                </a>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={invoices}
+                            perPage={tableFilters.per_page}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    per_page: value,
+                                }));
+                            }}
+                        />
+                    }
                 >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search invoices"
-                    />
-
-                    <FilterSelect
-                        name="customer"
-                        defaultValue={filters.customer ?? ''}
-                    >
-                        <option value="">All customers</option>
-                        {customerOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect name="status" defaultValue={filters.status}>
-                        <option value="">All statuses</option>
-                        {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <Input
-                        name="from"
-                        type="date"
-                        defaultValue={filters.from ?? ''}
-                    />
-                    <Input
-                        name="to"
-                        type="date"
-                        defaultValue={filters.to ?? ''}
-                    />
-                </IndexFiltersCard>
-
-                <DataTableCard
-                    title="Invoice list"
-                    description={`${invoices.total} invoice records`}
-                    pagination={invoices}
-                >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">
-                                    Invoice
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Linked records
-                                </th>
-                                <th className="px-6 py-3 font-medium">Dates</th>
-                                <th className="px-6 py-3 font-medium">
-                                    Amounts
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Linked records</th>
+                                <th>Dates</th>
+                                <th className="text-right">Amounts</th>
+                                <th>Status</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
 
@@ -188,7 +453,7 @@ export default function InvoicesIndex({
                                 <tr>
                                     <td
                                         colSpan={6}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No invoices matched the current filters.
                                     </td>
@@ -196,87 +461,60 @@ export default function InvoicesIndex({
                             )}
 
                             {invoices.data.map((invoice) => (
-                                <tr
-                                    key={invoice.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
-                                        <div className="space-y-1">
-                                            <p className="font-medium">
+                                <tr key={invoice.id}>
+                                    <td>
+                                        <div className="space-y-0.5">
+                                            <p className="max-w-[14rem] truncate font-semibold text-foreground">
                                                 {invoice.invoice_no}
                                             </p>
-                                            <p className="text-muted-foreground">
-                                                {invoice.customer.customer_code}{' '}
-                                                -{' '}
-                                                {invoice.customer.company_name}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {invoice.payment_count} payments
-                                                • {invoice.attachment_count}{' '}
-                                                attachments
+                                            <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
+                                                {invoice.customer.company_name
+                                                    ? `${invoice.customer.customer_code} • ${invoice.customer.company_name}`
+                                                    : 'No customer linked'}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
-                                                {invoice.quotation.quotation_no
-                                                    ? `Quotation: ${invoice.quotation.quotation_no}`
-                                                    : 'No quotation linked'}
-                                            </p>
-                                            <p>
-                                                {invoice.project.project_no
-                                                    ? `Project: ${invoice.project.project_no}`
-                                                    : 'No project linked'}
-                                            </p>
-                                            <p>
-                                                {invoice.work_order
-                                                    .work_order_no
-                                                    ? `Work order: ${invoice.work_order.work_order_no}`
-                                                    : 'No work order linked'}
-                                            </p>
-                                        </div>
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[18rem] truncate">
+                                            {invoice.quotation.quotation_no
+                                                ? `Quote • ${invoice.quotation.quotation_no}`
+                                                : 'No quotation linked'}
+                                        </p>
+                                        <p className="max-w-[18rem] truncate">
+                                            {invoice.project.project_no
+                                                ? `${invoice.project.project_no} • ${invoice.project.title ?? 'Project'}`
+                                                : invoice.work_order
+                                                        .work_order_no
+                                                  ? `${invoice.work_order.work_order_no} • ${invoice.work_order.summary ?? 'Work order'}`
+                                                  : 'No project or work order'}
+                                        </p>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
-                                                Invoice:{' '}
-                                                {formatDate(
-                                                    invoice.invoice_date,
-                                                )}
-                                            </p>
-                                            <p>
-                                                Due:{' '}
-                                                {formatDate(invoice.due_date)}
-                                            </p>
-                                        </div>
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p>
+                                            {formatDate(invoice.invoice_date)}
+                                        </p>
+                                        <p>
+                                            Due {formatDate(invoice.due_date)}
+                                        </p>
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <div className="space-y-1">
-                                            <p className="font-medium">
-                                                {formatCurrency(
-                                                    invoice.total_amount,
-                                                )}
-                                            </p>
-                                            <p className="text-muted-foreground">
-                                                Paid:{' '}
-                                                {formatCurrency(
-                                                    invoice.paid_amount,
-                                                )}
-                                            </p>
-                                            <p className="text-muted-foreground">
-                                                Balance:{' '}
-                                                {formatCurrency(
-                                                    invoice.balance_amount,
-                                                )}
-                                            </p>
-                                        </div>
+                                    <td className="text-right text-[13px] text-muted-foreground">
+                                        <p className="font-medium text-foreground tabular-nums">
+                                            {formatCurrency(
+                                                invoice.total_amount,
+                                            )}
+                                        </p>
+                                        <p className="truncate">
+                                            Bal{' '}
+                                            {formatCurrency(
+                                                invoice.balance_amount,
+                                            )}
+                                        </p>
                                     </td>
 
-                                    <td className="px-6 py-4">
+                                    <td>
                                         <Badge
                                             variant="outline"
                                             className={statusBadgeClass(
@@ -287,75 +525,67 @@ export default function InvoicesIndex({
                                         </Badge>
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-2">
-                                            {invoice.can.record_payment && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link
-                                                        href={paymentsCreate({
-                                                            query: {
-                                                                invoice:
-                                                                    invoice.id,
-                                                            },
-                                                        })}
-                                                    >
-                                                        Collect
-                                                    </Link>
-                                                </Button>
-                                            )}
-
-                                            {invoice.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link
-                                                        href={invoicesShow(
-                                                            invoice.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
-                                            )}
-
-                                            {invoice.can.update && (
-                                                <Button size="sm" asChild>
-                                                    <Link
-                                                        href={invoicesEdit(
-                                                            invoice.id,
-                                                        )}
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                </Button>
-                                            )}
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={[
+                                                    ...(invoice.can
+                                                        .record_payment
+                                                        ? [
+                                                              {
+                                                                  key: 'collect',
+                                                                  label: 'Collect',
+                                                                  icon: CreditCard,
+                                                                  href: paymentsCreate(
+                                                                      {
+                                                                          query: {
+                                                                              invoice:
+                                                                                  invoice.id,
+                                                                          },
+                                                                      },
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(invoice.can.view
+                                                        ? [
+                                                              {
+                                                                  key: 'open',
+                                                                  label: 'Open',
+                                                                  icon: Eye,
+                                                                  href: invoicesShow(
+                                                                      invoice.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(invoice.can.update
+                                                        ? [
+                                                              {
+                                                                  key: 'edit',
+                                                                  label: 'Edit',
+                                                                  icon: Pencil,
+                                                                  href: invoicesEdit(
+                                                                      invoice.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                ]}
+                                                label={`Open actions for ${invoice.invoice_no}`}
+                                            />
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );
 }
 
 InvoicesIndex.layout = {
-    breadcrumbs: [
-        {
-            title: 'Dashboard',
-            href: dashboard(),
-        },
-        {
-            title: 'Invoices',
-            href: invoicesIndex(),
-        },
-    ],
+    breadcrumbs: invoiceBreadcrumbs,
 };

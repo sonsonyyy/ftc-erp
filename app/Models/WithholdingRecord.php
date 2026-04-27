@@ -51,12 +51,16 @@ class WithholdingRecord extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('reference_no', 'like', "%{$term}%")
-                ->orWhere('subject_name', 'like', "%{$term}%")
-                ->orWhere('subject_tin', 'like', "%{$term}%")
-                ->orWhere('subject_identifier', 'like', "%{$term}%");
+                ->where('reference_no', $operator, "%{$term}%")
+                ->orWhere('subject_name', $operator, "%{$term}%")
+                ->orWhere('subject_tin', $operator, "%{$term}%")
+                ->orWhere('subject_identifier', $operator, "%{$term}%");
         });
     }
 

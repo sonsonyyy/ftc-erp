@@ -148,6 +148,14 @@ export type ProjectFilters = {
     search: string;
     customer: number | null;
     status: string;
+    per_page: number;
+};
+
+export type ProjectIndexSummary = {
+    total_projects: number;
+    active_projects: number;
+    completed_projects: number;
+    linked_work_orders: number;
 };
 
 export type ProjectStatusOption = SelectOption;

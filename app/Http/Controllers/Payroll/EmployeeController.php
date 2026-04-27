@@ -19,6 +19,8 @@ class EmployeeController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -31,6 +33,7 @@ class EmployeeController extends Controller
         $positionId = $request->integer('position') ?: null;
         $employmentStatus = $request->string('employment_status')->toString();
         $active = $request->string('active')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $employees = Employee::query()
             ->with([
@@ -45,18 +48,20 @@ class EmployeeController extends Controller
             ->active($active)
             ->orderBy('last_name')
             ->orderBy('first_name')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Employee $employee) => $this->employeeListItem($request, $employee));
 
         return Inertia::render('employees/index', [
             'employees' => $employees,
+            'summary' => $this->employeeSummary(),
             'filters' => [
                 'search' => $search,
                 'department' => $departmentId,
                 'position' => $positionId,
                 'employment_status' => $employmentStatus,
                 'active' => $active,
+                'per_page' => $perPage,
             ],
             'departmentOptions' => $this->departmentOptions(),
             'positionOptions' => $this->positionOptions(),
@@ -326,6 +331,24 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Build employee summary metrics for the index.
+     *
+     * @return array<string, int>
+     */
+    private function employeeSummary(): array
+    {
+        return [
+            'total_employees' => Employee::query()->count(),
+            'active_employees' => Employee::query()->where('is_active', true)->count(),
+            'inactive_employees' => Employee::query()->where('is_active', false)->count(),
+            'assigned_departments' => Employee::query()
+                ->whereNotNull('department_id')
+                ->distinct('department_id')
+                ->count('department_id'),
+        ];
+    }
+
+    /**
      * Build employment status options.
      *
      * @return array<int, array{value:string,label:string}>
@@ -350,5 +373,17 @@ class EmployeeController extends Controller
             ['value' => 'active', 'label' => 'Active only'],
             ['value' => 'inactive', 'label' => 'Inactive only'],
         ];
+    }
+
+    /**
+     * Resolve the validated page size for the employee table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

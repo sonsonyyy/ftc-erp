@@ -1,16 +1,34 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    Archive,
+    ChevronDown,
+    Pencil,
+    Plus,
+    Search,
+    SlidersHorizontal,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     create as departmentsCreate,
+    destroy as departmentsDestroy,
     edit as departmentsEdit,
     index as departmentsIndex,
 } from '@/routes/departments';
-import { DataTableCard } from '@/components/data-table-card';
-import { FilterSelect } from '@/components/filter-select';
-import { IndexFiltersCard } from '@/components/index-filters-card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import type { DepartmentListItem, PaginatedData, SelectOption } from '@/types';
 
 type Props = {
@@ -18,12 +36,15 @@ type Props = {
     filters: {
         search: string;
         active: string;
+        per_page: number;
     };
     activityOptions: SelectOption[];
     can: {
         create: boolean;
     };
 };
+
+const perPageOptions = ['5', '10', '15', '25'];
 
 function activityBadgeClass(isActive: boolean): string {
     return isActive
@@ -37,73 +58,186 @@ export default function DepartmentsIndex({
     activityOptions,
     can,
 }: Props) {
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [tableFilters, setTableFilters] = useState({
+        active: filters.active,
+        per_page: String(filters.per_page),
+    });
+
+    useEffect(() => {
+        setTableFilters((currentFilters) => {
+            const nextFilters = {
+                active: filters.active,
+                per_page: String(filters.per_page),
+            };
+
+            if (
+                currentFilters.active === nextFilters.active &&
+                currentFilters.per_page === nextFilters.per_page
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [filters.active, filters.per_page]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentPerPage = String(filters.per_page);
+
+        if (
+            normalizedSearch === filters.search &&
+            tableFilters.active === filters.active &&
+            tableFilters.per_page === currentPerPage
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(departmentsIndex()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    active: tableFilters.active,
+                    per_page: Number(tableFilters.per_page),
+                    page: 1,
+                }),
+                {
+                    only: ['departments', 'filters'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.active,
+        filters.per_page,
+        filters.search,
+        searchInput,
+        tableFilters,
+    ]);
+
+    const activeFilterCount = tableFilters.active === '' ? 0 : 1;
+
     return (
         <>
             <Head title="Departments" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Departments
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Maintain the department structure used by employee
-                            records, positions, and payroll filtering.
+                            Department structure for employees and payroll
+                            filters.
                         </p>
                     </div>
 
                     {can.create && (
                         <Button asChild>
                             <Link href={departmentsCreate()}>
+                                <Plus />
                                 New department
                             </Link>
                         </Button>
                     )}
                 </div>
 
-                <IndexFiltersCard
-                    action={departmentsIndex()}
-                    resetHref={departmentsIndex()}
-                    filters={filters}
-                    description="Search department names and narrow the list by active or inactive status."
-                >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search departments"
-                    />
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={searchInput}
+                                onChange={(event) =>
+                                    setSearchInput(event.currentTarget.value)
+                                }
+                                placeholder="Search departments"
+                                className="h-9 pl-9"
+                            />
+                        </div>
 
-                    <FilterSelect name="active" defaultValue={filters.active}>
-                        <option value="">All statuses</option>
-                        {activityOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-                </IndexFiltersCard>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <SlidersHorizontal />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                    <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
 
-                <DataTableCard
-                    title="Department list"
-                    description={`${departments.total} department records`}
-                    pagination={departments}
+                            <DropdownMenuContent align="start" className="w-56">
+                                <DropdownMenuRadioGroup
+                                    value={
+                                        tableFilters.active === ''
+                                            ? 'all'
+                                            : tableFilters.active
+                                    }
+                                    onValueChange={(value) => {
+                                        router.cancelAll();
+                                        setTableFilters((currentFilters) => ({
+                                            ...currentFilters,
+                                            active:
+                                                value === 'all' ? '' : value,
+                                        }));
+                                    }}
+                                >
+                                    <DropdownMenuRadioItem value="all">
+                                        All statuses
+                                    </DropdownMenuRadioItem>
+                                    {activityOptions.map((option) => (
+                                        <DropdownMenuRadioItem
+                                            key={option.value}
+                                            value={String(option.value)}
+                                        >
+                                            {option.label}
+                                        </DropdownMenuRadioItem>
+                                    ))}
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={departments}
+                            perPage={tableFilters.per_page}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    per_page: value,
+                                }));
+                            }}
+                        />
+                    }
                 >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">
-                                    Department
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    People structure
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>Department</th>
+                                <th className="text-right">People structure</th>
+                                <th>Status</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -111,7 +245,7 @@ export default function DepartmentsIndex({
                                 <tr>
                                     <td
                                         colSpan={4}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        className="py-10 text-center text-muted-foreground"
                                     >
                                         No departments matched the current
                                         filters.
@@ -120,26 +254,33 @@ export default function DepartmentsIndex({
                             )}
 
                             {departments.data.map((department) => (
-                                <tr
-                                    key={department.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
+                                <tr key={department.id}>
+                                    <td>
                                         <div className="space-y-1">
-                                            <p className="font-medium">
+                                            <p className="truncate font-medium text-foreground">
                                                 {department.name}
                                             </p>
-                                            <p className="text-muted-foreground">
+                                            <p className="truncate text-[13px] text-muted-foreground">
                                                 {department.description ??
                                                     'No description'}
                                             </p>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        {department.position_count} positions •{' '}
-                                        {department.employee_count} employees
+
+                                    <td className="text-right text-[13px]">
+                                        <p className="font-medium text-foreground tabular-nums">
+                                            {department.position_count}{' '}
+                                            positions
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                            <span className="tabular-nums">
+                                                {department.employee_count}
+                                            </span>{' '}
+                                            employees
+                                        </p>
                                     </td>
-                                    <td className="px-6 py-4">
+
+                                    <td>
                                         <Badge
                                             variant="outline"
                                             className={activityBadgeClass(
@@ -151,26 +292,55 @@ export default function DepartmentsIndex({
                                                 : 'Inactive'}
                                         </Badge>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-2">
-                                            {department.can.update && (
-                                                <Button size="sm" asChild>
-                                                    <Link
-                                                        href={departmentsEdit(
-                                                            department.id,
-                                                        )}
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                </Button>
-                                            )}
+
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={[
+                                                    ...(department.can.update
+                                                        ? [
+                                                              {
+                                                                  key: 'edit',
+                                                                  label: 'Edit',
+                                                                  icon: Pencil,
+                                                                  href: departmentsEdit(
+                                                                      department.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(department.can.delete
+                                                        ? [
+                                                              {
+                                                                  key: 'archive',
+                                                                  label: 'Archive',
+                                                                  icon: Archive,
+                                                                  destructive: true,
+                                                                  onSelect:
+                                                                      () =>
+                                                                          router.delete(
+                                                                              toUrl(
+                                                                                  departmentsDestroy(
+                                                                                      department.id,
+                                                                                  ),
+                                                                              ),
+                                                                              {
+                                                                                  preserveScroll: true,
+                                                                              },
+                                                                          ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                ]}
+                                                label={`Open actions for ${department.name}`}
+                                            />
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );

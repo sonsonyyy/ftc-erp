@@ -1,8 +1,16 @@
 import { Head, Link } from '@inertiajs/react';
 import CustomerController from '@/actions/App/Http/Controllers/Customers/CustomerController';
 import { dashboard } from '@/routes';
-import { index as customersIndex, edit as customersEdit } from '@/routes/customers';
-import { create as sitesCreate, index as sitesIndex, show as sitesShow, edit as sitesEdit } from '@/routes/sites';
+import {
+    index as customersIndex,
+    edit as customersEdit,
+} from '@/routes/customers';
+import {
+    create as sitesCreate,
+    index as sitesIndex,
+    show as sitesShow,
+    edit as sitesEdit,
+} from '@/routes/sites';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,7 +41,7 @@ export default function CustomersShow({ customer }: Props) {
         <>
             <Head title={customer.company_name} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
@@ -70,14 +78,18 @@ export default function CustomersShow({ customer }: Props) {
 
                         {customer.can.update && (
                             <Button asChild>
-                                <Link href={customersEdit(customer.id)}>Edit customer</Link>
+                                <Link href={customersEdit(customer.id)}>
+                                    Edit customer
+                                </Link>
                             </Button>
                         )}
 
                         {customer.can.delete && (
                             <Button variant="outline" asChild>
                                 <Link
-                                    href={CustomerController.destroy(customer.id)}
+                                    href={CustomerController.destroy(
+                                        customer.id,
+                                    )}
                                     method="delete"
                                     as="button"
                                 >
@@ -118,20 +130,25 @@ export default function CustomersShow({ customer }: Props) {
                         <CardHeader>
                             <CardTitle>Customer information</CardTitle>
                             <CardDescription>
-                                Master record details used by future quotations, projects, and billing.
+                                Master record details used by future quotations,
+                                projects, and billing.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="grid gap-5 md:grid-cols-2">
                             <div>
-                                <p className="text-sm text-muted-foreground">Phone</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Phone
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {customer.phone ?? 'Not set'}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Email</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Email
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {customer.email ?? 'Not set'}
                                 </p>
@@ -141,14 +158,16 @@ export default function CustomersShow({ customer }: Props) {
                                 <p className="text-sm text-muted-foreground">
                                     Billing address
                                 </p>
-                                <p className="mt-1 whitespace-pre-line font-medium">
+                                <p className="mt-1 font-medium whitespace-pre-line">
                                     {customer.billing_address ?? 'Not set'}
                                 </p>
                             </div>
 
                             <div className="md:col-span-2">
-                                <p className="text-sm text-muted-foreground">Notes</p>
-                                <p className="mt-1 whitespace-pre-line font-medium">
+                                <p className="text-sm text-muted-foreground">
+                                    Notes
+                                </p>
+                                <p className="mt-1 font-medium whitespace-pre-line">
                                     {customer.notes ?? 'No notes'}
                                 </p>
                             </div>
@@ -159,7 +178,8 @@ export default function CustomersShow({ customer }: Props) {
                         <CardHeader>
                             <CardTitle>Customer sites</CardTitle>
                             <CardDescription>
-                                Active project and service locations linked to this customer.
+                                Active project and service locations linked to
+                                this customer.
                             </CardDescription>
                         </CardHeader>
 
@@ -181,9 +201,13 @@ export default function CustomersShow({ customer }: Props) {
                                                 {site.site_name}
                                             </p>
                                             <p className="text-sm text-muted-foreground">
-                                                {site.site_code ?? 'No site code'}
+                                                {site.site_code ??
+                                                    'No site code'}
                                                 {(site.city || site.province) &&
-                                                    ` • ${[site.city, site.province]
+                                                    ` • ${[
+                                                        site.city,
+                                                        site.province,
+                                                    ]
                                                         .filter(Boolean)
                                                         .join(', ')}`}
                                             </p>
@@ -197,13 +221,19 @@ export default function CustomersShow({ customer }: Props) {
                                                     : 'border-slate-200 bg-slate-100 text-slate-700'
                                             }
                                         >
-                                            {site.is_active ? 'Active' : 'Inactive'}
+                                            {site.is_active
+                                                ? 'Active'
+                                                : 'Inactive'}
                                         </Badge>
                                     </div>
 
                                     <div className="flex flex-wrap gap-2">
                                         {site.can.view && (
-                                            <Button variant="outline" size="sm" asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                asChild
+                                            >
                                                 <Link href={sitesShow(site.id)}>
                                                     Open
                                                 </Link>

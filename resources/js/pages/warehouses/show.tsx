@@ -1,9 +1,18 @@
 import { Head, Link } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { create as stockMovementsCreate } from '@/routes/stock-movements';
-import { edit as warehousesEdit, index as warehousesIndex } from '@/routes/warehouses';
+import {
+    edit as warehousesEdit,
+    index as warehousesIndex,
+} from '@/routes/warehouses';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import type { WarehouseDetail } from '@/types';
 
 type Props = {
@@ -15,11 +24,15 @@ export default function WarehousesShow({ warehouse }: Props) {
         <>
             <Head title={warehouse.warehouse_code} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-1">
-                        <h1 className="text-2xl font-semibold tracking-tight">{warehouse.warehouse_code}</h1>
-                        <p className="text-sm text-muted-foreground">{warehouse.warehouse_name}</p>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            {warehouse.warehouse_code}
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            {warehouse.warehouse_name}
+                        </p>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -37,7 +50,9 @@ export default function WarehousesShow({ warehouse }: Props) {
 
                         {warehouse.can.update && (
                             <Button asChild>
-                                <Link href={warehousesEdit(warehouse.id)}>Edit warehouse</Link>
+                                <Link href={warehousesEdit(warehouse.id)}>
+                                    Edit warehouse
+                                </Link>
                             </Button>
                         )}
                     </div>
@@ -48,33 +63,58 @@ export default function WarehousesShow({ warehouse }: Props) {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Warehouse information</CardTitle>
-                                <CardDescription>Operational warehouse details and balance context for the stock location.</CardDescription>
+                                <CardDescription>
+                                    Operational warehouse details and balance
+                                    context for the stock location.
+                                </CardDescription>
                             </CardHeader>
 
                             <CardContent className="grid gap-5 md:grid-cols-2">
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Address</p>
-                                    <p className="mt-1 whitespace-pre-line font-medium">{warehouse.address ?? 'Not set'}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Address
+                                    </p>
+                                    <p className="mt-1 font-medium whitespace-pre-line">
+                                        {warehouse.address ?? 'Not set'}
+                                    </p>
                                 </div>
 
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Contact person</p>
-                                    <p className="mt-1 font-medium">{warehouse.contact_person ?? 'Not set'}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Contact person
+                                    </p>
+                                    <p className="mt-1 font-medium">
+                                        {warehouse.contact_person ?? 'Not set'}
+                                    </p>
                                 </div>
 
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Contact number</p>
-                                    <p className="mt-1 font-medium">{warehouse.contact_no ?? 'Not set'}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Contact number
+                                    </p>
+                                    <p className="mt-1 font-medium">
+                                        {warehouse.contact_no ?? 'Not set'}
+                                    </p>
                                 </div>
 
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Availability</p>
-                                    <p className="mt-1 font-medium">{warehouse.is_active ? 'Active' : 'Inactive'}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Availability
+                                    </p>
+                                    <p className="mt-1 font-medium">
+                                        {warehouse.is_active
+                                            ? 'Active'
+                                            : 'Inactive'}
+                                    </p>
                                 </div>
 
                                 <div className="md:col-span-2">
-                                    <p className="text-sm text-muted-foreground">Notes</p>
-                                    <p className="mt-1 whitespace-pre-line font-medium">{warehouse.notes ?? 'No notes recorded'}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Notes
+                                    </p>
+                                    <p className="mt-1 font-medium whitespace-pre-line">
+                                        {warehouse.notes ?? 'No notes recorded'}
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -82,7 +122,10 @@ export default function WarehousesShow({ warehouse }: Props) {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Recent movements</CardTitle>
-                                <CardDescription>Latest stock activity recorded for this warehouse.</CardDescription>
+                                <CardDescription>
+                                    Latest stock activity recorded for this
+                                    warehouse.
+                                </CardDescription>
                             </CardHeader>
 
                             <CardContent className="space-y-3">
@@ -93,20 +136,65 @@ export default function WarehousesShow({ warehouse }: Props) {
                                 )}
 
                                 {warehouse.recent_movements.map((movement) => (
-                                    <div key={movement.id} className="rounded-lg border px-4 py-3">
+                                    <div
+                                        key={movement.id}
+                                        className="rounded-lg border px-4 py-3"
+                                    >
                                         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                                            <p className="font-medium">{movement.inventory_item.item_code} - {movement.inventory_item.item_name}</p>
-                                            <p className="text-sm text-muted-foreground">{movement.movement_date ?? 'No date'}</p>
+                                            <p className="font-medium">
+                                                {
+                                                    movement.inventory_item
+                                                        .item_code
+                                                }{' '}
+                                                -{' '}
+                                                {
+                                                    movement.inventory_item
+                                                        .item_name
+                                                }
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {movement.movement_date ??
+                                                    'No date'}
+                                            </p>
                                         </div>
 
                                         <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
-                                            <p>Type: <span className="font-medium text-foreground">{movement.movement_type_label}</span></p>
-                                            <p>Quantity: <span className="font-medium text-foreground">{movement.quantity.toFixed(2)}</span></p>
-                                            <p>Balance after: <span className="font-medium text-foreground">{movement.balance_after.toFixed(2)}</span></p>
-                                            <p>Recorded by: <span className="font-medium text-foreground">{movement.created_by ?? 'System'}</span></p>
+                                            <p>
+                                                Type:{' '}
+                                                <span className="font-medium text-foreground">
+                                                    {
+                                                        movement.movement_type_label
+                                                    }
+                                                </span>
+                                            </p>
+                                            <p>
+                                                Quantity:{' '}
+                                                <span className="font-medium text-foreground">
+                                                    {movement.quantity.toFixed(
+                                                        2,
+                                                    )}
+                                                </span>
+                                            </p>
+                                            <p>
+                                                Balance after:{' '}
+                                                <span className="font-medium text-foreground">
+                                                    {movement.balance_after.toFixed(
+                                                        2,
+                                                    )}
+                                                </span>
+                                            </p>
+                                            <p>
+                                                Recorded by:{' '}
+                                                <span className="font-medium text-foreground">
+                                                    {movement.created_by ??
+                                                        'System'}
+                                                </span>
+                                            </p>
                                         </div>
 
-                                        <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{movement.remarks ?? 'No remarks'}</p>
+                                        <p className="mt-3 text-sm whitespace-pre-line text-muted-foreground">
+                                            {movement.remarks ?? 'No remarks'}
+                                        </p>
                                     </div>
                                 ))}
                             </CardContent>
@@ -116,7 +204,10 @@ export default function WarehousesShow({ warehouse }: Props) {
                     <Card>
                         <CardHeader>
                             <CardTitle>Current balances</CardTitle>
-                            <CardDescription>Inventory quantities currently held in this warehouse.</CardDescription>
+                            <CardDescription>
+                                Inventory quantities currently held in this
+                                warehouse.
+                            </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-3">
@@ -127,16 +218,35 @@ export default function WarehousesShow({ warehouse }: Props) {
                             )}
 
                             {warehouse.balances.map((balance) => (
-                                <div key={balance.id} className="rounded-lg border px-4 py-3">
+                                <div
+                                    key={balance.id}
+                                    className="rounded-lg border px-4 py-3"
+                                >
                                     <div className="flex items-center justify-between gap-3">
                                         <div>
-                                            <p className="font-medium">{balance.inventory_item.item_code}</p>
-                                            <p className="text-sm text-muted-foreground">{balance.inventory_item.item_name}</p>
+                                            <p className="font-medium">
+                                                {
+                                                    balance.inventory_item
+                                                        .item_code
+                                                }
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {
+                                                    balance.inventory_item
+                                                        .item_name
+                                                }
+                                            </p>
                                         </div>
 
                                         <div className="text-right">
-                                            <p className="font-medium">{balance.quantity_on_hand.toFixed(2)}</p>
-                                            <p className="text-xs text-muted-foreground">{balance.inventory_item.unit}</p>
+                                            <p className="font-medium">
+                                                {balance.quantity_on_hand.toFixed(
+                                                    2,
+                                                )}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {balance.inventory_item.unit}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

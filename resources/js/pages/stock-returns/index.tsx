@@ -1,23 +1,34 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    ChevronDown,
+    Eye,
+    Plus,
+    Search,
+    SlidersHorizontal,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     create as stockReturnsCreate,
     index as stockReturnsIndex,
     show as stockReturnsShow,
 } from '@/routes/stock-returns';
-import { FilterSelect } from '@/components/filter-select';
-import { DataTableCard } from '@/components/data-table-card';
-import { IndexFiltersCard } from '@/components/index-filters-card';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { countActiveFilters } from '@/lib/utils';
 import type {
     PaginatedData,
     SelectOption,
@@ -37,6 +48,19 @@ type Props = {
     };
 };
 
+const stockReturnBreadcrumbs = [
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+    },
+    {
+        title: 'Stock Returns',
+        href: stockReturnsIndex(),
+    },
+];
+
+const perPageOptions = ['5', '10', '15', '25'];
+
 export default function StockReturnsIndex({
     stockReturns,
     filters,
@@ -45,102 +69,314 @@ export default function StockReturnsIndex({
     workOrderOptions,
     can,
 }: Props) {
-    const activeFilterCount = countActiveFilters(filters);
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [tableFilters, setTableFilters] = useState({
+        warehouse: filters.warehouse === null ? '' : String(filters.warehouse),
+        project: filters.project === null ? '' : String(filters.project),
+        work_order:
+            filters.work_order === null ? '' : String(filters.work_order),
+        per_page: String(filters.per_page),
+    });
+
+    useEffect(() => {
+        setTableFilters((currentFilters) => {
+            const nextFilters = {
+                warehouse:
+                    filters.warehouse === null ? '' : String(filters.warehouse),
+                project:
+                    filters.project === null ? '' : String(filters.project),
+                work_order:
+                    filters.work_order === null
+                        ? ''
+                        : String(filters.work_order),
+                per_page: String(filters.per_page),
+            };
+
+            if (
+                currentFilters.warehouse === nextFilters.warehouse &&
+                currentFilters.project === nextFilters.project &&
+                currentFilters.work_order === nextFilters.work_order &&
+                currentFilters.per_page === nextFilters.per_page
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [
+        filters.per_page,
+        filters.project,
+        filters.warehouse,
+        filters.work_order,
+    ]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentWarehouse =
+            filters.warehouse === null ? '' : String(filters.warehouse);
+        const currentProject =
+            filters.project === null ? '' : String(filters.project);
+        const currentWorkOrder =
+            filters.work_order === null ? '' : String(filters.work_order);
+        const currentPerPage = String(filters.per_page);
+
+        if (
+            normalizedSearch === filters.search &&
+            tableFilters.warehouse === currentWarehouse &&
+            tableFilters.project === currentProject &&
+            tableFilters.work_order === currentWorkOrder &&
+            tableFilters.per_page === currentPerPage
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(stockReturnsIndex()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    warehouse:
+                        tableFilters.warehouse === ''
+                            ? undefined
+                            : Number(tableFilters.warehouse),
+                    project:
+                        tableFilters.project === ''
+                            ? undefined
+                            : Number(tableFilters.project),
+                    work_order:
+                        tableFilters.work_order === ''
+                            ? undefined
+                            : Number(tableFilters.work_order),
+                    per_page: Number(tableFilters.per_page),
+                    page: 1,
+                }),
+                {
+                    only: ['stockReturns', 'filters'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.per_page,
+        filters.project,
+        filters.search,
+        filters.warehouse,
+        filters.work_order,
+        searchInput,
+        tableFilters,
+    ]);
+
+    const activeFilterCount =
+        (tableFilters.warehouse === '' ? 0 : 1) +
+        (tableFilters.project === '' ? 0 : 1) +
+        (tableFilters.work_order === '' ? 0 : 1);
 
     return (
         <>
             <Head title="Stock Returns" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Stock Returns
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Track materials returned to warehouse stock from
-                            project and work order activity.
+                            Materials returned from project and service work.
                         </p>
                     </div>
 
                     {can.create && (
                         <Button asChild>
-                            <Link href={stockReturnsCreate()}>New return</Link>
+                            <Link href={stockReturnsCreate()}>
+                                <Plus />
+                                New return
+                            </Link>
                         </Button>
                     )}
                 </div>
 
-                <IndexFiltersCard
-                    action={stockReturnsIndex()}
-                    resetHref={stockReturnsIndex()}
-                    filters={filters}
-                    description="Search returns by reference, warehouse, project, or work order."
-                    activeFilterCount={activeFilterCount}
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={searchInput}
+                                onChange={(event) =>
+                                    setSearchInput(event.currentTarget.value)
+                                }
+                                placeholder="Search returns"
+                                className="h-9 pl-9"
+                            />
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <SlidersHorizontal />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                    <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="start" className="w-56">
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Warehouse
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.warehouse === ''
+                                                    ? 'all'
+                                                    : tableFilters.warehouse
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        warehouse:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All warehouses
+                                            </DropdownMenuRadioItem>
+                                            {warehouseOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Project
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.project === ''
+                                                    ? 'all'
+                                                    : tableFilters.project
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        project:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All projects
+                                            </DropdownMenuRadioItem>
+                                            {projectOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Work order
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.work_order === ''
+                                                    ? 'all'
+                                                    : tableFilters.work_order
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        work_order:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All work orders
+                                            </DropdownMenuRadioItem>
+                                            {workOrderOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={stockReturns}
+                            perPage={tableFilters.per_page}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    per_page: value,
+                                }));
+                            }}
+                        />
+                    }
                 >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search returns"
-                    />
-
-                    <FilterSelect
-                        name="warehouse"
-                        defaultValue={filters.warehouse ?? ''}
-                    >
-                        <option value="">All warehouses</option>
-                        {warehouseOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect
-                        name="project"
-                        defaultValue={filters.project ?? ''}
-                    >
-                        <option value="">All projects</option>
-                        {projectOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect
-                        name="work_order"
-                        defaultValue={filters.work_order ?? ''}
-                    >
-                        <option value="">All work orders</option>
-                        {workOrderOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-                </IndexFiltersCard>
-
-                <DataTableCard
-                    title="Return log"
-                    description={`${stockReturns.total} return records`}
-                    pagination={stockReturns}
-                >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">
-                                    Return
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Warehouse
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Project / work order
-                                </th>
-                                <th className="px-6 py-3 font-medium">Items</th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>Return</th>
+                                <th>Warehouse</th>
+                                <th>Project / work order</th>
+                                <th className="text-right">Items</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
 
@@ -149,96 +385,101 @@ export default function StockReturnsIndex({
                                 <tr>
                                     <td
                                         colSpan={5}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        className="py-10 text-center text-sm text-muted-foreground"
                                     >
-                                        No return records matched the current
+                                        No stock returns matched the current
                                         filters.
                                     </td>
                                 </tr>
                             )}
 
                             {stockReturns.data.map((stockReturn) => (
-                                <tr
-                                    key={stockReturn.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
-                                        <p className="font-medium">
-                                            {stockReturn.return_no}
-                                        </p>
-                                        <p className="text-muted-foreground">
-                                            {stockReturn.returned_date ??
-                                                'No date'}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {stockReturn.created_by ?? 'System'}
-                                        </p>
-                                    </td>
-
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        {stockReturn.warehouse.warehouse_code} -{' '}
-                                        {stockReturn.warehouse.warehouse_name}
-                                    </td>
-
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
-                                                {stockReturn.project
-                                                    .project_no ??
-                                                    'No project selected'}
+                                <tr key={stockReturn.id}>
+                                    <td>
+                                        <div className="space-y-0.5">
+                                            <p className="max-w-[14rem] truncate font-semibold text-foreground">
+                                                {stockReturn.return_no}
                                             </p>
-                                            <p>
-                                                {stockReturn.work_order
-                                                    .work_order_no ??
-                                                    'No work order selected'}
+                                            <p className="max-w-[14rem] truncate text-[13px] text-muted-foreground">
+                                                {[
+                                                    stockReturn.returned_date,
+                                                    stockReturn.created_by,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' • ') || 'No date'}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
-                                                {stockReturn.item_count} lines
+                                    <td>
+                                        <div className="space-y-0.5">
+                                            <p className="max-w-[16rem] truncate font-medium text-foreground">
+                                                {stockReturn.warehouse
+                                                    .warehouse_name ??
+                                                    'No warehouse'}
                                             </p>
-                                            <p>
-                                                {stockReturn.total_quantity.toFixed(
-                                                    2,
-                                                )}{' '}
-                                                total quantity
+                                            <p className="max-w-[16rem] truncate text-[13px] text-muted-foreground">
+                                                {stockReturn.warehouse
+                                                    .warehouse_code ??
+                                                    'No warehouse code'}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-right">
-                                        {stockReturn.can.view && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                asChild
-                                            >
-                                                <Link
-                                                    href={stockReturnsShow(
-                                                        stockReturn.id,
-                                                    )}
-                                                >
-                                                    Open
-                                                </Link>
-                                            </Button>
-                                        )}
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[18rem] truncate">
+                                            {stockReturn.project.project_no
+                                                ? `${stockReturn.project.project_no} • ${stockReturn.project.title ?? 'Project'}`
+                                                : 'No project'}
+                                        </p>
+                                        <p className="max-w-[18rem] truncate">
+                                            {stockReturn.work_order
+                                                .work_order_no
+                                                ? `${stockReturn.work_order.work_order_no} • ${stockReturn.work_order.summary ?? 'Work order'}`
+                                                : 'No work order'}
+                                        </p>
+                                    </td>
+
+                                    <td className="text-right text-[13px] text-muted-foreground">
+                                        <p className="font-medium text-foreground tabular-nums">
+                                            {stockReturn.total_quantity.toFixed(
+                                                2,
+                                            )}
+                                        </p>
+                                        <p>{stockReturn.item_count} lines</p>
+                                    </td>
+
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={
+                                                    stockReturn.can.view
+                                                        ? [
+                                                              {
+                                                                  key: 'open',
+                                                                  label: 'Open',
+                                                                  icon: Eye,
+                                                                  href: stockReturnsShow(
+                                                                      stockReturn.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []
+                                                }
+                                                label={`Open actions for ${stockReturn.return_no}`}
+                                            />
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );
 }
 
 StockReturnsIndex.layout = {
-    breadcrumbs: [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Stock Returns', href: stockReturnsIndex() },
-    ],
+    breadcrumbs: stockReturnBreadcrumbs,
 };

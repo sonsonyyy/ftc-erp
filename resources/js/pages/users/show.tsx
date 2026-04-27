@@ -28,7 +28,7 @@ export default function UsersShow({ managedUser }: Props) {
         <>
             <Head title={managedUser.name} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
@@ -37,7 +37,9 @@ export default function UsersShow({ managedUser }: Props) {
                             </h1>
                             <Badge
                                 variant="outline"
-                                className={activityBadgeClass(managedUser.is_active)}
+                                className={activityBadgeClass(
+                                    managedUser.is_active,
+                                )}
                             >
                                 {managedUser.is_active ? 'Active' : 'Inactive'}
                             </Badge>
@@ -56,14 +58,18 @@ export default function UsersShow({ managedUser }: Props) {
                     <div className="flex flex-wrap gap-2">
                         {managedUser.can.update && (
                             <Button asChild>
-                                <Link href={usersEdit(managedUser.id)}>Edit user</Link>
+                                <Link href={usersEdit(managedUser.id)}>
+                                    Edit user
+                                </Link>
                             </Button>
                         )}
 
                         {managedUser.can.delete && (
                             <Button variant="outline" asChild>
                                 <Link
-                                    href={UserController.destroy(managedUser.id)}
+                                    href={UserController.destroy(
+                                        managedUser.id,
+                                    )}
                                     method="delete"
                                     as="button"
                                 >
@@ -84,8 +90,12 @@ export default function UsersShow({ managedUser }: Props) {
 
                     <Card>
                         <CardHeader>
-                            <CardDescription>Effective permissions</CardDescription>
-                            <CardTitle>{managedUser.permissions.length}</CardTitle>
+                            <CardDescription>
+                                Effective permissions
+                            </CardDescription>
+                            <CardTitle>
+                                {managedUser.permissions.length}
+                            </CardTitle>
                         </CardHeader>
                     </Card>
 
@@ -108,18 +118,25 @@ export default function UsersShow({ managedUser }: Props) {
                         <CardHeader>
                             <CardTitle>Account information</CardTitle>
                             <CardDescription>
-                                Core identity details for this internal ERP account.
+                                Core identity details for this internal ERP
+                                account.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="grid gap-5 md:grid-cols-2">
                             <div>
-                                <p className="text-sm text-muted-foreground">Email</p>
-                                <p className="mt-1 font-medium">{managedUser.email}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Email
+                                </p>
+                                <p className="mt-1 font-medium">
+                                    {managedUser.email}
+                                </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Verified at</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Verified at
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {managedUser.email_verified_at
                                         ? new Date(
@@ -130,7 +147,9 @@ export default function UsersShow({ managedUser }: Props) {
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Created</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Created
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {managedUser.created_at
                                         ? new Date(
@@ -141,7 +160,9 @@ export default function UsersShow({ managedUser }: Props) {
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Last updated</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Last updated
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {managedUser.updated_at
                                         ? new Date(
@@ -157,7 +178,8 @@ export default function UsersShow({ managedUser }: Props) {
                         <CardHeader>
                             <CardTitle>Assigned roles</CardTitle>
                             <CardDescription>
-                                Role membership is the source of truth for module access.
+                                Role membership is the source of truth for
+                                module access.
                             </CardDescription>
                         </CardHeader>
 
@@ -175,7 +197,8 @@ export default function UsersShow({ managedUser }: Props) {
                     <CardHeader>
                         <CardTitle>Effective permissions</CardTitle>
                         <CardDescription>
-                            Permissions currently granted through the assigned roles.
+                            Permissions currently granted through the assigned
+                            roles.
                         </CardDescription>
                     </CardHeader>
 

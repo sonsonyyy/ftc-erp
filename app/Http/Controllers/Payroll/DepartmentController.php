@@ -15,6 +15,8 @@ class DepartmentController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -24,13 +26,14 @@ class DepartmentController extends Controller
 
         $search = $request->string('search')->toString();
         $active = $request->string('active')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $departments = Department::query()
             ->withCount(['positions', 'employees'])
             ->search($search)
             ->active($active)
             ->orderBy('name')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Department $department) => $this->departmentListItem($request, $department));
 
@@ -39,6 +42,7 @@ class DepartmentController extends Controller
             'filters' => [
                 'search' => $search,
                 'active' => $active,
+                'per_page' => $perPage,
             ],
             'activityOptions' => $this->activityOptions(),
             'can' => [
@@ -178,5 +182,17 @@ class DepartmentController extends Controller
             ['value' => 'active', 'label' => 'Active only'],
             ['value' => 'inactive', 'label' => 'Inactive only'],
         ];
+    }
+
+    /**
+     * Resolve the validated page size for the department table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

@@ -18,6 +18,8 @@ class SupplierController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of suppliers.
      */
@@ -27,6 +29,7 @@ class SupplierController extends Controller
 
         $search = $request->string('search')->toString();
         $activity = $request->string('activity')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $suppliers = Supplier::query()
             ->withCount(['purchaseRequests', 'purchaseOrders', 'attachments'])
@@ -34,7 +37,7 @@ class SupplierController extends Controller
             ->active($activity)
             ->orderBy('company_name')
             ->orderBy('supplier_code')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Supplier $supplier) => $this->supplierListItem($request, $supplier));
 
@@ -43,6 +46,7 @@ class SupplierController extends Controller
             'filters' => [
                 'search' => $search,
                 'activity' => $activity,
+                'per_page' => $perPage,
             ],
             'activityOptions' => $this->activityOptions(),
             'can' => [
@@ -292,5 +296,17 @@ class SupplierController extends Controller
             ['value' => 'active', 'label' => 'Active'],
             ['value' => 'inactive', 'label' => 'Inactive'],
         ];
+    }
+
+    /**
+     * Resolve a supported page size for paginated listings.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

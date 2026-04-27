@@ -25,7 +25,7 @@ export default function PurchaseOrdersCreate(props: Props) {
         <>
             <Head title="New Purchase Order" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <PurchaseOrderForm
                     {...props}
                     title="New purchase order"

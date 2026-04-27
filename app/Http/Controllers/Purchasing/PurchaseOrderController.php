@@ -29,6 +29,8 @@ class PurchaseOrderController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of purchase orders.
      */
@@ -41,6 +43,7 @@ class PurchaseOrderController extends Controller
         $search = $request->string('search')->toString();
         $supplierId = $request->integer('supplier') ?: null;
         $status = $request->string('status')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $query = PurchaseOrder::query()
             ->with([
@@ -63,7 +66,7 @@ class PurchaseOrderController extends Controller
         }
 
         $purchaseOrders = (clone $query)
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (PurchaseOrder $purchaseOrder) => $this->purchaseOrderListItem($request, $purchaseOrder));
 
@@ -73,6 +76,7 @@ class PurchaseOrderController extends Controller
                 'search' => $search,
                 'supplier' => $supplierId,
                 'status' => $status,
+                'per_page' => $perPage,
             ],
             'supplierOptions' => $this->supplierOptions(),
             'statusOptions' => $this->statusOptions(includeDerived: true),
@@ -127,6 +131,18 @@ class PurchaseOrderController extends Controller
                 ];
             }),
         );
+    }
+
+    /**
+     * Resolve a supported page size for paginated listings.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 
     /**

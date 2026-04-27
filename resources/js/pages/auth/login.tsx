@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { LogIn, ShieldCheck } from 'lucide-react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -36,12 +37,11 @@ export default function Login({ status, canResetPassword }: Props) {
                     <>
                         <Card className="overflow-hidden border-border/70 bg-card/95 shadow-lg shadow-black/5 backdrop-blur-sm">
                             <CardHeader className="gap-3 pb-2">
-                                <CardTitle className="text-xl">
+                                <CardTitle className="text-lg">
                                     Sign in
                                 </CardTitle>
-                                <CardDescription className="leading-6">
-                                    Use your assigned work email and password to
-                                    continue.
+                                <CardDescription className="leading-5">
+                                    Use your work email and password.
                                 </CardDescription>
                             </CardHeader>
 
@@ -115,16 +115,16 @@ export default function Login({ status, canResetPassword }: Props) {
                                         data-test="login-button"
                                     >
                                         {processing && <Spinner />}
-                                        Log in to ERP
+                                        {!processing && <LogIn />}
+                                        Log in
                                     </Button>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <p className="text-center text-xs leading-6 text-muted-foreground">
-                            Access is limited to authorized Fire Teknik staff.
-                            Contact your administrator if you need help signing
-                            in.
+                        <p className="flex items-center justify-center gap-2 text-center text-xs leading-5 text-muted-foreground">
+                            <ShieldCheck className="size-3.5" />
+                            Authorized Fire Teknik staff only.
                         </p>
                     </>
                 )}
@@ -136,5 +136,5 @@ export default function Login({ status, canResetPassword }: Props) {
 Login.layout = {
     variant: 'split',
     title: 'Log in to Fire Teknik ERP',
-    description: 'Secure access for authorized staff and administrators.',
+    description: 'Secure access for authorized staff.',
 };

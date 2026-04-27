@@ -62,21 +62,25 @@ class CustomerSite extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('site_code', 'like', "%{$term}%")
-                ->orWhere('site_name', 'like', "%{$term}%")
-                ->orWhere('contact_person', 'like', "%{$term}%")
-                ->orWhere('contact_no', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%")
-                ->orWhere('address', 'like', "%{$term}%")
-                ->orWhere('city', 'like', "%{$term}%")
-                ->orWhere('province', 'like', "%{$term}%")
-                ->orWhereHas('customer', function (Builder $customerQuery) use ($term): void {
+                ->where('site_code', $operator, "%{$term}%")
+                ->orWhere('site_name', $operator, "%{$term}%")
+                ->orWhere('contact_person', $operator, "%{$term}%")
+                ->orWhere('contact_no', $operator, "%{$term}%")
+                ->orWhere('email', $operator, "%{$term}%")
+                ->orWhere('address', $operator, "%{$term}%")
+                ->orWhere('city', $operator, "%{$term}%")
+                ->orWhere('province', $operator, "%{$term}%")
+                ->orWhereHas('customer', function (Builder $customerQuery) use ($term, $operator): void {
                     $customerQuery
-                        ->where('customer_code', 'like', "%{$term}%")
-                        ->orWhere('company_name', 'like', "%{$term}%")
-                        ->orWhere('trade_name', 'like', "%{$term}%");
+                        ->where('customer_code', $operator, "%{$term}%")
+                        ->orWhere('company_name', $operator, "%{$term}%")
+                        ->orWhere('trade_name', $operator, "%{$term}%");
                 });
         });
     }

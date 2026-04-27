@@ -1,33 +1,64 @@
-import { Head, Link } from '@inertiajs/react';
-import { dashboard } from '@/routes';
+import { Head, Link, router } from '@inertiajs/react';
 import {
-    create as workOrdersCreate,
-    index as workOrdersIndex,
-    show as workOrdersShow,
-} from '@/routes/work-orders';
-import { FilterSelect } from '@/components/filter-select';
-import { DataTableCard } from '@/components/data-table-card';
-import { IndexFiltersCard } from '@/components/index-filters-card';
+    Activity,
+    Archive,
+    ChevronDown,
+    ClipboardList,
+    Clock3,
+    Download,
+    Ellipsis,
+    Eye,
+    Pencil,
+    Plus,
+    Search,
+    SlidersHorizontal,
+    TriangleAlert,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
-    CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { cleanQueryParams, countActiveFilters } from '@/lib/utils';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
+import { dashboard } from '@/routes';
+import {
+    create as workOrdersCreate,
+    destroy as workOrdersDestroy,
+    edit as workOrdersEdit,
+    index as workOrdersIndex,
+    show as workOrdersShow,
+} from '@/routes/work-orders';
 import type {
     PaginatedData,
     SelectOption,
     WorkOrderFilters,
+    WorkOrderIndexSummary,
     WorkOrderListItem,
 } from '@/types';
 
 type Props = {
     workOrders: PaginatedData<WorkOrderListItem>;
+    summary: WorkOrderIndexSummary;
     filters: WorkOrderFilters;
     customerOptions: SelectOption[];
     projectOptions: SelectOption[];
@@ -38,6 +69,19 @@ type Props = {
         create: boolean;
     };
 };
+
+const workOrderBreadcrumbs = [
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+    },
+    {
+        title: 'Work Orders',
+        href: workOrdersIndex(),
+    },
+];
+
+const perPageOptions = ['5', '10', '15', '25'];
 
 function formatDate(date: string | null): string {
     if (!date) {
@@ -78,6 +122,7 @@ function statusBadgeClass(status: string): string {
 
 export default function WorkOrdersIndex({
     workOrders,
+    summary,
     filters,
     customerOptions,
     projectOptions,
@@ -86,137 +131,503 @@ export default function WorkOrdersIndex({
     serviceTypeOptions,
     can,
 }: Props) {
-    const activeFilterCount = countActiveFilters(filters);
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [tableFilters, setTableFilters] = useState({
+        customer: filters.customer === null ? '' : String(filters.customer),
+        project: filters.project === null ? '' : String(filters.project),
+        status: filters.status,
+        priority: filters.priority,
+        service_type: filters.service_type,
+        per_page: String(filters.per_page),
+    });
+
+    useEffect(() => {
+        setTableFilters((currentFilters) => {
+            const nextFilters = {
+                customer:
+                    filters.customer === null ? '' : String(filters.customer),
+                project:
+                    filters.project === null ? '' : String(filters.project),
+                status: filters.status,
+                priority: filters.priority,
+                service_type: filters.service_type,
+                per_page: String(filters.per_page),
+            };
+
+            if (
+                currentFilters.customer === nextFilters.customer &&
+                currentFilters.project === nextFilters.project &&
+                currentFilters.status === nextFilters.status &&
+                currentFilters.priority === nextFilters.priority &&
+                currentFilters.service_type === nextFilters.service_type &&
+                currentFilters.per_page === nextFilters.per_page
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [
+        filters.customer,
+        filters.per_page,
+        filters.priority,
+        filters.project,
+        filters.service_type,
+        filters.status,
+    ]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentCustomer =
+            filters.customer === null ? '' : String(filters.customer);
+        const currentProject =
+            filters.project === null ? '' : String(filters.project);
+        const currentPerPage = String(filters.per_page);
+
+        if (
+            normalizedSearch === filters.search &&
+            tableFilters.customer === currentCustomer &&
+            tableFilters.project === currentProject &&
+            tableFilters.status === filters.status &&
+            tableFilters.priority === filters.priority &&
+            tableFilters.service_type === filters.service_type &&
+            tableFilters.per_page === currentPerPage
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(workOrdersIndex()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    customer:
+                        tableFilters.customer === ''
+                            ? undefined
+                            : Number(tableFilters.customer),
+                    project:
+                        tableFilters.project === ''
+                            ? undefined
+                            : Number(tableFilters.project),
+                    status: tableFilters.status,
+                    priority: tableFilters.priority,
+                    service_type: tableFilters.service_type,
+                    per_page: Number(tableFilters.per_page),
+                    page: 1,
+                }),
+                {
+                    only: ['workOrders', 'filters', 'summary'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.customer,
+        filters.per_page,
+        filters.priority,
+        filters.project,
+        filters.search,
+        filters.service_type,
+        filters.status,
+        searchInput,
+        tableFilters,
+    ]);
+
+    const activeFilterCount =
+        (tableFilters.customer === '' ? 0 : 1) +
+        (tableFilters.project === '' ? 0 : 1) +
+        (tableFilters.status === '' ? 0 : 1) +
+        (tableFilters.priority === '' ? 0 : 1) +
+        (tableFilters.service_type === '' ? 0 : 1);
     const exportHref = workOrdersIndex({
         query: cleanQueryParams({
-            ...filters,
+            search: searchInput.trim(),
+            customer:
+                tableFilters.customer === ''
+                    ? undefined
+                    : Number(tableFilters.customer),
+            project:
+                tableFilters.project === ''
+                    ? undefined
+                    : Number(tableFilters.project),
+            status: tableFilters.status,
+            priority: tableFilters.priority,
+            service_type: tableFilters.service_type,
             export: 'csv',
         }),
     });
+    const summaryCards = [
+        {
+            title: 'Total work orders',
+            value: summary.total_work_orders,
+            icon: ClipboardList,
+            iconClassName: 'bg-sky-50 text-sky-700',
+        },
+        {
+            title: 'Scheduled',
+            value: summary.scheduled_work_orders,
+            icon: Clock3,
+            iconClassName: 'bg-indigo-50 text-indigo-700',
+        },
+        {
+            title: 'In progress',
+            value: summary.in_progress_work_orders,
+            icon: Activity,
+            iconClassName: 'bg-amber-50 text-amber-700',
+        },
+        {
+            title: 'Urgent jobs',
+            value: summary.urgent_work_orders,
+            icon: TriangleAlert,
+            iconClassName: 'bg-rose-50 text-rose-700',
+        },
+    ];
 
     return (
         <>
             <Head title="Work Orders" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Work Orders
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Coordinate service jobs, execution tasks, technician
-                            notes, and material usage in one place.
+                            Coordinate field jobs, schedules, and execution.
                         </p>
                     </div>
 
                     {can.create && (
                         <Button asChild>
                             <Link href={workOrdersCreate()}>
+                                <Plus />
                                 New work order
                             </Link>
                         </Button>
                     )}
                 </div>
 
-                <IndexFiltersCard
-                    action={workOrdersIndex()}
-                    resetHref={workOrdersIndex()}
-                    filters={filters}
-                    exportHref={exportHref}
-                    description="Search by work order number, summary, customer, site, quotation, or project."
-                    activeFilterCount={activeFilterCount}
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    {summaryCards.map((card) => {
+                        const Icon = card.icon;
+
+                        return (
+                            <Card
+                                key={card.title}
+                                className="border-border/70 py-4 shadow-sm"
+                            >
+                                <CardContent className="flex items-center gap-3">
+                                    <div
+                                        className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${card.iconClassName}`}
+                                    >
+                                        <Icon className="size-5" />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <CardDescription>
+                                            {card.title}
+                                        </CardDescription>
+                                        <CardTitle className="text-2xl tracking-tight">
+                                            {card.value}
+                                        </CardTitle>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+                </div>
+
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={searchInput}
+                                onChange={(event) =>
+                                    setSearchInput(event.currentTarget.value)
+                                }
+                                placeholder="Search work orders"
+                                className="h-9 pl-9"
+                            />
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <SlidersHorizontal />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                    <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="start" className="w-56">
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Status
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="w-56">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.status === ''
+                                                    ? 'all'
+                                                    : tableFilters.status
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        status:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All statuses
+                                            </DropdownMenuRadioItem>
+                                            {statusOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Priority
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="w-56">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.priority === ''
+                                                    ? 'all'
+                                                    : tableFilters.priority
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        priority:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All priorities
+                                            </DropdownMenuRadioItem>
+                                            {priorityOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Service type
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.service_type === ''
+                                                    ? 'all'
+                                                    : tableFilters.service_type
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        service_type:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All service types
+                                            </DropdownMenuRadioItem>
+                                            {serviceTypeOptions.map(
+                                                (option) => (
+                                                    <DropdownMenuRadioItem
+                                                        key={option.value}
+                                                        value={String(
+                                                            option.value,
+                                                        )}
+                                                    >
+                                                        {option.label}
+                                                    </DropdownMenuRadioItem>
+                                                ),
+                                            )}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Customer
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.customer === ''
+                                                    ? 'all'
+                                                    : tableFilters.customer
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        customer:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All customers
+                                            </DropdownMenuRadioItem>
+                                            {customerOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Project
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.project === ''
+                                                    ? 'all'
+                                                    : tableFilters.project
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        project:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All projects
+                                            </DropdownMenuRadioItem>
+                                            {projectOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 bg-background"
+                            >
+                                <Ellipsis />
+                                Actions
+                                <ChevronDown />
+                            </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem asChild>
+                                <a href={toUrl(exportHref)}>
+                                    <Download />
+                                    Export CSV
+                                </a>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={workOrders}
+                            perPage={tableFilters.per_page}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    per_page: value,
+                                }));
+                            }}
+                        />
+                    }
                 >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search work orders"
-                    />
-
-                    <FilterSelect
-                        name="customer"
-                        defaultValue={filters.customer ?? ''}
-                    >
-                        <option value="">All customers</option>
-                        {customerOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect
-                        name="project"
-                        defaultValue={filters.project ?? ''}
-                    >
-                        <option value="">All projects</option>
-                        {projectOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect name="status" defaultValue={filters.status}>
-                        <option value="">All statuses</option>
-                        {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect
-                        name="priority"
-                        defaultValue={filters.priority}
-                    >
-                        <option value="">All priorities</option>
-                        {priorityOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect
-                        name="service_type"
-                        defaultValue={filters.service_type}
-                    >
-                        <option value="">All service types</option>
-                        {serviceTypeOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-                </IndexFiltersCard>
-
-                <DataTableCard
-                    title="Work order registry"
-                    description={`${workOrders.total} work order records`}
-                    pagination={workOrders}
-                >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">
-                                    Work order
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Customer / site
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Schedule
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Priority
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>Work order</th>
+                                <th>Customer / site</th>
+                                <th>Schedule</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th className="text-right">Attachments</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
 
@@ -224,8 +635,8 @@ export default function WorkOrdersIndex({
                             {workOrders.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={6}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        colSpan={7}
+                                        className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No work orders matched the current
                                         filters.
@@ -234,69 +645,60 @@ export default function WorkOrdersIndex({
                             )}
 
                             {workOrders.data.map((workOrder) => (
-                                <tr
-                                    key={workOrder.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
-                                        <div className="space-y-1">
-                                            <p className="font-medium">
+                                <tr key={workOrder.id}>
+                                    <td>
+                                        <div className="space-y-0.5">
+                                            <p className="max-w-[16rem] truncate font-semibold text-foreground">
                                                 {workOrder.work_order_no}
                                             </p>
-                                            <p className="text-muted-foreground">
-                                                {workOrder.summary}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {workOrder.service_type_label}
+                                            <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
+                                                {[
+                                                    workOrder.summary,
+                                                    workOrder.service_type_label,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' • ')}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
-                                                {
-                                                    workOrder.customer
-                                                        .customer_code
-                                                }{' '}
-                                                -{' '}
-                                                {
-                                                    workOrder.customer
-                                                        .company_name
-                                                }
+                                    <td>
+                                        <div className="space-y-0.5">
+                                            <p className="max-w-[18rem] truncate font-medium text-foreground">
+                                                {workOrder.customer
+                                                    .company_name ??
+                                                    'Unlinked customer'}
                                             </p>
-                                            <p>
-                                                {workOrder.site.site_name ??
+                                            <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
+                                                {[
+                                                    workOrder.customer
+                                                        .customer_code,
+                                                    workOrder.site.site_name,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' • ') ||
                                                     'No site linked'}
                                             </p>
-                                            {workOrder.project.project_no && (
-                                                <p className="text-xs">
-                                                    Project:{' '}
-                                                    {
-                                                        workOrder.project
-                                                            .project_no
-                                                    }
-                                                </p>
-                                            )}
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <div className="space-y-0.5 leading-5">
+                                            <p className="max-w-[14rem] truncate">
                                                 Scheduled:{' '}
                                                 {formatDate(
                                                     workOrder.scheduled_date,
                                                 )}
                                             </p>
-                                            <p>
-                                                {workOrder.attachment_count}{' '}
-                                                attachments
+                                            <p className="max-w-[14rem] truncate">
+                                                {workOrder.project.project_no
+                                                    ? `Project: ${workOrder.project.project_no}`
+                                                    : 'No project linked'}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4">
+                                    <td>
                                         <Badge
                                             variant="outline"
                                             className={priorityBadgeClass(
@@ -307,7 +709,7 @@ export default function WorkOrdersIndex({
                                         </Badge>
                                     </td>
 
-                                    <td className="px-6 py-4">
+                                    <td>
                                         <Badge
                                             variant="outline"
                                             className={statusBadgeClass(
@@ -318,36 +720,75 @@ export default function WorkOrdersIndex({
                                         </Badge>
                                     </td>
 
-                                    <td className="px-6 py-4 text-right">
-                                        {workOrder.can.view && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                asChild
-                                            >
-                                                <Link
-                                                    href={workOrdersShow(
-                                                        workOrder.id,
-                                                    )}
-                                                >
-                                                    Open
-                                                </Link>
-                                            </Button>
-                                        )}
+                                    <td className="text-right font-medium tabular-nums">
+                                        {workOrder.attachment_count}
+                                    </td>
+
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={[
+                                                    ...(workOrder.can.view
+                                                        ? [
+                                                              {
+                                                                  key: 'open',
+                                                                  label: 'Open',
+                                                                  icon: Eye,
+                                                                  href: workOrdersShow(
+                                                                      workOrder.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(workOrder.can.update
+                                                        ? [
+                                                              {
+                                                                  key: 'edit',
+                                                                  label: 'Edit',
+                                                                  icon: Pencil,
+                                                                  href: workOrdersEdit(
+                                                                      workOrder.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(workOrder.can.delete
+                                                        ? [
+                                                              {
+                                                                  key: 'archive',
+                                                                  label: 'Archive',
+                                                                  icon: Archive,
+                                                                  destructive: true,
+                                                                  onSelect:
+                                                                      () =>
+                                                                          router.delete(
+                                                                              toUrl(
+                                                                                  workOrdersDestroy(
+                                                                                      workOrder.id,
+                                                                                  ),
+                                                                              ),
+                                                                              {
+                                                                                  preserveScroll: true,
+                                                                              },
+                                                                          ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                ]}
+                                                label={`Open actions for ${workOrder.work_order_no}`}
+                                            />
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );
 }
 
 WorkOrdersIndex.layout = {
-    breadcrumbs: [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Work Orders', href: workOrdersIndex() },
-    ],
+    breadcrumbs: workOrderBreadcrumbs,
 };

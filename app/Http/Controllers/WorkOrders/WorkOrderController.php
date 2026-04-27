@@ -40,6 +40,8 @@ class WorkOrderController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -55,6 +57,7 @@ class WorkOrderController extends Controller
         $status = $request->string('status')->toString();
         $priority = $request->string('priority')->toString();
         $serviceType = $request->string('service_type')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $query = WorkOrder::query()
             ->with([
@@ -78,12 +81,13 @@ class WorkOrderController extends Controller
         }
 
         $workOrders = (clone $query)
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (WorkOrder $workOrder) => $this->workOrderListItem($request, $workOrder));
 
         return Inertia::render('work-orders/index', [
             'workOrders' => $workOrders,
+            'summary' => $this->workOrderSummary(),
             'filters' => [
                 'search' => $search,
                 'customer' => $customerId,
@@ -91,6 +95,7 @@ class WorkOrderController extends Controller
                 'status' => $status,
                 'priority' => $priority,
                 'service_type' => $serviceType,
+                'per_page' => $perPage,
             ],
             'customerOptions' => $this->customerOptions(),
             'projectOptions' => $this->projectOptions(),
@@ -146,6 +151,34 @@ class WorkOrderController extends Controller
                 ];
             }),
         );
+    }
+
+    /**
+     * Build the top-line work-order summary cards.
+     *
+     * @return array<string, int>
+     */
+    private function workOrderSummary(): array
+    {
+        $baseQuery = WorkOrder::query();
+
+        return [
+            'total_work_orders' => (clone $baseQuery)->count(),
+            'scheduled_work_orders' => (clone $baseQuery)
+                ->where('status', WorkOrderStatus::Scheduled->value)
+                ->count(),
+            'in_progress_work_orders' => (clone $baseQuery)
+                ->where('status', WorkOrderStatus::InProgress->value)
+                ->count(),
+            'urgent_work_orders' => (clone $baseQuery)
+                ->where('priority', WorkOrderPriority::Urgent->value)
+                ->whereNotIn('status', [
+                    WorkOrderStatus::Completed->value,
+                    WorkOrderStatus::Closed->value,
+                    WorkOrderStatus::Cancelled->value,
+                ])
+                ->count(),
+        ];
     }
 
     /**
@@ -748,6 +781,18 @@ class WorkOrderController extends Controller
                 'value' => $user->getKey(),
                 'label' => $user->name,
             ])->all();
+    }
+
+    /**
+     * Resolve the validated page size for the work-order table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 
     /**

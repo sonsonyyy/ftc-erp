@@ -16,6 +16,8 @@ class PositionController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -26,6 +28,7 @@ class PositionController extends Controller
         $search = $request->string('search')->toString();
         $departmentId = $request->integer('department') ?: null;
         $active = $request->string('active')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $positions = Position::query()
             ->with(['department:id,name'])
@@ -34,7 +37,7 @@ class PositionController extends Controller
             ->forDepartment($departmentId)
             ->active($active)
             ->orderBy('title')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Position $position) => $this->positionListItem($request, $position));
 
@@ -44,6 +47,7 @@ class PositionController extends Controller
                 'search' => $search,
                 'department' => $departmentId,
                 'active' => $active,
+                'per_page' => $perPage,
             ],
             'departmentOptions' => $this->departmentOptions(),
             'activityOptions' => $this->activityOptions(),
@@ -210,5 +214,17 @@ class PositionController extends Controller
             ['value' => 'active', 'label' => 'Active only'],
             ['value' => 'inactive', 'label' => 'Inactive only'],
         ];
+    }
+
+    /**
+     * Resolve the validated page size for the position table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

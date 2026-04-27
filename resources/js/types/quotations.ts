@@ -123,6 +123,13 @@ export type QuotationKpiMetrics = {
     average_days_to_materialize: number | null;
 };
 
+export type QuotationIndexSummary = {
+    total_quotations: number;
+    pending_quotations: number;
+    awarded_quotations: number;
+    total_quotation_value: number;
+};
+
 export type QuotationStatusBreakdownItem = {
     status: string;
     label: string;
@@ -157,6 +164,7 @@ export type QuotationFilters = {
     status: string;
     from: string | null;
     to: string | null;
+    per_page: number;
 };
 
 export type QuotationKpiFilters = {

@@ -1,8 +1,15 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { create as employeesCreate, index as employeesIndex } from '@/routes/employees';
+import {
+    create as employeesCreate,
+    index as employeesIndex,
+} from '@/routes/employees';
 import { EmployeeForm } from '@/components/payroll/employee-form';
-import type { EmployeeFormDefaults, PositionOption, SelectOption } from '@/types';
+import type {
+    EmployeeFormDefaults,
+    PositionOption,
+    SelectOption,
+} from '@/types';
 
 type Props = {
     departmentOptions: SelectOption[];
@@ -21,7 +28,7 @@ export default function EmployeesCreate({
         <>
             <Head title="New Employee" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <EmployeeForm
                     departmentOptions={departmentOptions}
                     positionOptions={positionOptions}

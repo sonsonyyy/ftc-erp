@@ -30,6 +30,8 @@ class InvoiceController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of invoices.
      */
@@ -44,6 +46,7 @@ class InvoiceController extends Controller
         $status = $request->string('status')->toString();
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
+        $perPage = $this->resolvePerPage($request);
 
         $query = Invoice::query()
             ->with([
@@ -65,7 +68,7 @@ class InvoiceController extends Controller
         }
 
         $invoices = (clone $query)
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Invoice $invoice) => $this->invoiceListItem($request, $invoice));
 
@@ -77,6 +80,7 @@ class InvoiceController extends Controller
                 'status' => $status,
                 'from' => $from,
                 'to' => $to,
+                'per_page' => $perPage,
             ],
             'customerOptions' => $this->customerOptions(),
             'statusOptions' => $this->statusOptions(),
@@ -131,6 +135,18 @@ class InvoiceController extends Controller
                 ];
             }),
         );
+    }
+
+    /**
+     * Resolve a supported page size for paginated listings.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 
     /**

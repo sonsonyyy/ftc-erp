@@ -40,10 +40,14 @@ class InventoryCategory extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('name', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%");
+                ->where('name', $operator, "%{$term}%")
+                ->orWhere('description', $operator, "%{$term}%");
         });
     }
 }

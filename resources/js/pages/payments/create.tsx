@@ -1,7 +1,12 @@
 import { dashboard } from '@/routes';
 import { index as paymentsIndex } from '@/routes/payments';
 import { PaymentForm } from '@/components/billing/payment-form';
-import type { PaymentFormDefaults, PaymentInvoiceOption, PaymentMethodOption, SelectOption } from '@/types';
+import type {
+    PaymentFormDefaults,
+    PaymentInvoiceOption,
+    PaymentMethodOption,
+    SelectOption,
+} from '@/types';
 
 type Props = {
     customerOptions: SelectOption[];
@@ -12,7 +17,7 @@ type Props = {
 
 export default function PaymentsCreate(props: Props) {
     return (
-        <div className="flex flex-1 flex-col gap-6 p-4">
+        <div className="app-page flex flex-1 flex-col gap-6">
             <PaymentForm
                 {...props}
                 title="Record Payment"

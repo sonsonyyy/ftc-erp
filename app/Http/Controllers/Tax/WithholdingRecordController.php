@@ -14,6 +14,8 @@ class WithholdingRecordController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -25,6 +27,7 @@ class WithholdingRecordController extends Controller
         $type = $request->string('type')->toString();
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
+        $perPage = $this->resolvePerPage($request);
 
         $withholdingRecords = WithholdingRecord::query()
             ->search($search)
@@ -32,7 +35,7 @@ class WithholdingRecordController extends Controller
             ->betweenRecordDates($from, $to)
             ->orderByDesc('record_date')
             ->orderByDesc('id')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (WithholdingRecord $record) => $this->recordListItem($record));
 
@@ -43,6 +46,7 @@ class WithholdingRecordController extends Controller
                 'type' => $type,
                 'from' => $from,
                 'to' => $to,
+                'per_page' => $perPage,
             ],
             'typeOptions' => $this->typeOptions(),
             'can' => [
@@ -101,5 +105,17 @@ class WithholdingRecordController extends Controller
     private function normalizeDateFilter(string $value): ?string
     {
         return filled($value) ? $value : null;
+    }
+
+    /**
+     * Resolve the validated page size for the withholding table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

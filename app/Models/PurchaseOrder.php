@@ -163,30 +163,32 @@ class PurchaseOrder extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $likeOperator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+        return $query->where(function (Builder $builder) use ($likeOperator, $term): void {
             $builder
-                ->where('po_no', 'like', "%{$term}%")
-                ->orWhere('supplier_reference', 'like', "%{$term}%")
-                ->orWhere('remarks', 'like', "%{$term}%")
-                ->orWhereHas('supplier', function (Builder $supplierQuery) use ($term): void {
+                ->where('po_no', $likeOperator, "%{$term}%")
+                ->orWhere('supplier_reference', $likeOperator, "%{$term}%")
+                ->orWhere('remarks', $likeOperator, "%{$term}%")
+                ->orWhereHas('supplier', function (Builder $supplierQuery) use ($likeOperator, $term): void {
                     $supplierQuery
-                        ->where('supplier_code', 'like', "%{$term}%")
-                        ->orWhere('company_name', 'like', "%{$term}%");
+                        ->where('supplier_code', $likeOperator, "%{$term}%")
+                        ->orWhere('company_name', $likeOperator, "%{$term}%");
                 })
-                ->orWhereHas('purchaseRequest', function (Builder $requestQuery) use ($term): void {
+                ->orWhereHas('purchaseRequest', function (Builder $requestQuery) use ($likeOperator, $term): void {
                     $requestQuery
-                        ->where('request_no', 'like', "%{$term}%")
-                        ->orWhere('purpose', 'like', "%{$term}%");
+                        ->where('request_no', $likeOperator, "%{$term}%")
+                        ->orWhere('purpose', $likeOperator, "%{$term}%");
                 })
-                ->orWhereHas('project', function (Builder $projectQuery) use ($term): void {
+                ->orWhereHas('project', function (Builder $projectQuery) use ($likeOperator, $term): void {
                     $projectQuery
-                        ->where('project_no', 'like', "%{$term}%")
-                        ->orWhere('title', 'like', "%{$term}%");
+                        ->where('project_no', $likeOperator, "%{$term}%")
+                        ->orWhere('title', $likeOperator, "%{$term}%");
                 })
-                ->orWhereHas('workOrder', function (Builder $workOrderQuery) use ($term): void {
+                ->orWhereHas('workOrder', function (Builder $workOrderQuery) use ($likeOperator, $term): void {
                     $workOrderQuery
-                        ->where('work_order_no', 'like', "%{$term}%")
-                        ->orWhere('summary', 'like', "%{$term}%");
+                        ->where('work_order_no', $likeOperator, "%{$term}%")
+                        ->orWhere('summary', $likeOperator, "%{$term}%");
                 });
         });
     }

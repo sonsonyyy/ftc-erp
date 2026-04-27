@@ -20,7 +20,7 @@ type Props = {
 
 export default function InvoicesCreate(props: Props) {
     return (
-        <div className="flex flex-1 flex-col gap-6 p-4">
+        <div className="app-page flex flex-1 flex-col gap-6">
             <InvoiceForm
                 {...props}
                 title="New Invoice"

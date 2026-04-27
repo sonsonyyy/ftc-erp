@@ -1,4 +1,34 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    ChevronDown,
+    Download,
+    Ellipsis,
+    Eye,
+    Pencil,
+    Plus,
+    Search,
+    SlidersHorizontal,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     create as purchaseOrdersCreate,
@@ -6,20 +36,6 @@ import {
     index as purchaseOrdersIndex,
     show as purchaseOrdersShow,
 } from '@/routes/purchase-orders';
-import { FilterSelect } from '@/components/filter-select';
-import { DataTableCard } from '@/components/data-table-card';
-import { IndexFiltersCard } from '@/components/index-filters-card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { cleanQueryParams, countActiveFilters } from '@/lib/utils';
 import type {
     PaginatedData,
     PurchaseOrderFilters,
@@ -36,6 +52,19 @@ type Props = {
         create: boolean;
     };
 };
+
+const purchaseOrderBreadcrumbs = [
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+    },
+    {
+        title: 'Purchase Orders',
+        href: purchaseOrdersIndex(),
+    },
+];
+
+const perPageOptions = ['5', '10', '15', '25'];
 
 function statusBadgeClass(status: string): string {
     return (
@@ -57,10 +86,93 @@ export default function PurchaseOrdersIndex({
     statusOptions,
     can,
 }: Props) {
-    const activeFilterCount = countActiveFilters(filters);
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [tableFilters, setTableFilters] = useState({
+        supplier: filters.supplier === null ? '' : String(filters.supplier),
+        status: filters.status,
+        per_page: String(filters.per_page),
+    });
+
+    useEffect(() => {
+        setTableFilters((currentFilters) => {
+            const nextFilters = {
+                supplier:
+                    filters.supplier === null ? '' : String(filters.supplier),
+                status: filters.status,
+                per_page: String(filters.per_page),
+            };
+
+            if (
+                currentFilters.supplier === nextFilters.supplier &&
+                currentFilters.status === nextFilters.status &&
+                currentFilters.per_page === nextFilters.per_page
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [filters.per_page, filters.status, filters.supplier]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentSupplier =
+            filters.supplier === null ? '' : String(filters.supplier);
+        const currentPerPage = String(filters.per_page);
+
+        if (
+            normalizedSearch === filters.search &&
+            tableFilters.supplier === currentSupplier &&
+            tableFilters.status === filters.status &&
+            tableFilters.per_page === currentPerPage
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(purchaseOrdersIndex()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    supplier:
+                        tableFilters.supplier === ''
+                            ? undefined
+                            : Number(tableFilters.supplier),
+                    status: tableFilters.status,
+                    per_page: Number(tableFilters.per_page),
+                    page: 1,
+                }),
+                {
+                    only: ['purchaseOrders', 'filters'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.per_page,
+        filters.search,
+        filters.status,
+        filters.supplier,
+        searchInput,
+        tableFilters,
+    ]);
+
+    const activeFilterCount =
+        (tableFilters.supplier === '' ? 0 : 1) +
+        (tableFilters.status === '' ? 0 : 1);
     const exportHref = purchaseOrdersIndex({
         query: cleanQueryParams({
-            ...filters,
+            search: searchInput.trim(),
+            supplier:
+                tableFilters.supplier === ''
+                    ? undefined
+                    : Number(tableFilters.supplier),
+            status: tableFilters.status,
             export: 'csv',
         }),
     });
@@ -69,85 +181,180 @@ export default function PurchaseOrdersIndex({
         <>
             <Head title="Purchase Orders" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Purchase Orders
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Track ordering progress and receiving readiness
-                            against approved sourcing needs.
+                            Order release and receiving progress by supplier.
                         </p>
                     </div>
 
                     {can.create && (
                         <Button asChild>
                             <Link href={purchaseOrdersCreate()}>
+                                <Plus />
                                 New purchase order
                             </Link>
                         </Button>
                     )}
                 </div>
 
-                <IndexFiltersCard
-                    action={purchaseOrdersIndex()}
-                    resetHref={purchaseOrdersIndex()}
-                    filters={filters}
-                    exportHref={exportHref}
-                    description="Search by PO number, supplier reference, supplier, request, project, or work order."
-                    activeFilterCount={activeFilterCount}
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={searchInput}
+                                onChange={(event) =>
+                                    setSearchInput(event.currentTarget.value)
+                                }
+                                placeholder="Search purchase orders"
+                                className="h-9 pl-9"
+                            />
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <SlidersHorizontal />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                    <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="start" className="w-56">
+                                <DropdownMenuRadioGroup
+                                    value={
+                                        tableFilters.status === ''
+                                            ? 'all'
+                                            : tableFilters.status
+                                    }
+                                    onValueChange={(value) => {
+                                        router.cancelAll();
+                                        setTableFilters((currentFilters) => ({
+                                            ...currentFilters,
+                                            status:
+                                                value === 'all' ? '' : value,
+                                        }));
+                                    }}
+                                >
+                                    <DropdownMenuRadioItem value="all">
+                                        All statuses
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuSeparator />
+                                    {statusOptions.map((option) => (
+                                        <DropdownMenuRadioItem
+                                            key={option.value}
+                                            value={String(option.value)}
+                                        >
+                                            {option.label}
+                                        </DropdownMenuRadioItem>
+                                    ))}
+                                </DropdownMenuRadioGroup>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Supplier
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.supplier === ''
+                                                    ? 'all'
+                                                    : tableFilters.supplier
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        supplier:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All suppliers
+                                            </DropdownMenuRadioItem>
+                                            {supplierOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 bg-background"
+                            >
+                                <Ellipsis />
+                                Actions
+                                <ChevronDown />
+                            </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem asChild>
+                                <a href={toUrl(exportHref)}>
+                                    <Download />
+                                    Export CSV
+                                </a>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={purchaseOrders}
+                            perPage={tableFilters.per_page}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    per_page: value,
+                                }));
+                            }}
+                        />
+                    }
                 >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search purchase orders"
-                    />
-
-                    <FilterSelect
-                        name="supplier"
-                        defaultValue={filters.supplier ?? ''}
-                    >
-                        <option value="">All suppliers</option>
-                        {supplierOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect name="status" defaultValue={filters.status}>
-                        <option value="">All statuses</option>
-                        {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-                </IndexFiltersCard>
-
-                <DataTableCard
-                    title="Purchase-order registry"
-                    description={`${purchaseOrders.total} purchase orders`}
-                    pagination={purchaseOrders}
-                >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">PO</th>
-                                <th className="px-6 py-3 font-medium">
-                                    Supplier / linkage
-                                </th>
-                                <th className="px-6 py-3 font-medium">Dates</th>
-                                <th className="px-6 py-3 font-medium">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Receiving
-                                </th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>PO</th>
+                                <th>Supplier / linkage</th>
+                                <th>Dates</th>
+                                <th>Status</th>
+                                <th className="text-right">Receiving</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
 
@@ -156,7 +363,7 @@ export default function PurchaseOrdersIndex({
                                 <tr>
                                     <td
                                         colSpan={6}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No purchase orders matched the current
                                         filters.
@@ -165,64 +372,54 @@ export default function PurchaseOrdersIndex({
                             )}
 
                             {purchaseOrders.data.map((purchaseOrder) => (
-                                <tr
-                                    key={purchaseOrder.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
-                                        <div className="space-y-1">
-                                            <p className="font-medium">
+                                <tr key={purchaseOrder.id}>
+                                    <td>
+                                        <div className="space-y-0.5">
+                                            <p className="max-w-[14rem] truncate font-semibold text-foreground">
                                                 {purchaseOrder.po_no}
                                             </p>
-                                            <p className="text-muted-foreground">
+                                            <p className="max-w-[16rem] truncate text-[13px] text-muted-foreground">
                                                 {purchaseOrder.supplier_reference ??
                                                     'No supplier reference'}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
+                                    <td>
+                                        <div className="space-y-0.5">
+                                            <p className="max-w-[18rem] truncate font-medium text-foreground">
                                                 {purchaseOrder.supplier
                                                     .company_name
-                                                    ? `${purchaseOrder.supplier.supplier_code} - ${purchaseOrder.supplier.company_name}`
+                                                    ? `${purchaseOrder.supplier.supplier_code} • ${purchaseOrder.supplier.company_name}`
                                                     : 'No supplier'}
                                             </p>
-                                            <p>
+                                            <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
                                                 {purchaseOrder.purchase_request
                                                     .request_no
-                                                    ? `PR: ${purchaseOrder.purchase_request.request_no}`
-                                                    : 'No purchase request'}
-                                            </p>
-                                            <p>
-                                                {purchaseOrder.project
-                                                    .project_no
-                                                    ? `${purchaseOrder.project.project_no} - ${purchaseOrder.project.title}`
-                                                    : purchaseOrder.work_order
-                                                            .work_order_no
-                                                      ? `${purchaseOrder.work_order.work_order_no} - ${purchaseOrder.work_order.summary}`
-                                                      : 'No project / work order'}
+                                                    ? `PR • ${purchaseOrder.purchase_request.request_no}`
+                                                    : purchaseOrder.project
+                                                            .project_no
+                                                      ? `${purchaseOrder.project.project_no} • ${purchaseOrder.project.title ?? 'Project'}`
+                                                      : purchaseOrder.work_order
+                                                              .work_order_no
+                                                        ? `${purchaseOrder.work_order.work_order_no} • ${purchaseOrder.work_order.summary ?? 'Work order'}`
+                                                        : 'No linked request or job'}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
-                                                Order date:{' '}
-                                                {purchaseOrder.order_date ??
-                                                    'Not set'}
-                                            </p>
-                                            <p>
-                                                Expected:{' '}
-                                                {purchaseOrder.expected_date ??
-                                                    'Not set'}
-                                            </p>
-                                        </div>
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p>
+                                            {purchaseOrder.order_date ??
+                                                'No order date'}
+                                        </p>
+                                        <p>
+                                            {purchaseOrder.expected_date ??
+                                                'No expected date'}
+                                        </p>
                                     </td>
 
-                                    <td className="px-6 py-4">
+                                    <td>
                                         <Badge
                                             variant="outline"
                                             className={statusBadgeClass(
@@ -233,71 +430,66 @@ export default function PurchaseOrdersIndex({
                                         </Badge>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
-                                                Ordered:{' '}
-                                                {
-                                                    purchaseOrder.ordered_quantity_total
-                                                }
-                                            </p>
-                                            <p>
-                                                Received:{' '}
-                                                {
-                                                    purchaseOrder.received_quantity_total
-                                                }
-                                            </p>
-                                            <p>
-                                                {purchaseOrder.receipt_count}{' '}
-                                                receipts
-                                            </p>
-                                        </div>
+                                    <td className="text-right text-[13px] text-muted-foreground">
+                                        <p className="font-medium text-foreground tabular-nums">
+                                            Ordered{' '}
+                                            {purchaseOrder.ordered_quantity_total.toFixed(
+                                                2,
+                                            )}
+                                        </p>
+                                        <p>
+                                            Received{' '}
+                                            {purchaseOrder.received_quantity_total.toFixed(
+                                                2,
+                                            )}{' '}
+                                            • {purchaseOrder.receipt_count}{' '}
+                                            receipts
+                                        </p>
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-2">
-                                            {purchaseOrder.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link
-                                                        href={purchaseOrdersShow(
-                                                            purchaseOrder.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
-                                            )}
-
-                                            {purchaseOrder.can.update && (
-                                                <Button size="sm" asChild>
-                                                    <Link
-                                                        href={purchaseOrdersEdit(
-                                                            purchaseOrder.id,
-                                                        )}
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                </Button>
-                                            )}
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={[
+                                                    ...(purchaseOrder.can.view
+                                                        ? [
+                                                              {
+                                                                  key: 'open',
+                                                                  label: 'Open',
+                                                                  icon: Eye,
+                                                                  href: purchaseOrdersShow(
+                                                                      purchaseOrder.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(purchaseOrder.can.update
+                                                        ? [
+                                                              {
+                                                                  key: 'edit',
+                                                                  label: 'Edit',
+                                                                  icon: Pencil,
+                                                                  href: purchaseOrdersEdit(
+                                                                      purchaseOrder.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                ]}
+                                                label={`Open actions for ${purchaseOrder.po_no}`}
+                                            />
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );
 }
 
 PurchaseOrdersIndex.layout = {
-    breadcrumbs: [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Purchase Orders', href: purchaseOrdersIndex() },
-    ],
+    breadcrumbs: purchaseOrderBreadcrumbs,
 };

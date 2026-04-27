@@ -38,13 +38,20 @@ test('authorized users can browse paginated users', function () {
         $user->roles()->sync([roleId('Sales Admin / Business Development')]);
     });
 
-    $this->get(route('users.index'))
+    $this->get(route('users.index', [
+        'per_page' => 5,
+    ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('users/index')
             ->where('users.total', 16)
             ->where('users.current_page', 1)
-            ->has('users.data', 15)
+            ->has('users.data', 5)
+            ->where('filters.per_page', 5)
+            ->where('summary.total_users', 16)
+            ->where('summary.active_users', 16)
+            ->where('summary.inactive_users', 0)
+            ->where('summary.roles_in_use', 2)
             ->where('can.create', true),
         );
 });
@@ -67,14 +74,18 @@ test('user list can be filtered by role and activity', function () {
     $inactiveOperationsUser->roles()->sync([$operationsRoleId]);
 
     $this->get(route('users.index', [
+        'search' => 'alpha',
         'role' => $salesRoleId,
         'active' => 'active',
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('users/index')
+            ->where('filters.search', 'alpha')
             ->where('filters.role', $salesRoleId)
             ->where('filters.active', 'active')
+            ->where('filters.per_page', 5)
             ->where('users.total', 1)
             ->where('users.data.0.name', 'Alpha Sales'),
         );

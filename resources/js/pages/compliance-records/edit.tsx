@@ -1,6 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { index as complianceRecordsIndex, show as complianceRecordsShow } from '@/routes/compliance-records';
+import {
+    index as complianceRecordsIndex,
+    show as complianceRecordsShow,
+} from '@/routes/compliance-records';
 import { ComplianceRecordForm } from '@/components/compliance/compliance-record-form';
 import type {
     ComplianceRecordDetail,
@@ -32,7 +35,7 @@ export default function ComplianceRecordsEdit({
         <>
             <Head title={`Edit ${complianceRecord.record_no}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <ComplianceRecordForm
                     complianceRecord={complianceRecord}
                     templateOptions={templateOptions}

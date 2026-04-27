@@ -16,6 +16,8 @@ class WarehouseController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -25,6 +27,7 @@ class WarehouseController extends Controller
 
         $search = $request->string('search')->toString();
         $activity = $request->string('activity')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $warehouses = Warehouse::query()
             ->withCount('stockBalances')
@@ -32,7 +35,7 @@ class WarehouseController extends Controller
             ->search($search)
             ->activity($activity)
             ->orderBy('warehouse_name')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Warehouse $warehouse) => [
                 'id' => $warehouse->getKey(),
@@ -55,6 +58,7 @@ class WarehouseController extends Controller
             'filters' => [
                 'search' => $search,
                 'activity' => $activity,
+                'per_page' => $perPage,
             ],
             'activityOptions' => [
                 ['value' => 'active', 'label' => 'Active'],
@@ -228,5 +232,17 @@ class WarehouseController extends Controller
         ]);
 
         return to_route('warehouses.index');
+    }
+
+    /**
+     * Resolve the validated page size for the warehouse table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

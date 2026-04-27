@@ -53,7 +53,24 @@ test('authorized users can browse paginated work orders', function () {
             ->where('workOrders.total', 16)
             ->where('workOrders.current_page', 1)
             ->has('workOrders.data', 15)
+            ->where('summary.total_work_orders', 16)
+            ->where('filters.per_page', 15)
             ->where('can.create', true),
+        );
+});
+
+test('work order page size can be customized', function () {
+    actingAsWorkOrderRole('Operations Admin');
+
+    WorkOrder::factory()->count(12)->create();
+
+    $this->get(route('work-orders.index', ['per_page' => 5]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('work-orders/index')
+            ->where('workOrders.total', 12)
+            ->has('workOrders.data', 5)
+            ->where('filters.per_page', 5),
         );
 });
 
@@ -109,7 +126,7 @@ test('work order list can be filtered by search customer project status priority
     ]);
 
     $this->get(route('work-orders.index', [
-        'search' => 'Alpha',
+        'search' => 'alpha',
         'customer' => $alphaCustomer->getKey(),
         'project' => $alphaProject->getKey(),
         'status' => WorkOrderStatus::Scheduled->value,
@@ -119,7 +136,7 @@ test('work order list can be filtered by search customer project status priority
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('work-orders/index')
-            ->where('filters.search', 'Alpha')
+            ->where('filters.search', 'alpha')
             ->where('filters.customer', $alphaCustomer->getKey())
             ->where('filters.project', $alphaProject->getKey())
             ->where('filters.status', WorkOrderStatus::Scheduled->value)

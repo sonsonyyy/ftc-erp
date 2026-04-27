@@ -75,15 +75,19 @@ class PayrollRun extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('payroll_run_no', 'like', "%{$term}%")
-                ->orWhere('remarks', 'like', "%{$term}%")
-                ->orWhereHas('entries.employee', function (Builder $employeeQuery) use ($term): void {
+                ->where('payroll_run_no', $operator, "%{$term}%")
+                ->orWhere('remarks', $operator, "%{$term}%")
+                ->orWhereHas('entries.employee', function (Builder $employeeQuery) use ($term, $operator): void {
                     $employeeQuery
-                        ->where('employee_no', 'like', "%{$term}%")
-                        ->orWhere('first_name', 'like', "%{$term}%")
-                        ->orWhere('last_name', 'like', "%{$term}%");
+                        ->where('employee_no', $operator, "%{$term}%")
+                        ->orWhere('first_name', $operator, "%{$term}%")
+                        ->orWhere('last_name', $operator, "%{$term}%");
                 });
         });
     }

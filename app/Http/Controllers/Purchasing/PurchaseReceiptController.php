@@ -19,6 +19,8 @@ class PurchaseReceiptController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of purchase receipts.
      */
@@ -29,6 +31,7 @@ class PurchaseReceiptController extends Controller
         $search = $request->string('search')->toString();
         $supplierId = $request->integer('supplier') ?: null;
         $warehouseId = $request->integer('warehouse') ?: null;
+        $perPage = $this->resolvePerPage($request);
 
         $purchaseReceipts = PurchaseReceipt::query()
             ->with([
@@ -40,24 +43,26 @@ class PurchaseReceiptController extends Controller
             ->withCount(['items', 'attachments'])
             ->withSum('items as received_quantity_total', 'received_quantity')
             ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($builder) use ($search): void {
+                $likeOperator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+                $query->where(function ($builder) use ($likeOperator, $search): void {
                     $builder
-                        ->where('receipt_no', 'like', "%{$search}%")
-                        ->orWhere('supplier_reference', 'like', "%{$search}%")
-                        ->orWhere('remarks', 'like', "%{$search}%")
-                        ->orWhereHas('purchaseOrder', function ($purchaseOrderQuery) use ($search): void {
+                        ->where('receipt_no', $likeOperator, "%{$search}%")
+                        ->orWhere('supplier_reference', $likeOperator, "%{$search}%")
+                        ->orWhere('remarks', $likeOperator, "%{$search}%")
+                        ->orWhereHas('purchaseOrder', function ($purchaseOrderQuery) use ($likeOperator, $search): void {
                             $purchaseOrderQuery
-                                ->where('po_no', 'like', "%{$search}%")
-                                ->orWhereHas('supplier', function ($supplierQuery) use ($search): void {
+                                ->where('po_no', $likeOperator, "%{$search}%")
+                                ->orWhereHas('supplier', function ($supplierQuery) use ($likeOperator, $search): void {
                                     $supplierQuery
-                                        ->where('supplier_code', 'like', "%{$search}%")
-                                        ->orWhere('company_name', 'like', "%{$search}%");
+                                        ->where('supplier_code', $likeOperator, "%{$search}%")
+                                        ->orWhere('company_name', $likeOperator, "%{$search}%");
                                 });
                         })
-                        ->orWhereHas('warehouse', function ($warehouseQuery) use ($search): void {
+                        ->orWhereHas('warehouse', function ($warehouseQuery) use ($likeOperator, $search): void {
                             $warehouseQuery
-                                ->where('warehouse_code', 'like', "%{$search}%")
-                                ->orWhere('warehouse_name', 'like', "%{$search}%");
+                                ->where('warehouse_code', $likeOperator, "%{$search}%")
+                                ->orWhere('warehouse_name', $likeOperator, "%{$search}%");
                         });
                 });
             })
@@ -68,7 +73,7 @@ class PurchaseReceiptController extends Controller
             ->when(filled($warehouseId), fn ($query) => $query->where('warehouse_id', $warehouseId))
             ->orderByDesc('received_date')
             ->orderByDesc('id')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (PurchaseReceipt $purchaseReceipt) => $this->purchaseReceiptListItem($request, $purchaseReceipt));
 
@@ -78,6 +83,7 @@ class PurchaseReceiptController extends Controller
                 'search' => $search,
                 'supplier' => $supplierId,
                 'warehouse' => $warehouseId,
+                'per_page' => $perPage,
             ],
             'supplierOptions' => $this->supplierOptions(),
             'warehouseOptions' => $this->warehouseOptions(),
@@ -311,6 +317,18 @@ class PurchaseReceiptController extends Controller
                     && ($request->user()?->can('update', $purchaseReceipt) ?? false),
             ],
         ];
+    }
+
+    /**
+     * Resolve a supported page size for paginated listings.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 
     /**

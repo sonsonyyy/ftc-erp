@@ -8,7 +8,7 @@ export default function InventoryCategoriesCreate() {
         <>
             <Head title="New Inventory Category" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <InventoryCategoryForm
                     title="New inventory category"
                     description="Create a reusable category for inventory filtering, item organization, and low-stock reporting."

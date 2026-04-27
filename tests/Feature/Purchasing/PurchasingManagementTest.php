@@ -176,14 +176,16 @@ test('authorized users can browse and filter paginated suppliers', function () {
     Supplier::factory()->count(14)->create();
 
     $this->get(route('suppliers.index', [
-        'search' => 'Alpha',
+        'search' => 'alpha',
         'activity' => 'active',
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('suppliers/index')
-            ->where('filters.search', 'Alpha')
+            ->where('filters.search', 'alpha')
             ->where('filters.activity', 'active')
+            ->where('filters.per_page', 5)
             ->where('suppliers.total', 1)
             ->where('suppliers.data.0.company_name', 'Alpha Fire Supply')
             ->where('can.create', true),
@@ -297,16 +299,18 @@ test('authorized users can browse filter and create purchase requests', function
     ]);
 
     $this->get(route('purchase-requests.index', [
-        'search' => 'Alpha',
+        'search' => 'alpha',
         'supplier' => $context['supplier']->getKey(),
         'status' => PurchaseRequestStatus::Submitted->value,
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('purchase-requests/index')
-            ->where('filters.search', 'Alpha')
+            ->where('filters.search', 'alpha')
             ->where('filters.supplier', $context['supplier']->getKey())
             ->where('filters.status', PurchaseRequestStatus::Submitted->value)
+            ->where('filters.per_page', 5)
             ->where('purchaseRequests.total', 1)
             ->where('purchaseRequests.data.0.request_no', 'PR-ALPHA'),
         );
@@ -459,6 +463,23 @@ test('authorized users can create purchase orders and linked request becomes ord
 
     expect($purchaseOrder->items()->count())->toBe(2);
     expect($purchaseRequest->refresh()->status)->toBe(PurchaseRequestStatus::Ordered);
+
+    $this->get(route('purchase-orders.index', [
+        'search' => 'po-new',
+        'supplier' => $purchaseRequest->supplier_id,
+        'status' => PurchaseOrderStatus::Approved->value,
+        'per_page' => 5,
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('purchase-orders/index')
+            ->where('filters.search', 'po-new')
+            ->where('filters.supplier', $purchaseRequest->supplier_id)
+            ->where('filters.status', PurchaseOrderStatus::Approved->value)
+            ->where('filters.per_page', 5)
+            ->where('purchaseOrders.total', 1)
+            ->where('purchaseOrders.data.0.po_no', 'PO-NEW-001'),
+        );
 });
 
 test('purchasing users can submit and approve purchase orders', function () {
@@ -599,6 +620,23 @@ test('recording a purchase receipt updates stock and marks the order as fully re
     expect($purchaseOrder->refresh()->status)->toBe(PurchaseOrderStatus::FullyReceived);
     expect(StockBalance::query()->count())->toBe(1);
     expect(StockMovement::query()->count())->toBe(1);
+
+    $this->get(route('purchase-receipts.index', [
+        'search' => 'rcv-new',
+        'supplier' => $context['supplier']->getKey(),
+        'warehouse' => $context['warehouse']->getKey(),
+        'per_page' => 5,
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('purchase-receipts/index')
+            ->where('filters.search', 'rcv-new')
+            ->where('filters.supplier', $context['supplier']->getKey())
+            ->where('filters.warehouse', $context['warehouse']->getKey())
+            ->where('filters.per_page', 5)
+            ->where('purchaseReceipts.total', 1)
+            ->where('purchaseReceipts.data.0.receipt_no', 'RCV-NEW-001'),
+        );
 });
 
 test('users without permission cannot record purchase receipts', function () {

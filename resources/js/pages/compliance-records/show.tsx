@@ -59,26 +59,30 @@ function formatDateTime(date: string | null): string {
 }
 
 function statusBadgeClass(status: string): string {
-    return {
-        draft: 'border-slate-200 bg-slate-100 text-slate-700',
-        active: 'border-sky-200 bg-sky-50 text-sky-700',
-        due_soon: 'border-amber-200 bg-amber-50 text-amber-700',
-        for_renewal: 'border-violet-200 bg-violet-50 text-violet-700',
-        for_filing: 'border-cyan-200 bg-cyan-50 text-cyan-700',
-        in_progress: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-        submitted: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        renewed: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        expired: 'border-rose-200 bg-rose-50 text-rose-700',
-        overdue: 'border-rose-200 bg-rose-50 text-rose-700',
-        archived: 'border-stone-200 bg-stone-100 text-stone-700',
-    }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700';
+    return (
+        {
+            draft: 'border-slate-200 bg-slate-100 text-slate-700',
+            active: 'border-sky-200 bg-sky-50 text-sky-700',
+            due_soon: 'border-amber-200 bg-amber-50 text-amber-700',
+            for_renewal: 'border-violet-200 bg-violet-50 text-violet-700',
+            for_filing: 'border-cyan-200 bg-cyan-50 text-cyan-700',
+            in_progress: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+            submitted: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+            renewed: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+            expired: 'border-rose-200 bg-rose-50 text-rose-700',
+            overdue: 'border-rose-200 bg-rose-50 text-rose-700',
+            archived: 'border-stone-200 bg-stone-100 text-stone-700',
+        }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700'
+    );
 }
 
 function approvalBadgeClass(state: string): string {
-    return {
-        pending: 'border-amber-200 bg-amber-50 text-amber-700',
-        approved: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-    }[state] ?? 'border-slate-200 bg-slate-100 text-slate-700';
+    return (
+        {
+            pending: 'border-amber-200 bg-amber-50 text-amber-700',
+            approved: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        }[state] ?? 'border-slate-200 bg-slate-100 text-slate-700'
+    );
 }
 
 export default function ComplianceRecordsShow({
@@ -120,9 +124,12 @@ export default function ComplianceRecordsShow({
             remarks: data.remarks || null,
         }));
 
-        submissionForm.submit(ComplianceSubmissionController.store(complianceRecord.id), {
-            preserveScroll: true,
-        });
+        submissionForm.submit(
+            ComplianceSubmissionController.store(complianceRecord.id),
+            {
+                preserveScroll: true,
+            },
+        );
     }
 
     function submitTask(event: React.FormEvent<HTMLFormElement>) {
@@ -131,7 +138,10 @@ export default function ComplianceRecordsShow({
         taskForm.transform((data) => ({
             title: data.title,
             due_date: data.due_date || null,
-            assigned_user_id: data.assigned_user_id === '' ? null : Number(data.assigned_user_id),
+            assigned_user_id:
+                data.assigned_user_id === ''
+                    ? null
+                    : Number(data.assigned_user_id),
             status: data.status,
             notes: data.notes || null,
         }));
@@ -155,19 +165,22 @@ export default function ComplianceRecordsShow({
     }
 
     function deleteTask(taskId: number) {
-        router.delete(ComplianceTaskController.destroy({
-            compliance_record: complianceRecord.id,
-            task: taskId,
-        }), {
-            preserveScroll: true,
-        });
+        router.delete(
+            ComplianceTaskController.destroy({
+                compliance_record: complianceRecord.id,
+                task: taskId,
+            }),
+            {
+                preserveScroll: true,
+            },
+        );
     }
 
     return (
         <>
             <Head title={complianceRecord.record_no} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
@@ -176,7 +189,9 @@ export default function ComplianceRecordsShow({
                             </h1>
                             <Badge
                                 variant="outline"
-                                className={statusBadgeClass(complianceRecord.display_status)}
+                                className={statusBadgeClass(
+                                    complianceRecord.display_status,
+                                )}
                             >
                                 {complianceRecord.display_status_label}
                             </Badge>
@@ -184,13 +199,16 @@ export default function ComplianceRecordsShow({
 
                         <p className="text-sm text-muted-foreground">
                             {complianceRecord.title}
-                            {complianceRecord.template && ` • ${complianceRecord.template.name}`}
+                            {complianceRecord.template &&
+                                ` • ${complianceRecord.template.name}`}
                         </p>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
                         <Button variant="outline" asChild>
-                            <Link href={complianceRecordsCalendar()}>Calendar</Link>
+                            <Link href={complianceRecordsCalendar()}>
+                                Calendar
+                            </Link>
                         </Button>
 
                         <Button variant="outline" asChild>
@@ -199,7 +217,11 @@ export default function ComplianceRecordsShow({
 
                         {complianceRecord.can.update && (
                             <Button asChild>
-                                <Link href={complianceRecordsEdit(complianceRecord.id)}>
+                                <Link
+                                    href={complianceRecordsEdit(
+                                        complianceRecord.id,
+                                    )}
+                                >
                                     Edit record
                                 </Link>
                             </Button>
@@ -208,7 +230,9 @@ export default function ComplianceRecordsShow({
                         {complianceRecord.can.delete && (
                             <Button variant="outline" asChild>
                                 <Link
-                                    href={ComplianceRecordController.destroy(complianceRecord.id)}
+                                    href={ComplianceRecordController.destroy(
+                                        complianceRecord.id,
+                                    )}
                                     method="delete"
                                     as="button"
                                 >
@@ -224,7 +248,9 @@ export default function ComplianceRecordsShow({
                         <CardHeader>
                             <CardDescription>Next deadline</CardDescription>
                             <CardTitle className="text-base">
-                                {formatDate(complianceRecord.next_deadline_date)}
+                                {formatDate(
+                                    complianceRecord.next_deadline_date,
+                                )}
                             </CardTitle>
                         </CardHeader>
                     </Card>
@@ -232,7 +258,9 @@ export default function ComplianceRecordsShow({
                     <Card>
                         <CardHeader>
                             <CardDescription>Submissions</CardDescription>
-                            <CardTitle>{complianceRecord.submission_count}</CardTitle>
+                            <CardTitle>
+                                {complianceRecord.submission_count}
+                            </CardTitle>
                         </CardHeader>
                     </Card>
 
@@ -246,14 +274,18 @@ export default function ComplianceRecordsShow({
                     <Card>
                         <CardHeader>
                             <CardDescription>Open alerts</CardDescription>
-                            <CardTitle>{complianceRecord.open_alert_count}</CardTitle>
+                            <CardTitle>
+                                {complianceRecord.open_alert_count}
+                            </CardTitle>
                         </CardHeader>
                     </Card>
 
                     <Card>
                         <CardHeader>
                             <CardDescription>Attachments</CardDescription>
-                            <CardTitle>{complianceRecord.attachment_count}</CardTitle>
+                            <CardTitle>
+                                {complianceRecord.attachment_count}
+                            </CardTitle>
                         </CardHeader>
                     </Card>
                 </div>
@@ -263,48 +295,64 @@ export default function ComplianceRecordsShow({
                         <CardHeader>
                             <CardTitle>Compliance information</CardTitle>
                             <CardDescription>
-                                Core filing context, deadline tracking, and current ownership for this record.
+                                Core filing context, deadline tracking, and
+                                current ownership for this record.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="grid gap-5 md:grid-cols-2">
                             <div>
-                                <p className="text-sm text-muted-foreground">Agency</p>
-                                <p className="mt-1 font-medium">{complianceRecord.agency}</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Agency
+                                </p>
+                                <p className="mt-1 font-medium">
+                                    {complianceRecord.agency}
+                                </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Category</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Category
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {complianceRecord.category ?? 'Not set'}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Due date</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Due date
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {formatDate(complianceRecord.due_date)}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Expiry date</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Expiry date
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {formatDate(complianceRecord.expiry_date)}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Recurrence</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Recurrence
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {complianceRecord.recurrence_unit_label}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Responsible user</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Responsible user
+                                </p>
                                 <p className="mt-1 font-medium">
-                                    {complianceRecord.assigned_user?.name ?? 'Unassigned'}
+                                    {complianceRecord.assigned_user?.name ??
+                                        'Unassigned'}
                                 </p>
                             </div>
 
@@ -313,15 +361,20 @@ export default function ComplianceRecordsShow({
                                     Latest submission
                                 </p>
                                 <p className="mt-1 font-medium">
-                                    {complianceRecord.latest_submission_reference ?? 'Not recorded'}
+                                    {complianceRecord.latest_submission_reference ??
+                                        'Not recorded'}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                    {formatDate(complianceRecord.latest_submission_at)}
+                                    {formatDate(
+                                        complianceRecord.latest_submission_at,
+                                    )}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Reminder cadence</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Reminder cadence
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {complianceRecord.reminder_days.length > 0
                                         ? `${complianceRecord.reminder_days.join(', ')} days`
@@ -330,15 +383,20 @@ export default function ComplianceRecordsShow({
                             </div>
 
                             <div className="md:col-span-2">
-                                <p className="text-sm text-muted-foreground">Description</p>
-                                <p className="mt-1 whitespace-pre-line font-medium">
-                                    {complianceRecord.description ?? 'No description'}
+                                <p className="text-sm text-muted-foreground">
+                                    Description
+                                </p>
+                                <p className="mt-1 font-medium whitespace-pre-line">
+                                    {complianceRecord.description ??
+                                        'No description'}
                                 </p>
                             </div>
 
                             <div className="md:col-span-2">
-                                <p className="text-sm text-muted-foreground">Notes</p>
-                                <p className="mt-1 whitespace-pre-line font-medium">
+                                <p className="text-sm text-muted-foreground">
+                                    Notes
+                                </p>
+                                <p className="mt-1 font-medium whitespace-pre-line">
                                     {complianceRecord.notes ?? 'No notes'}
                                 </p>
                             </div>
@@ -349,87 +407,165 @@ export default function ComplianceRecordsShow({
                         <CardHeader>
                             <CardTitle>Submission history</CardTitle>
                             <CardDescription>
-                                Log each filing or renewal so the next cycle carries forward cleanly.
+                                Log each filing or renewal so the next cycle
+                                carries forward cleanly.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-4">
-                            {!complianceRecord.can.create_submission && submissions.some((submission) => submission.approval_state === 'pending') && (
-                                <div className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
-                                    A submission is waiting for approval. Approve it below before recording another cycle.
-                                </div>
-                            )}
+                            {!complianceRecord.can.create_submission &&
+                                submissions.some(
+                                    (submission) =>
+                                        submission.approval_state === 'pending',
+                                ) && (
+                                    <div className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                                        A submission is waiting for approval.
+                                        Approve it below before recording
+                                        another cycle.
+                                    </div>
+                                )}
 
                             {complianceRecord.can.create_submission && (
-                                <form onSubmit={submitSubmission} className="space-y-4 rounded-lg border p-4">
+                                <form
+                                    onSubmit={submitSubmission}
+                                    className="space-y-4 rounded-lg border p-4"
+                                >
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="reference_no">Reference number</Label>
+                                            <Label htmlFor="reference_no">
+                                                Reference number
+                                            </Label>
                                             <Input
                                                 id="reference_no"
-                                                value={submissionForm.data.reference_no}
+                                                value={
+                                                    submissionForm.data
+                                                        .reference_no
+                                                }
                                                 onChange={(event) =>
-                                                    submissionForm.setData('reference_no', event.currentTarget.value)
+                                                    submissionForm.setData(
+                                                        'reference_no',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
                                                 }
                                                 placeholder="SUB-CMP-0003"
                                             />
-                                            <InputError message={submissionForm.errors.reference_no} />
+                                            <InputError
+                                                message={
+                                                    submissionForm.errors
+                                                        .reference_no
+                                                }
+                                            />
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="submitted_at">Submitted at</Label>
+                                            <Label htmlFor="submitted_at">
+                                                Submitted at
+                                            </Label>
                                             <Input
                                                 id="submitted_at"
                                                 type="date"
-                                                value={submissionForm.data.submitted_at}
+                                                value={
+                                                    submissionForm.data
+                                                        .submitted_at
+                                                }
                                                 onChange={(event) =>
-                                                    submissionForm.setData('submitted_at', event.currentTarget.value)
+                                                    submissionForm.setData(
+                                                        'submitted_at',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
                                                 }
                                             />
-                                            <InputError message={submissionForm.errors.submitted_at} />
+                                            <InputError
+                                                message={
+                                                    submissionForm.errors
+                                                        .submitted_at
+                                                }
+                                            />
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="next_due_date">Next due date</Label>
+                                            <Label htmlFor="next_due_date">
+                                                Next due date
+                                            </Label>
                                             <Input
                                                 id="next_due_date"
                                                 type="date"
-                                                value={submissionForm.data.next_due_date}
+                                                value={
+                                                    submissionForm.data
+                                                        .next_due_date
+                                                }
                                                 onChange={(event) =>
-                                                    submissionForm.setData('next_due_date', event.currentTarget.value)
+                                                    submissionForm.setData(
+                                                        'next_due_date',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
                                                 }
                                             />
-                                            <InputError message={submissionForm.errors.next_due_date} />
+                                            <InputError
+                                                message={
+                                                    submissionForm.errors
+                                                        .next_due_date
+                                                }
+                                            />
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="next_expiry_date">Next expiry date</Label>
+                                            <Label htmlFor="next_expiry_date">
+                                                Next expiry date
+                                            </Label>
                                             <Input
                                                 id="next_expiry_date"
                                                 type="date"
-                                                value={submissionForm.data.next_expiry_date}
+                                                value={
+                                                    submissionForm.data
+                                                        .next_expiry_date
+                                                }
                                                 onChange={(event) =>
-                                                    submissionForm.setData('next_expiry_date', event.currentTarget.value)
+                                                    submissionForm.setData(
+                                                        'next_expiry_date',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
                                                 }
                                             />
-                                            <InputError message={submissionForm.errors.next_expiry_date} />
+                                            <InputError
+                                                message={
+                                                    submissionForm.errors
+                                                        .next_expiry_date
+                                                }
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="submission_remarks">Remarks</Label>
+                                        <Label htmlFor="submission_remarks">
+                                            Remarks
+                                        </Label>
                                         <Textarea
                                             id="submission_remarks"
                                             value={submissionForm.data.remarks}
                                             onChange={(event) =>
-                                                submissionForm.setData('remarks', event.currentTarget.value)
+                                                submissionForm.setData(
+                                                    'remarks',
+                                                    event.currentTarget.value,
+                                                )
                                             }
                                             placeholder="OR number, portal notes, or renewed permit details."
                                         />
-                                        <InputError message={submissionForm.errors.remarks} />
+                                        <InputError
+                                            message={
+                                                submissionForm.errors.remarks
+                                            }
+                                        />
                                     </div>
 
-                                    <Button type="submit" disabled={submissionForm.processing}>
+                                    <Button
+                                        type="submit"
+                                        disabled={submissionForm.processing}
+                                    >
                                         Add submission
                                     </Button>
                                 </form>
@@ -442,37 +578,54 @@ export default function ComplianceRecordsShow({
                             )}
 
                             {submissions.map((submission) => (
-                                <div key={submission.id} className="rounded-lg border px-4 py-3">
+                                <div
+                                    key={submission.id}
+                                    className="rounded-lg border px-4 py-3"
+                                >
                                     <div className="space-y-3">
                                         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                                             <div className="space-y-2">
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <p className="font-medium">
-                                                        {submission.reference_no}
+                                                        {
+                                                            submission.reference_no
+                                                        }
                                                     </p>
                                                     <Badge
                                                         variant="outline"
-                                                        className={approvalBadgeClass(submission.approval_state)}
+                                                        className={approvalBadgeClass(
+                                                            submission.approval_state,
+                                                        )}
                                                     >
-                                                        {submission.approval_state_label}
+                                                        {
+                                                            submission.approval_state_label
+                                                        }
                                                     </Badge>
                                                     <p className="text-sm text-muted-foreground">
-                                                        {formatDate(submission.submitted_at)}
+                                                        {formatDate(
+                                                            submission.submitted_at,
+                                                        )}
                                                     </p>
                                                 </div>
 
                                                 <p className="text-sm text-muted-foreground">
-                                                    Submitted by {submission.submitted_by ?? 'Unknown'}
+                                                    Submitted by{' '}
+                                                    {submission.submitted_by ??
+                                                        'Unknown'}
                                                 </p>
                                             </div>
 
                                             {submission.can.approve && (
                                                 <Button size="sm" asChild>
                                                     <Link
-                                                        href={ComplianceSubmissionController.approve({
-                                                            compliance_record: complianceRecord.id,
-                                                            submission: submission.id,
-                                                        })}
+                                                        href={ComplianceSubmissionController.approve(
+                                                            {
+                                                                compliance_record:
+                                                                    complianceRecord.id,
+                                                                submission:
+                                                                    submission.id,
+                                                            },
+                                                        )}
                                                         method="patch"
                                                         as="button"
                                                     >
@@ -483,11 +636,25 @@ export default function ComplianceRecordsShow({
                                         </div>
 
                                         <p className="text-xs text-muted-foreground">
-                                            Snapshot due: {formatDate(submission.due_date_snapshot)} • Snapshot expiry: {formatDate(submission.expiry_date_snapshot)}
+                                            Snapshot due:{' '}
+                                            {formatDate(
+                                                submission.due_date_snapshot,
+                                            )}{' '}
+                                            • Snapshot expiry:{' '}
+                                            {formatDate(
+                                                submission.expiry_date_snapshot,
+                                            )}
                                         </p>
 
                                         <p className="text-xs text-muted-foreground">
-                                            Next due: {formatDate(submission.next_due_date)} • Next expiry: {formatDate(submission.next_expiry_date)}
+                                            Next due:{' '}
+                                            {formatDate(
+                                                submission.next_due_date,
+                                            )}{' '}
+                                            • Next expiry:{' '}
+                                            {formatDate(
+                                                submission.next_expiry_date,
+                                            )}
                                         </p>
 
                                         {submission.remarks && (
@@ -504,7 +671,8 @@ export default function ComplianceRecordsShow({
 
                                         {submission.approval_notes && (
                                             <p className="text-sm text-muted-foreground">
-                                                Approval notes: {submission.approval_notes}
+                                                Approval notes:{' '}
+                                                {submission.approval_notes}
                                             </p>
                                         )}
                                     </div>
@@ -519,94 +687,156 @@ export default function ComplianceRecordsShow({
                         <CardHeader>
                             <CardTitle>Tasks</CardTitle>
                             <CardDescription>
-                                Track the prep work that needs to happen before filing or renewal.
+                                Track the prep work that needs to happen before
+                                filing or renewal.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-4">
                             {complianceRecord.can.create_task && (
-                                <form onSubmit={submitTask} className="space-y-4 rounded-lg border p-4">
+                                <form
+                                    onSubmit={submitTask}
+                                    className="space-y-4 rounded-lg border p-4"
+                                >
                                     <div className="grid gap-2">
-                                        <Label htmlFor="task_title">Task title</Label>
+                                        <Label htmlFor="task_title">
+                                            Task title
+                                        </Label>
                                         <Input
                                             id="task_title"
                                             value={taskForm.data.title}
                                             onChange={(event) =>
-                                                taskForm.setData('title', event.currentTarget.value)
+                                                taskForm.setData(
+                                                    'title',
+                                                    event.currentTarget.value,
+                                                )
                                             }
                                             placeholder="Prepare supporting documents"
                                         />
-                                        <InputError message={taskForm.errors.title} />
+                                        <InputError
+                                            message={taskForm.errors.title}
+                                        />
                                     </div>
 
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="task_due_date">Due date</Label>
+                                            <Label htmlFor="task_due_date">
+                                                Due date
+                                            </Label>
                                             <Input
                                                 id="task_due_date"
                                                 type="date"
                                                 value={taskForm.data.due_date}
                                                 onChange={(event) =>
-                                                    taskForm.setData('due_date', event.currentTarget.value)
+                                                    taskForm.setData(
+                                                        'due_date',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
                                                 }
                                             />
-                                            <InputError message={taskForm.errors.due_date} />
+                                            <InputError
+                                                message={
+                                                    taskForm.errors.due_date
+                                                }
+                                            />
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="task_assigned_user_id">Assigned user</Label>
+                                            <Label htmlFor="task_assigned_user_id">
+                                                Assigned user
+                                            </Label>
                                             <select
                                                 id="task_assigned_user_id"
-                                                value={taskForm.data.assigned_user_id}
-                                                onChange={(event) =>
-                                                    taskForm.setData('assigned_user_id', event.currentTarget.value)
+                                                value={
+                                                    taskForm.data
+                                                        .assigned_user_id
                                                 }
-                                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                                onChange={(event) =>
+                                                    taskForm.setData(
+                                                        'assigned_user_id',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
+                                                }
+                                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                             >
-                                                <option value="">Unassigned</option>
-                                                {assignedUserOptions.map((option) => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
+                                                <option value="">
+                                                    Unassigned
+                                                </option>
+                                                {assignedUserOptions.map(
+                                                    (option) => (
+                                                        <option
+                                                            key={option.value}
+                                                            value={option.value}
+                                                        >
+                                                            {option.label}
+                                                        </option>
+                                                    ),
+                                                )}
                                             </select>
-                                            <InputError message={taskForm.errors.assigned_user_id} />
+                                            <InputError
+                                                message={
+                                                    taskForm.errors
+                                                        .assigned_user_id
+                                                }
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="task_status">Initial status</Label>
+                                        <Label htmlFor="task_status">
+                                            Initial status
+                                        </Label>
                                         <select
                                             id="task_status"
                                             value={taskForm.data.status}
                                             onChange={(event) =>
-                                                taskForm.setData('status', event.currentTarget.value)
+                                                taskForm.setData(
+                                                    'status',
+                                                    event.currentTarget.value,
+                                                )
                                             }
-                                            className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                         >
                                             {taskStatusOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
+                                                <option
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
                                                     {option.label}
                                                 </option>
                                             ))}
                                         </select>
-                                        <InputError message={taskForm.errors.status} />
+                                        <InputError
+                                            message={taskForm.errors.status}
+                                        />
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="task_notes">Notes</Label>
+                                        <Label htmlFor="task_notes">
+                                            Notes
+                                        </Label>
                                         <Textarea
                                             id="task_notes"
                                             value={taskForm.data.notes}
                                             onChange={(event) =>
-                                                taskForm.setData('notes', event.currentTarget.value)
+                                                taskForm.setData(
+                                                    'notes',
+                                                    event.currentTarget.value,
+                                                )
                                             }
                                             placeholder="Working notes for the assigned owner."
                                         />
-                                        <InputError message={taskForm.errors.notes} />
+                                        <InputError
+                                            message={taskForm.errors.notes}
+                                        />
                                     </div>
 
-                                    <Button type="submit" disabled={taskForm.processing}>
+                                    <Button
+                                        type="submit"
+                                        disabled={taskForm.processing}
+                                    >
                                         Add task
                                     </Button>
                                 </form>
@@ -619,20 +849,29 @@ export default function ComplianceRecordsShow({
                             )}
 
                             {tasks.map((task) => (
-                                <div key={task.id} className="rounded-lg border px-4 py-3">
+                                <div
+                                    key={task.id}
+                                    className="rounded-lg border px-4 py-3"
+                                >
                                     <div className="space-y-3">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <p className="font-medium">{task.title}</p>
+                                            <p className="font-medium">
+                                                {task.title}
+                                            </p>
                                             <Badge
                                                 variant="outline"
-                                                className={statusBadgeClass(task.status)}
+                                                className={statusBadgeClass(
+                                                    task.status,
+                                                )}
                                             >
                                                 {task.status_label}
                                             </Badge>
                                         </div>
 
                                         <p className="text-sm text-muted-foreground">
-                                            Due {formatDate(task.due_date)} • {task.assigned_user?.name ?? 'Unassigned'}
+                                            Due {formatDate(task.due_date)} •{' '}
+                                            {task.assigned_user?.name ??
+                                                'Unassigned'}
                                         </p>
 
                                         {task.notes && (
@@ -643,7 +882,10 @@ export default function ComplianceRecordsShow({
 
                                         {task.completed_at && (
                                             <p className="text-xs text-muted-foreground">
-                                                Completed {formatDateTime(task.completed_at)}
+                                                Completed{' '}
+                                                {formatDateTime(
+                                                    task.completed_at,
+                                                )}
                                             </p>
                                         )}
 
@@ -656,7 +898,10 @@ export default function ComplianceRecordsShow({
                                                     onClick={() =>
                                                         toggleTaskStatus(
                                                             task.id,
-                                                            task.status === 'completed' ? 'open' : 'completed',
+                                                            task.status ===
+                                                                'completed'
+                                                                ? 'open'
+                                                                : 'completed',
                                                         )
                                                     }
                                                 >
@@ -669,7 +914,9 @@ export default function ComplianceRecordsShow({
                                                     type="button"
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => deleteTask(task.id)}
+                                                    onClick={() =>
+                                                        deleteTask(task.id)
+                                                    }
                                                 >
                                                     Remove
                                                 </Button>
@@ -685,7 +932,8 @@ export default function ComplianceRecordsShow({
                         <CardHeader>
                             <CardTitle>Recent alerts</CardTitle>
                             <CardDescription>
-                                Reminder and escalation history generated by the scheduler.
+                                Reminder and escalation history generated by the
+                                scheduler.
                             </CardDescription>
                         </CardHeader>
 
@@ -697,19 +945,26 @@ export default function ComplianceRecordsShow({
                             )}
 
                             {alerts.map((alert) => (
-                                <div key={alert.id} className="rounded-lg border px-4 py-3">
+                                <div
+                                    key={alert.id}
+                                    className="rounded-lg border px-4 py-3"
+                                >
                                     <div className="space-y-2">
                                         <div className="flex flex-wrap items-center gap-2">
                                             <Badge
                                                 variant="outline"
                                                 className={statusBadgeClass(
-                                                    alert.acknowledged_at ? 'submitted' : 'overdue',
+                                                    alert.acknowledged_at
+                                                        ? 'submitted'
+                                                        : 'overdue',
                                                 )}
                                             >
                                                 {alert.alert_type_label}
                                             </Badge>
                                             <p className="text-xs text-muted-foreground">
-                                                {formatDate(alert.scheduled_for)}
+                                                {formatDate(
+                                                    alert.scheduled_for,
+                                                )}
                                             </p>
                                         </div>
 
@@ -718,18 +973,27 @@ export default function ComplianceRecordsShow({
                                         </p>
 
                                         <p className="text-xs text-muted-foreground">
-                                            {alert.deadline_type} • reference {formatDate(alert.reference_date)}
+                                            {alert.deadline_type} • reference{' '}
+                                            {formatDate(alert.reference_date)}
                                         </p>
 
                                         {alert.acknowledged_at ? (
                                             <p className="text-xs text-muted-foreground">
-                                                Acknowledged by {alert.acknowledged_by ?? 'Unknown'} on {formatDateTime(alert.acknowledged_at)}
+                                                Acknowledged by{' '}
+                                                {alert.acknowledged_by ??
+                                                    'Unknown'}{' '}
+                                                on{' '}
+                                                {formatDateTime(
+                                                    alert.acknowledged_at,
+                                                )}
                                             </p>
                                         ) : (
                                             alert.can_acknowledge && (
                                                 <Button size="sm" asChild>
                                                     <Link
-                                                        href={ComplianceAlertController.acknowledge(alert.id)}
+                                                        href={ComplianceAlertController.acknowledge(
+                                                            alert.id,
+                                                        )}
                                                         method="patch"
                                                         as="button"
                                                     >

@@ -27,6 +27,8 @@ class ComplianceRecordController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -40,6 +42,7 @@ class ComplianceRecordController extends Controller
         $status = $request->string('status')->toString();
         $agency = $request->string('agency')->toString();
         $assigned = $request->integer('assigned');
+        $perPage = $this->resolvePerPage($request);
         $today = now();
         $canViewAlerts = $request->user()?->can('viewAny', ComplianceAlert::class) ?? false;
 
@@ -65,7 +68,7 @@ class ComplianceRecordController extends Controller
         }
 
         $complianceRecords = (clone $query)
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (ComplianceRecord $complianceRecord) => $this->recordListItem($request, $complianceRecord));
 
@@ -76,6 +79,7 @@ class ComplianceRecordController extends Controller
                 'status' => $status,
                 'agency' => $agency,
                 'assigned' => $assigned > 0 ? $assigned : null,
+                'per_page' => $perPage,
             ],
             'summary' => [
                 'due_soon_count' => ComplianceRecord::query()
@@ -94,7 +98,6 @@ class ComplianceRecordController extends Controller
                     ? ComplianceAlert::query()->unacknowledged()->count()
                     : null,
             ],
-            'recentAlerts' => $canViewAlerts ? $this->recentAlertItems() : [],
             'statusOptions' => $this->statusOptions(),
             'agencyOptions' => $this->agencyOptions(),
             'assignedUserOptions' => $this->assignedUserOptions(),
@@ -597,32 +600,6 @@ class ComplianceRecordController extends Controller
     }
 
     /**
-     * Build recent-alert preview items for the index page.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function recentAlertItems(): array
-    {
-        return ComplianceAlert::query()
-            ->with('complianceRecord:id,record_no,title')
-            ->unacknowledged()
-            ->orderBy('scheduled_for')
-            ->limit(5)
-            ->get()
-            ->map(fn (ComplianceAlert $alert) => [
-                'id' => $alert->getKey(),
-                'alert_type_label' => $alert->alert_type->label(),
-                'message' => $alert->message,
-                'scheduled_for' => optional($alert->scheduled_for)?->toDateString(),
-                'record' => $alert->complianceRecord === null ? null : [
-                    'id' => $alert->complianceRecord->getKey(),
-                    'record_no' => $alert->complianceRecord->record_no,
-                    'title' => $alert->complianceRecord->title,
-                ],
-            ])->all();
-    }
-
-    /**
      * Transform an attachment into a frontend-friendly payload.
      *
      * @return array<string, mixed>
@@ -655,5 +632,17 @@ class ComplianceRecordController extends Controller
             ->sortDesc()
             ->values()
             ->all();
+    }
+
+    /**
+     * Resolve the validated page size for the compliance table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

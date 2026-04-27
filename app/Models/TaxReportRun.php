@@ -80,10 +80,14 @@ class TaxReportRun extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('report_no', 'like', "%{$term}%")
-                ->orWhere('remarks', 'like', "%{$term}%");
+                ->where('report_no', $operator, "%{$term}%")
+                ->orWhere('remarks', $operator, "%{$term}%");
         });
     }
 

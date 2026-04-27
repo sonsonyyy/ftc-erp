@@ -44,7 +44,26 @@ test('authorized users can browse paginated inventory items', function () {
             ->where('inventoryItems.total', 16)
             ->where('inventoryItems.current_page', 1)
             ->has('inventoryItems.data', 15)
+            ->where('filters.per_page', 15)
+            ->where('summary.item_count', 16)
             ->where('can.create', true),
+        );
+});
+
+test('inventory item page size can be customized', function () {
+    actingAsInventoryItemRole('Warehouse / Inventory Officer');
+
+    InventoryItem::factory()->count(12)->create([
+        'status' => InventoryItemStatus::Active,
+    ]);
+
+    $this->get(route('inventory.index', ['per_page' => 5]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('inventory/index')
+            ->where('inventoryItems.total', 12)
+            ->has('inventoryItems.data', 5)
+            ->where('filters.per_page', 5),
         );
 });
 
@@ -88,7 +107,7 @@ test('inventory list can be filtered by search category status and low stock fla
     ]);
 
     $this->get(route('inventory.index', [
-        'search' => 'Alpha',
+        'search' => 'alpha',
         'category' => $sprinklerCategory->getKey(),
         'status' => InventoryItemStatus::Active->value,
         'low_stock' => '1',
@@ -96,12 +115,53 @@ test('inventory list can be filtered by search category status and low stock fla
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('inventory/index')
-            ->where('filters.search', 'Alpha')
+            ->where('filters.search', 'alpha')
             ->where('filters.category', $sprinklerCategory->getKey())
             ->where('filters.status', InventoryItemStatus::Active->value)
             ->where('filters.low_stock', '1')
             ->where('inventoryItems.total', 1)
             ->where('inventoryItems.data.0.item_code', 'ITM-ALPHA-001'),
+        );
+});
+
+test('authorized users can browse paginated inventory categories', function () {
+    actingAsInventoryItemRole('Warehouse / Inventory Officer');
+
+    InventoryCategory::factory()->count(16)->create();
+
+    $this->get(route('inventory-categories.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('inventory/categories/index')
+            ->where('categories.total', 16)
+            ->where('categories.current_page', 1)
+            ->has('categories.data', 15)
+            ->where('filters.per_page', 15)
+            ->where('can.create', true),
+        );
+});
+
+test('inventory categories can be filtered by search and page size', function () {
+    actingAsInventoryItemRole('Warehouse / Inventory Officer');
+
+    InventoryCategory::factory()->create([
+        'name' => 'Sprinklers',
+    ]);
+    InventoryCategory::factory()->create([
+        'name' => 'Alarm Devices',
+    ]);
+
+    $this->get(route('inventory-categories.index', [
+        'search' => 'sprink',
+        'per_page' => 5,
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('inventory/categories/index')
+            ->where('filters.search', 'sprink')
+            ->where('filters.per_page', 5)
+            ->where('categories.total', 1)
+            ->where('categories.data.0.name', 'Sprinklers'),
         );
 });
 
@@ -205,11 +265,13 @@ test('low stock page can be filtered by warehouse', function () {
 
     $this->get(route('inventory.low-stock', [
         'warehouse' => $mainWarehouse->getKey(),
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('inventory/low-stock')
             ->where('filters.warehouse', $mainWarehouse->getKey())
+            ->where('filters.per_page', 5)
             ->where('lowStockItems.total', 1)
             ->where('lowStockItems.data.0.item_code', 'ITM-LOW-001')
             ->where('lowStockItems.data.0.shortage', 7),

@@ -1,6 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { create as positionsCreate, index as positionsIndex } from '@/routes/positions';
+import {
+    create as positionsCreate,
+    index as positionsIndex,
+} from '@/routes/positions';
 import { PositionForm } from '@/components/payroll/position-form';
 import type { SelectOption } from '@/types';
 
@@ -11,12 +14,15 @@ type Props = {
     };
 };
 
-export default function PositionsCreate({ departmentOptions, defaults }: Props) {
+export default function PositionsCreate({
+    departmentOptions,
+    defaults,
+}: Props) {
     return (
         <>
             <Head title="New Position" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <PositionForm
                     departmentOptions={departmentOptions}
                     defaults={defaults}

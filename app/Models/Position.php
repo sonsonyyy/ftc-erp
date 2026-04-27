@@ -62,11 +62,15 @@ class Position extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('title', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%")
-                ->orWhereHas('department', fn (Builder $departmentQuery) => $departmentQuery->where('name', 'like', "%{$term}%"));
+                ->where('title', $operator, "%{$term}%")
+                ->orWhere('description', $operator, "%{$term}%")
+                ->orWhereHas('department', fn (Builder $departmentQuery) => $departmentQuery->where('name', $operator, "%{$term}%"));
         });
     }
 

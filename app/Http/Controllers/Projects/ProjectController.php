@@ -34,6 +34,8 @@ class ProjectController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -46,6 +48,7 @@ class ProjectController extends Controller
         $search = $request->string('search')->toString();
         $customerId = $request->integer('customer') ?: null;
         $status = $request->string('status')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $query = Project::query()
             ->with([
@@ -65,16 +68,18 @@ class ProjectController extends Controller
         }
 
         $projects = (clone $query)
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Project $project) => $this->projectListItem($request, $project));
 
         return Inertia::render('projects/index', [
             'projects' => $projects,
+            'summary' => $this->projectSummary(),
             'filters' => [
                 'search' => $search,
                 'customer' => $customerId,
                 'status' => $status,
+                'per_page' => $perPage,
             ],
             'customerOptions' => $this->customerOptions(),
             'statusOptions' => $this->statusOptions(),
@@ -127,6 +132,33 @@ class ProjectController extends Controller
                 ];
             }),
         );
+    }
+
+    /**
+     * Build the top-line project summary cards.
+     *
+     * @return array<string, int>
+     */
+    private function projectSummary(): array
+    {
+        $baseQuery = Project::query();
+
+        return [
+            'total_projects' => (clone $baseQuery)->count(),
+            'active_projects' => (clone $baseQuery)
+                ->whereIn('status', [
+                    ProjectStatus::Open->value,
+                    ProjectStatus::InProgress->value,
+                    ProjectStatus::OnHold->value,
+                ])
+                ->count(),
+            'completed_projects' => (clone $baseQuery)
+                ->where('status', ProjectStatus::Completed->value)
+                ->count(),
+            'linked_work_orders' => WorkOrder::query()
+                ->whereNotNull('project_id')
+                ->count(),
+        ];
     }
 
     /**
@@ -515,6 +547,18 @@ class ProjectController extends Controller
                 'value' => $customer->getKey(),
                 'label' => "{$customer->customer_code} - {$customer->company_name}",
             ])->all();
+    }
+
+    /**
+     * Resolve the validated page size for the project table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 
     /**

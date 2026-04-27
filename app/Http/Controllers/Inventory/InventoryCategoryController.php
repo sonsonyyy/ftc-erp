@@ -15,6 +15,8 @@ class InventoryCategoryController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -23,12 +25,13 @@ class InventoryCategoryController extends Controller
         $this->authorize('viewAny', InventoryCategory::class);
 
         $search = $request->string('search')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $categories = InventoryCategory::query()
             ->withCount('inventoryItems')
             ->search($search)
             ->orderBy('name')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (InventoryCategory $inventoryCategory) => [
                 'id' => $inventoryCategory->getKey(),
@@ -45,6 +48,7 @@ class InventoryCategoryController extends Controller
             'categories' => $categories,
             'filters' => [
                 'search' => $search,
+                'per_page' => $perPage,
             ],
             'can' => [
                 'create' => $request->user()?->can('create', InventoryCategory::class) ?? false,
@@ -129,5 +133,17 @@ class InventoryCategoryController extends Controller
         ]);
 
         return to_route('inventory-categories.index');
+    }
+
+    /**
+     * Resolve the validated page size for the category table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

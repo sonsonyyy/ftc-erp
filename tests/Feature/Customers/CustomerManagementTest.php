@@ -7,6 +7,7 @@ use App\Models\CustomerSite;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -34,7 +35,15 @@ function actingAsRole(string $roleName): User
 test('authorized users can browse paginated customers', function () {
     actingAsRole('Sales Admin / Business Development');
 
-    Customer::factory()->count(16)->create();
+    $customers = Customer::factory()->count(16)->create([
+        'status' => CustomerStatus::Active,
+    ]);
+
+    CustomerSite::factory()->count(4)->sequence(
+        fn (Sequence $sequence) => [
+            'customer_id' => $customers[$sequence->index]->getKey(),
+        ],
+    )->create();
 
     $this->get(route('customers.index'))
         ->assertOk()
@@ -42,8 +51,31 @@ test('authorized users can browse paginated customers', function () {
             ->component('customers/index')
             ->where('customers.total', 16)
             ->where('customers.current_page', 1)
+            ->where('customers.per_page', 15)
             ->has('customers.data', 15)
+            ->where('summary.total_customers', 16)
+            ->where('summary.active_customers', 16)
+            ->where('summary.inactive_customers', 0)
+            ->where('summary.total_sites', 4)
+            ->where('filters.per_page', 15)
             ->where('can.create', true),
+        );
+});
+
+test('customer list supports custom page size', function () {
+    actingAsRole('Sales Admin / Business Development');
+
+    Customer::factory()->count(12)->create();
+
+    $this->get(route('customers.index', [
+        'per_page' => 5,
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('customers/index')
+            ->where('customers.per_page', 5)
+            ->has('customers.data', 5)
+            ->where('filters.per_page', 5),
         );
 });
 
@@ -63,13 +95,13 @@ test('customer list can be filtered by search and status', function () {
     ]);
 
     $this->get(route('customers.index', [
-        'search' => 'Alpha',
+        'search' => 'alpha',
         'status' => CustomerStatus::Active->value,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('customers/index')
-            ->where('filters.search', 'Alpha')
+            ->where('filters.search', 'alpha')
             ->where('filters.status', CustomerStatus::Active->value)
             ->where('customers.total', 1)
             ->where('customers.data.0.company_name', 'Alpha Fire Systems'),

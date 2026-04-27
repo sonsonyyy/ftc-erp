@@ -1,30 +1,57 @@
-import { Head, Link } from '@inertiajs/react';
-import { dashboard } from '@/routes';
-import { FilterSelect } from '@/components/filter-select';
-import { DataTableCard } from '@/components/data-table-card';
-import { IndexFiltersCard } from '@/components/index-filters-card';
+import { Head, Link, router } from '@inertiajs/react';
 import {
-    calendar as complianceRecordsCalendar,
-    create as complianceRecordsCreate,
-    index as complianceRecordsIndex,
-    show as complianceRecordsShow,
-} from '@/routes/compliance-records';
-import { index as complianceAlertsIndex } from '@/routes/compliance-alerts';
+    Archive,
+    BellRing,
+    ChevronDown,
+    Clock3,
+    Download,
+    Ellipsis,
+    Eye,
+    Pencil,
+    Plus,
+    RefreshCw,
+    Search,
+    ShieldAlert,
+    SlidersHorizontal,
+    TriangleAlert,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
-    CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { cleanQueryParams, countActiveFilters } from '@/lib/utils';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
+import { dashboard } from '@/routes';
+import {
+    create as complianceRecordsCreate,
+    destroy as complianceRecordsDestroy,
+    edit as complianceRecordsEdit,
+    index as complianceRecordsIndex,
+    show as complianceRecordsShow,
+} from '@/routes/compliance-records';
 import type {
     ComplianceRecordFilters,
     ComplianceRecordListItem,
-    ComplianceRecentAlertItem,
     ComplianceSummary,
     PaginatedData,
     SelectOption,
@@ -34,7 +61,6 @@ type Props = {
     complianceRecords: PaginatedData<ComplianceRecordListItem>;
     filters: ComplianceRecordFilters;
     summary: ComplianceSummary;
-    recentAlerts: ComplianceRecentAlertItem[];
     statusOptions: SelectOption[];
     agencyOptions: SelectOption[];
     assignedUserOptions: SelectOption[];
@@ -43,6 +69,8 @@ type Props = {
         view_alerts: boolean;
     };
 };
+
+const perPageOptions = ['5', '10', '15', '25'];
 
 function formatDate(date: string | null): string {
     if (!date) {
@@ -54,6 +82,16 @@ function formatDate(date: string | null): string {
         day: 'numeric',
         year: 'numeric',
     }).format(new Date(date));
+}
+
+function formatDeadlineType(type: string | null): string {
+    if (!type) {
+        return 'No deadline';
+    }
+
+    return type
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 function statusBadgeClass(status: string): string {
@@ -78,238 +116,405 @@ export default function ComplianceRecordsIndex({
     complianceRecords,
     filters,
     summary,
-    recentAlerts,
     statusOptions,
     agencyOptions,
     assignedUserOptions,
     can,
 }: Props) {
-    const activeFilterCount = countActiveFilters(filters);
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [tableFilters, setTableFilters] = useState({
+        status: filters.status,
+        agency: filters.agency,
+        assigned: filters.assigned === null ? '' : String(filters.assigned),
+        per_page: String(filters.per_page),
+    });
+
+    useEffect(() => {
+        setTableFilters((currentFilters) => {
+            const nextFilters = {
+                status: filters.status,
+                agency: filters.agency,
+                assigned:
+                    filters.assigned === null ? '' : String(filters.assigned),
+                per_page: String(filters.per_page),
+            };
+
+            if (
+                currentFilters.status === nextFilters.status &&
+                currentFilters.agency === nextFilters.agency &&
+                currentFilters.assigned === nextFilters.assigned &&
+                currentFilters.per_page === nextFilters.per_page
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [filters.agency, filters.assigned, filters.per_page, filters.status]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentAssigned =
+            filters.assigned === null ? '' : String(filters.assigned);
+        const currentPerPage = String(filters.per_page);
+
+        if (
+            normalizedSearch === filters.search &&
+            tableFilters.status === filters.status &&
+            tableFilters.agency === filters.agency &&
+            tableFilters.assigned === currentAssigned &&
+            tableFilters.per_page === currentPerPage
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(complianceRecordsIndex()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    status: tableFilters.status,
+                    agency: tableFilters.agency,
+                    assigned:
+                        tableFilters.assigned === ''
+                            ? undefined
+                            : Number(tableFilters.assigned),
+                    per_page: Number(tableFilters.per_page),
+                    page: 1,
+                }),
+                {
+                    only: ['complianceRecords', 'filters', 'summary'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.agency,
+        filters.assigned,
+        filters.per_page,
+        filters.search,
+        filters.status,
+        searchInput,
+        tableFilters,
+    ]);
+
+    const activeFilterCount =
+        (tableFilters.status === '' ? 0 : 1) +
+        (tableFilters.agency === '' ? 0 : 1) +
+        (tableFilters.assigned === '' ? 0 : 1);
+
     const exportHref = complianceRecordsIndex({
         query: cleanQueryParams({
-            ...filters,
+            search: searchInput.trim(),
+            status: tableFilters.status,
+            agency: tableFilters.agency,
+            assigned:
+                tableFilters.assigned === ''
+                    ? undefined
+                    : Number(tableFilters.assigned),
             export: 'csv',
         }),
     });
+
+    const summaryCards = [
+        {
+            title: 'Due soon',
+            value: summary.due_soon_count,
+            icon: Clock3,
+            iconClassName: 'bg-amber-50 text-amber-700',
+        },
+        {
+            title: 'For renewal',
+            value: summary.for_renewal_count,
+            icon: RefreshCw,
+            iconClassName: 'bg-violet-50 text-violet-700',
+        },
+        {
+            title: 'Overdue',
+            value: summary.overdue_count,
+            icon: TriangleAlert,
+            iconClassName: 'bg-rose-50 text-rose-700',
+        },
+        {
+            title: 'Expired',
+            value: summary.expired_count,
+            icon: ShieldAlert,
+            iconClassName: 'bg-rose-50 text-rose-700',
+        },
+        {
+            title: 'Open alerts',
+            value: summary.open_alert_count ?? 'Restricted',
+            icon: BellRing,
+            iconClassName: 'bg-sky-50 text-sky-700',
+        },
+    ];
 
     return (
         <>
             <Head title="Compliance" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Compliance
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Track permits, licenses, renewals, and recurring
-                            filings in one practical registry.
+                            Permits, licenses, renewals, and recurring filings
+                            in one registry.
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" asChild>
-                            <Link href={complianceRecordsCalendar()}>
-                                Calendar
+                    {can.create && (
+                        <Button asChild>
+                            <Link href={complianceRecordsCreate()}>
+                                <Plus />
+                                New record
                             </Link>
                         </Button>
-
-                        {can.view_alerts && (
-                            <Button variant="outline" asChild>
-                                <Link href={complianceAlertsIndex()}>
-                                    Alerts
-                                </Link>
-                            </Button>
-                        )}
-
-                        {can.create && (
-                            <Button asChild>
-                                <Link href={complianceRecordsCreate()}>
-                                    New record
-                                </Link>
-                            </Button>
-                        )}
-                    </div>
+                    )}
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                    <Card>
-                        <CardHeader>
-                            <CardDescription>Due soon</CardDescription>
-                            <CardTitle>{summary.due_soon_count}</CardTitle>
-                        </CardHeader>
-                    </Card>
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                    {summaryCards.map((card) => {
+                        const Icon = card.icon;
 
-                    <Card>
-                        <CardHeader>
-                            <CardDescription>For renewal</CardDescription>
-                            <CardTitle>{summary.for_renewal_count}</CardTitle>
-                        </CardHeader>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardDescription>Overdue</CardDescription>
-                            <CardTitle>{summary.overdue_count}</CardTitle>
-                        </CardHeader>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardDescription>Expired</CardDescription>
-                            <CardTitle>{summary.expired_count}</CardTitle>
-                        </CardHeader>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardDescription>Open alerts</CardDescription>
-                            <CardTitle>
-                                {summary.open_alert_count ?? 'Restricted'}
-                            </CardTitle>
-                        </CardHeader>
-                    </Card>
-                </div>
-
-                <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-                    <IndexFiltersCard
-                        action={complianceRecordsIndex()}
-                        resetHref={complianceRecordsIndex()}
-                        filters={filters}
-                        exportHref={exportHref}
-                        description="Search by record number, title, agency, or notes, then narrow by status and owner."
-                        activeFilterCount={activeFilterCount}
-                    >
-                        <Input
-                            name="search"
-                            defaultValue={filters.search}
-                            placeholder="Search compliance records"
-                        />
-
-                        <FilterSelect
-                            name="status"
-                            defaultValue={filters.status}
-                        >
-                            <option value="">All statuses</option>
-                            {statusOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </FilterSelect>
-
-                        <FilterSelect
-                            name="agency"
-                            defaultValue={filters.agency}
-                        >
-                            <option value="">All agencies</option>
-                            {agencyOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </FilterSelect>
-
-                        <FilterSelect
-                            name="assigned"
-                            defaultValue={filters.assigned ?? ''}
-                        >
-                            <option value="">All owners</option>
-                            {assignedUserOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </FilterSelect>
-                    </IndexFiltersCard>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-start justify-between gap-3">
-                            <div>
-                                <CardTitle>Recent alerts</CardTitle>
-                                <CardDescription>
-                                    The latest reminder items needing review.
-                                </CardDescription>
-                            </div>
-
-                            {can.view_alerts && (
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link href={complianceAlertsIndex()}>
-                                        Open
-                                    </Link>
-                                </Button>
-                            )}
-                        </CardHeader>
-
-                        <CardContent className="space-y-3">
-                            {recentAlerts.length === 0 && (
-                                <div className="rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
-                                    No open alerts right now.
-                                </div>
-                            )}
-
-                            {recentAlerts.map((alert) => (
-                                <div
-                                    key={alert.id}
-                                    className="rounded-lg border px-4 py-3"
-                                >
-                                    <p className="text-sm font-medium">
-                                        {alert.alert_type_label}
-                                    </p>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        {alert.message}
-                                    </p>
-                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                        <span>
-                                            {formatDate(alert.scheduled_for)}
-                                        </span>
-                                        {alert.record && (
-                                            <span>
-                                                {alert.record.record_no} •{' '}
-                                                {alert.record.title}
-                                            </span>
-                                        )}
+                        return (
+                            <Card
+                                key={card.title}
+                                className="border-border/70 py-4 shadow-sm"
+                            >
+                                <CardContent className="flex items-center gap-3">
+                                    <div
+                                        className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${card.iconClassName}`}
+                                    >
+                                        <Icon className="size-5" />
                                     </div>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
+
+                                    <div className="space-y-1">
+                                        <CardDescription>
+                                            {card.title}
+                                        </CardDescription>
+                                        <CardTitle className="text-2xl tracking-tight">
+                                            {card.value}
+                                        </CardTitle>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
 
-                <DataTableCard
-                    title="Compliance registry"
-                    description={`${complianceRecords.total} compliance records`}
-                    pagination={complianceRecords}
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={searchInput}
+                                onChange={(event) =>
+                                    setSearchInput(event.currentTarget.value)
+                                }
+                                placeholder="Search compliance records"
+                                className="h-9 pl-9"
+                            />
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <SlidersHorizontal />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                    <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="start" className="w-56">
+                                <DropdownMenuRadioGroup
+                                    value={
+                                        tableFilters.status === ''
+                                            ? 'all'
+                                            : tableFilters.status
+                                    }
+                                    onValueChange={(value) => {
+                                        router.cancelAll();
+                                        setTableFilters((currentFilters) => ({
+                                            ...currentFilters,
+                                            status:
+                                                value === 'all' ? '' : value,
+                                        }));
+                                    }}
+                                >
+                                    <DropdownMenuRadioItem value="all">
+                                        All statuses
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuSeparator />
+                                    {statusOptions.map((option) => (
+                                        <DropdownMenuRadioItem
+                                            key={option.value}
+                                            value={String(option.value)}
+                                        >
+                                            {option.label}
+                                        </DropdownMenuRadioItem>
+                                    ))}
+                                </DropdownMenuRadioGroup>
+
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Agency
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.agency === ''
+                                                    ? 'all'
+                                                    : tableFilters.agency
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        agency:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All agencies
+                                            </DropdownMenuRadioItem>
+                                            {agencyOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Owner
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.assigned === ''
+                                                    ? 'all'
+                                                    : tableFilters.assigned
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        assigned:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All owners
+                                            </DropdownMenuRadioItem>
+                                            {assignedUserOptions.map(
+                                                (option) => (
+                                                    <DropdownMenuRadioItem
+                                                        key={option.value}
+                                                        value={String(
+                                                            option.value,
+                                                        )}
+                                                    >
+                                                        {option.label}
+                                                    </DropdownMenuRadioItem>
+                                                ),
+                                            )}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 bg-background"
+                            >
+                                <Ellipsis />
+                                Actions
+                                <ChevronDown />
+                            </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem asChild>
+                                <Link href={exportHref}>
+                                    <Download />
+                                    Export CSV
+                                </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={complianceRecords}
+                            perPage={tableFilters.per_page}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    per_page: value,
+                                }));
+                            }}
+                        />
+                    }
                 >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">
-                                    Record
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Agency / category
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Next deadline
-                                </th>
-                                <th className="px-6 py-3 font-medium">Owner</th>
-                                <th className="px-6 py-3 font-medium">
-                                    Signals
-                                </th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>Record</th>
+                                <th>Agency / category</th>
+                                <th>Next deadline</th>
+                                <th>Owner</th>
+                                <th className="text-right">Signals</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
-
                         <tbody>
                             {complianceRecords.data.length === 0 && (
                                 <tr>
                                     <td
                                         colSpan={6}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        className="py-10 text-center text-muted-foreground"
                                     >
                                         No compliance records matched the
                                         current filters.
@@ -318,16 +523,13 @@ export default function ComplianceRecordsIndex({
                             )}
 
                             {complianceRecords.data.map((record) => (
-                                <tr
-                                    key={record.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
+                                <tr key={record.id}>
+                                    <td>
                                         <div className="space-y-1">
-                                            <p className="font-medium">
+                                            <p className="truncate font-medium text-foreground">
                                                 {record.record_no}
                                             </p>
-                                            <p className="text-muted-foreground">
+                                            <p className="truncate text-[13px] text-muted-foreground">
                                                 {record.title}
                                             </p>
                                             <Badge
@@ -341,77 +543,105 @@ export default function ComplianceRecordsIndex({
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
+                                    <td>
                                         <div className="space-y-1">
-                                            <p>{record.agency}</p>
-                                            <p>
+                                            <p className="truncate text-[13px] font-medium text-foreground">
+                                                {record.agency}
+                                            </p>
+                                            <p className="truncate text-[13px] text-muted-foreground">
                                                 {record.category ??
                                                     'No category'}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
+                                    <td>
+                                        <div className="space-y-1 text-[13px]">
+                                            <p className="truncate font-medium text-foreground">
                                                 {record.next_deadline_type
-                                                    ? `${record.next_deadline_type} • ${formatDate(record.next_deadline_date)}`
+                                                    ? `${formatDeadlineType(record.next_deadline_type)} • ${formatDate(record.next_deadline_date)}`
                                                     : 'No deadline'}
                                             </p>
-                                            <p className="text-xs">
-                                                Due:{' '}
+                                            <p className="truncate text-muted-foreground">
+                                                Due{' '}
                                                 {formatDate(record.due_date)}
-                                            </p>
-                                            <p className="text-xs">
-                                                Expiry:{' '}
-                                                {formatDate(record.expiry_date)}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
+                                    <td className="text-[13px] text-muted-foreground">
                                         {record.assigned_user ?? 'Unassigned'}
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
-                                                {record.submission_count}{' '}
-                                                submissions
-                                            </p>
-                                            <p>
-                                                {record.open_alert_count} open
-                                                alerts
-                                            </p>
-                                            <p>
-                                                {record.attachment_count}{' '}
-                                                attachments
-                                            </p>
-                                        </div>
+                                    <td className="text-right text-[13px]">
+                                        <p className="font-medium text-foreground tabular-nums">
+                                            {record.submission_count}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                            {record.open_alert_count} alerts
+                                        </p>
                                     </td>
 
-                                    <td className="px-6 py-4 text-right">
-                                        {record.can.view && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                asChild
-                                            >
-                                                <Link
-                                                    href={complianceRecordsShow(
-                                                        record.id,
-                                                    )}
-                                                >
-                                                    Open
-                                                </Link>
-                                            </Button>
-                                        )}
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={[
+                                                    ...(record.can.view
+                                                        ? [
+                                                              {
+                                                                  key: 'open',
+                                                                  label: 'Open',
+                                                                  icon: Eye,
+                                                                  href: complianceRecordsShow(
+                                                                      record.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(record.can.update
+                                                        ? [
+                                                              {
+                                                                  key: 'edit',
+                                                                  label: 'Edit',
+                                                                  icon: Pencil,
+                                                                  href: complianceRecordsEdit(
+                                                                      record.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(record.can.delete
+                                                        ? [
+                                                              {
+                                                                  key: 'archive',
+                                                                  label: 'Archive',
+                                                                  icon: Archive,
+                                                                  destructive: true,
+                                                                  onSelect:
+                                                                      () =>
+                                                                          router.delete(
+                                                                              toUrl(
+                                                                                  complianceRecordsDestroy(
+                                                                                      record.id,
+                                                                                  ),
+                                                                              ),
+                                                                              {
+                                                                                  preserveScroll: true,
+                                                                              },
+                                                                          ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                ]}
+                                                label={`Open actions for ${record.record_no}`}
+                                            />
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );

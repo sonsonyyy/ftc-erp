@@ -1,6 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { index as projectsIndex, show as projectsShow } from '@/routes/projects';
+import {
+    index as projectsIndex,
+    show as projectsShow,
+} from '@/routes/projects';
 import { ProjectForm } from '@/components/projects/project-form';
 import type {
     ProjectDetail,
@@ -26,7 +29,7 @@ export default function ProjectsEdit({
         <>
             <Head title={`Edit ${project.project_no}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <ProjectForm
                     project={project}
                     customerOptions={customerOptions}

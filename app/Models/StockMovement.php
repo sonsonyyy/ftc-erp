@@ -95,20 +95,22 @@ class StockMovement extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $likeOperator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+        return $query->where(function (Builder $builder) use ($likeOperator, $term): void {
             $builder
-                ->where('reference_number', 'like', "%{$term}%")
-                ->orWhere('remarks', 'like', "%{$term}%")
-                ->orWhereHas('inventoryItem', function (Builder $itemQuery) use ($term): void {
+                ->where('reference_number', $likeOperator, "%{$term}%")
+                ->orWhere('remarks', $likeOperator, "%{$term}%")
+                ->orWhereHas('inventoryItem', function (Builder $itemQuery) use ($likeOperator, $term): void {
                     $itemQuery
-                        ->where('item_code', 'like', "%{$term}%")
-                        ->orWhere('item_name', 'like', "%{$term}%")
-                        ->orWhere('sku', 'like', "%{$term}%");
+                        ->where('item_code', $likeOperator, "%{$term}%")
+                        ->orWhere('item_name', $likeOperator, "%{$term}%")
+                        ->orWhere('sku', $likeOperator, "%{$term}%");
                 })
-                ->orWhereHas('warehouse', function (Builder $warehouseQuery) use ($term): void {
+                ->orWhereHas('warehouse', function (Builder $warehouseQuery) use ($likeOperator, $term): void {
                     $warehouseQuery
-                        ->where('warehouse_code', 'like', "%{$term}%")
-                        ->orWhere('warehouse_name', 'like', "%{$term}%");
+                        ->where('warehouse_code', $likeOperator, "%{$term}%")
+                        ->orWhere('warehouse_name', $likeOperator, "%{$term}%");
                 });
         });
     }

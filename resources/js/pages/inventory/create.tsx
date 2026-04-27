@@ -9,12 +9,15 @@ type Props = {
     statusOptions: SelectOption[];
 };
 
-export default function InventoryCreate({ categoryOptions, statusOptions }: Props) {
+export default function InventoryCreate({
+    categoryOptions,
+    statusOptions,
+}: Props) {
     return (
         <>
             <Head title="New Inventory Item" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <InventoryItemForm
                     categoryOptions={categoryOptions}
                     statusOptions={statusOptions}

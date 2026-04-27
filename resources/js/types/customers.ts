@@ -78,6 +78,7 @@ export type SiteListItem = {
     site_name: string;
     contact_person: string | null;
     contact_no: string | null;
+    email: string | null;
     city: string | null;
     province: string | null;
     is_active: boolean;

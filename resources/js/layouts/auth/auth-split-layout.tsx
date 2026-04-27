@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import { ClipboardList, FileText, Package, ShieldCheck } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
@@ -19,52 +20,72 @@ export default function AuthSplitLayout({
                     className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-linear-to-b from-black/20 via-black/10 to-black/75" />
-                <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
+                <div className="relative z-10 flex h-full flex-col justify-between p-8 text-white xl:p-10">
                     <div className="flex items-center justify-start">
                         <Link
                             href={home()}
-                            className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-sm font-medium backdrop-blur"
+                            className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-[13px] font-medium backdrop-blur"
                         >
                             <AppLogoIcon className="size-5 fill-current text-white" />
                             <span>{name}</span>
                         </Link>
                     </div>
 
-                    <div className="max-w-xl space-y-6">
+                    <div className="max-w-xl space-y-5">
                         <div className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium tracking-[0.24em] text-white/80 uppercase">
                             Internal ERP
                         </div>
-                        <div className="space-y-4">
-                            <h2 className="max-w-lg text-4xl leading-tight font-semibold text-white">
-                                Run sales, service, inventory, and compliance
-                                from one operations workspace.
+                        <div className="space-y-3">
+                            <h2 className="max-w-lg text-3xl leading-tight font-semibold text-white xl:text-[2rem]">
+                                Sales, service, inventory, and compliance in one
+                                workspace.
                             </h2>
-                            <p className="max-w-xl text-base leading-7 text-white/78">
-                                Fire Teknik teams can monitor quotations,
-                                projects, work orders, warehousing, billing,
-                                payroll, and renewals from a single secured
-                                portal.
+                            <p className="max-w-xl text-sm leading-6 text-white/78 xl:text-[15px]">
+                                Fire Teknik teams track quotations, jobs,
+                                warehouse activity, billing, payroll, and
+                                renewals from one secure ERP.
                             </p>
                         </div>
-                        <div className="grid gap-3 text-sm text-white/82 sm:grid-cols-2">
+                        <div className="grid gap-3 text-[13px] text-white/82 sm:grid-cols-2">
                             <div className="rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-sm">
-                                Quotation tracking and awarded job visibility
+                                <div className="flex items-start gap-3">
+                                    <FileText className="mt-0.5 size-4 shrink-0 text-white/80" />
+                                    <span>
+                                        Quotation pipeline and sales visibility
+                                    </span>
+                                </div>
                             </div>
                             <div className="rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-sm">
-                                Project, service, and work-order coordination
+                                <div className="flex items-start gap-3">
+                                    <ClipboardList className="mt-0.5 size-4 shrink-0 text-white/80" />
+                                    <span>
+                                        Projects, service, and work orders
+                                    </span>
+                                </div>
                             </div>
                             <div className="rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-sm">
-                                Inventory, purchasing, and warehouse control
+                                <div className="flex items-start gap-3">
+                                    <Package className="mt-0.5 size-4 shrink-0 text-white/80" />
+                                    <span>
+                                        Inventory, purchasing, and warehouse
+                                        control
+                                    </span>
+                                </div>
                             </div>
                             <div className="rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-sm">
-                                Billing, payroll, tax, and compliance snapshots
+                                <div className="flex items-start gap-3">
+                                    <ShieldCheck className="mt-0.5 size-4 shrink-0 text-white/80" />
+                                    <span>
+                                        Billing, payroll, tax, and compliance
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="flex min-h-svh items-center justify-center px-6 py-10 sm:px-8 lg:px-12">
+            <div className="flex min-h-svh items-center justify-center px-6 py-10 sm:px-8 lg:px-10 xl:px-12">
                 <div className="w-full max-w-md">
                     <Link
                         href={home()}
@@ -78,12 +99,12 @@ export default function AuthSplitLayout({
                         </span>
                     </Link>
 
-                    <div className="space-y-6">
+                    <div className="space-y-5">
                         <div className="space-y-2 text-left">
-                            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+                            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                                 {title}
                             </h1>
-                            <p className="text-sm leading-6 text-muted-foreground">
+                            <p className="text-[13px] leading-5 text-muted-foreground">
                                 {description}
                             </p>
                         </div>

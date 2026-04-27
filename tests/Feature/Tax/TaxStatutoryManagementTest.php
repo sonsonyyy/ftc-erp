@@ -97,39 +97,46 @@ test('authorized users can browse and filter tax source pages', function () {
         'counterparty_name' => 'Dormant Supplier',
     ]);
 
-    $this->get(route('withholding-records.index'))
+    $this->get(route('withholding-records.index', [
+        'per_page' => 5,
+    ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('withholding-records/index')
             ->where('withholdingRecords.current_page', 1)
-            ->has('withholdingRecords.data', 15)
+            ->has('withholdingRecords.data', 5)
+            ->where('filters.per_page', 5)
             ->where('can.generate_reports', true));
 
     $this->get(route('withholding-records.index', [
-        'search' => 'Nina',
+        'search' => 'nina',
         'type' => WithholdingRecordType::CompensationWithholding->value,
         'from' => '2026-03-01',
         'to' => '2026-03-31',
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('withholding-records/index')
-            ->where('filters.search', 'Nina')
+            ->where('filters.search', 'nina')
             ->where('filters.type', WithholdingRecordType::CompensationWithholding->value)
+            ->where('filters.per_page', 5)
             ->where('withholdingRecords.total', 1)
             ->where('withholdingRecords.data.0.reference_no', 'PR-TAX-0001'));
 
     $this->get(route('vat-records.index', [
-        'search' => 'Metro Fire',
+        'search' => 'metro fire',
         'type' => VatRecordType::OutputVat->value,
         'from' => '2026-04-01',
         'to' => '2026-04-30',
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('vat-records/index')
-            ->where('filters.search', 'Metro Fire')
+            ->where('filters.search', 'metro fire')
             ->where('filters.type', VatRecordType::OutputVat->value)
+            ->where('filters.per_page', 5)
             ->where('vatRecords.total', 1)
             ->where('vatRecords.data.0.reference_no', 'INV-TAX-0001'));
 });
@@ -216,16 +223,18 @@ test('tax report runs can be filtered reviewed generated and archived', function
     ]);
 
     $this->get(route('tax-report-runs.index', [
-        'search' => 'MANUAL-001',
+        'search' => 'manual-001',
         'type' => TaxReportType::Form1601C->value,
         'from' => '2026-03-01',
         'to' => '2026-03-31',
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('tax-report-runs/index')
-            ->where('filters.search', 'MANUAL-001')
+            ->where('filters.search', 'manual-001')
             ->where('filters.type', TaxReportType::Form1601C->value)
+            ->where('filters.per_page', 5)
             ->where('taxReportRuns.total', 1)
             ->where('taxReportRuns.data.0.report_no', 'TAX-1601C-MANUAL-001'));
 

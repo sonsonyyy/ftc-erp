@@ -6,6 +6,7 @@ export type InvoiceFilters = {
     status: string;
     from: string | null;
     to: string | null;
+    per_page: number;
 };
 
 export type BillingQuotationOption = {
@@ -185,6 +186,7 @@ export type PaymentFilters = {
     customer: number | null;
     from: string | null;
     to: string | null;
+    per_page: number;
 };
 
 export type PaymentInvoiceOption = {

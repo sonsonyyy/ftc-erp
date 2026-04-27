@@ -24,7 +24,7 @@ export default function SitesShow({ site }: Props) {
         <>
             <Head title={site.site_name} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
@@ -66,7 +66,9 @@ export default function SitesShow({ site }: Props) {
                         {site.can.delete && (
                             <Button variant="outline" asChild>
                                 <Link
-                                    href={CustomerSiteController.destroy(site.id)}
+                                    href={CustomerSiteController.destroy(
+                                        site.id,
+                                    )}
                                     method="delete"
                                     as="button"
                                 >
@@ -82,7 +84,8 @@ export default function SitesShow({ site }: Props) {
                         <CardHeader>
                             <CardTitle>Site information</CardTitle>
                             <CardDescription>
-                                Operational details used by projects and service work.
+                                Operational details used by projects and service
+                                work.
                             </CardDescription>
                         </CardHeader>
 
@@ -123,7 +126,9 @@ export default function SitesShow({ site }: Props) {
                             </div>
 
                             <div className="md:col-span-2">
-                                <p className="text-sm text-muted-foreground">Email</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Email
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {site.email ?? 'Not set'}
                                 </p>
@@ -133,7 +138,7 @@ export default function SitesShow({ site }: Props) {
                                 <p className="text-sm text-muted-foreground">
                                     Address
                                 </p>
-                                <p className="mt-1 whitespace-pre-line font-medium">
+                                <p className="mt-1 font-medium whitespace-pre-line">
                                     {site.address}
                                 </p>
                             </div>
@@ -157,8 +162,10 @@ export default function SitesShow({ site }: Props) {
                             </div>
 
                             <div className="md:col-span-2">
-                                <p className="text-sm text-muted-foreground">Notes</p>
-                                <p className="mt-1 whitespace-pre-line font-medium">
+                                <p className="text-sm text-muted-foreground">
+                                    Notes
+                                </p>
+                                <p className="mt-1 font-medium whitespace-pre-line">
                                     {site.notes ?? 'No notes'}
                                 </p>
                             </div>

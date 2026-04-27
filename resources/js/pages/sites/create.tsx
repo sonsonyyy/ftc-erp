@@ -18,7 +18,7 @@ export default function SitesCreate({ customerOptions, defaults }: Props) {
         <>
             <Head title="New site" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <SiteForm
                     customerOptions={customerOptions}
                     defaults={defaults}

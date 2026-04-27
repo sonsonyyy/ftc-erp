@@ -130,21 +130,25 @@ class Quotation extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('quotation_no', 'like', "%{$term}%")
-                ->orWhere('subject', 'like', "%{$term}%")
-                ->orWhere('lost_reason', 'like', "%{$term}%")
-                ->orWhereHas('customer', function (Builder $customerQuery) use ($term): void {
+                ->where('quotation_no', $operator, "%{$term}%")
+                ->orWhere('subject', $operator, "%{$term}%")
+                ->orWhere('lost_reason', $operator, "%{$term}%")
+                ->orWhereHas('customer', function (Builder $customerQuery) use ($term, $operator): void {
                     $customerQuery
-                        ->where('customer_code', 'like', "%{$term}%")
-                        ->orWhere('company_name', 'like', "%{$term}%")
-                        ->orWhere('trade_name', 'like', "%{$term}%");
+                        ->where('customer_code', $operator, "%{$term}%")
+                        ->orWhere('company_name', $operator, "%{$term}%")
+                        ->orWhere('trade_name', $operator, "%{$term}%");
                 })
-                ->orWhereHas('customerSite', function (Builder $siteQuery) use ($term): void {
+                ->orWhereHas('customerSite', function (Builder $siteQuery) use ($term, $operator): void {
                     $siteQuery
-                        ->where('site_code', 'like', "%{$term}%")
-                        ->orWhere('site_name', 'like', "%{$term}%");
+                        ->where('site_code', $operator, "%{$term}%")
+                        ->orWhere('site_name', $operator, "%{$term}%");
                 });
         });
     }

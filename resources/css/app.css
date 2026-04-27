@@ -138,6 +138,48 @@
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground antialiased;
+        font-size: 0.9375rem;
+    }
+
+    input[type='number'] {
+        -moz-appearance: textfield;
+    }
+
+    input[type='number']::-webkit-outer-spin-button,
+    input[type='number']::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
+@layer components {
+    .app-page {
+        gap: 1.25rem;
+        padding: 1.25rem 1rem;
+    }
+
+    .app-page h1.text-2xl.font-semibold.tracking-tight {
+        font-size: 1.375rem;
+        line-height: 1.2;
+    }
+
+    .app-page .space-y-1 > p.text-sm.text-muted-foreground,
+    .app-page .space-y-2 > p.text-sm.text-muted-foreground {
+        max-width: 46rem;
+        font-size: 0.8125rem;
+        line-height: 1.45;
+    }
+
+    @media (min-width: 640px) {
+        .app-page {
+            padding-inline: 1.25rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .app-page {
+            padding: 1.5rem;
+        }
     }
 }

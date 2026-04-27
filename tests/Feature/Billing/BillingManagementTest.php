@@ -186,14 +186,16 @@ test('billing users can browse and filter paginated invoices', function () {
     ]);
 
     $this->get(route('invoices.index', [
-        'search' => 'INV-BILL-001',
+        'search' => 'inv-bill-001',
         'customer' => $customer->getKey(),
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('invoices/index')
-            ->where('filters.search', 'INV-BILL-001')
+            ->where('filters.search', 'inv-bill-001')
             ->where('filters.customer', $customer->getKey())
+            ->where('filters.per_page', 5)
             ->where('invoices.total', 1)
             ->where('invoices.data.0.invoice_no', 'INV-BILL-001')
             ->where('can.create', true),
@@ -555,6 +557,21 @@ test('billing users can record payments and balances update for full partial and
     expect($invoicePartial->currentStatus())->toBe(InvoiceStatus::PartiallyPaid);
 
     expect($payment->allocations()->count())->toBe(3);
+
+    $this->get(route('payments.index', [
+        'search' => 'pay-2026',
+        'customer' => $customer->getKey(),
+        'per_page' => 5,
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('payments/index')
+            ->where('filters.search', 'pay-2026')
+            ->where('filters.customer', $customer->getKey())
+            ->where('filters.per_page', 5)
+            ->where('payments.total', 1)
+            ->where('payments.data.0.payment_no', 'PAY-2026-2001'),
+        );
 });
 
 test('payment validation rejects customer mismatches and over-allocation', function () {
@@ -670,14 +687,18 @@ test('accounts receivable report is filterable by customer and status', function
     ]);
 
     $this->get(route('accounts-receivable.index', [
+        'search' => 'inv-ar-001',
         'customer' => $customerA->getKey(),
         'status' => InvoiceStatus::Overdue->value,
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('accounts-receivable/index')
+            ->where('filters.search', 'inv-ar-001')
             ->where('filters.customer', $customerA->getKey())
             ->where('filters.status', InvoiceStatus::Overdue->value)
+            ->where('filters.per_page', 5)
             ->where('report.total', 1)
             ->where('report.data.0.invoice_no', 'INV-AR-001')
             ->where('report.data.0.status', InvoiceStatus::Overdue->value),

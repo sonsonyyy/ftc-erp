@@ -13,16 +13,11 @@ export function PaginationLinks<T>({ pagination }: Props<T>) {
     }
 
     return (
-        <div className="flex flex-col gap-4 border-t bg-muted/10 px-6 py-4 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">
-                    Showing {pagination.from ?? 0} to {pagination.to ?? 0} of{' '}
-                    {pagination.total} records
-                </p>
-                <p className="text-xs text-muted-foreground">
-                    Page {pagination.current_page} of {pagination.last_page}
-                </p>
-            </div>
+        <div className="flex flex-col gap-3 border-t px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[13px] text-muted-foreground">
+                Showing {pagination.from ?? 0}-{pagination.to ?? 0} of{' '}
+                {pagination.total}
+            </p>
 
             <div className="flex flex-wrap items-center gap-1">
                 {pagination.links.map((link) => {
@@ -37,7 +32,7 @@ export function PaginationLinks<T>({ pagination }: Props<T>) {
                                 variant="outline"
                                 size="sm"
                                 disabled
-                                className="min-w-9 rounded-full px-3 text-muted-foreground"
+                                className="min-w-9 rounded-lg px-3 text-muted-foreground"
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                             />
                         );
@@ -49,7 +44,7 @@ export function PaginationLinks<T>({ pagination }: Props<T>) {
                             variant={isActive ? 'default' : 'outline'}
                             size="sm"
                             className={cn(
-                                'min-w-9 rounded-full px-3',
+                                'min-w-9 rounded-lg px-3',
                                 !isActive && 'bg-background',
                             )}
                             asChild

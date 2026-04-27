@@ -1,7 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import DepartmentController from '@/actions/App/Http/Controllers/Payroll/DepartmentController';
 import { dashboard } from '@/routes';
-import { edit as departmentsEdit, index as departmentsIndex } from '@/routes/departments';
+import {
+    edit as departmentsEdit,
+    index as departmentsIndex,
+} from '@/routes/departments';
 import { DepartmentForm } from '@/components/payroll/department-form';
 import { Button } from '@/components/ui/button';
 import type { DepartmentDetail } from '@/types';
@@ -15,11 +18,17 @@ export default function DepartmentsEdit({ department }: Props) {
         <>
             <Head title={department.name} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex justify-end">
                     {department.can.delete && (
                         <Button variant="outline" asChild>
-                            <Link href={DepartmentController.destroy(department.id)} method="delete" as="button">
+                            <Link
+                                href={DepartmentController.destroy(
+                                    department.id,
+                                )}
+                                method="delete"
+                                as="button"
+                            >
                                 Archive department
                             </Link>
                         </Button>

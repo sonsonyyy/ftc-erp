@@ -20,6 +20,8 @@ class TaxReportRunController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -31,6 +33,7 @@ class TaxReportRunController extends Controller
         $type = $request->string('type')->toString();
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
+        $perPage = $this->resolvePerPage($request);
 
         $taxReportRuns = TaxReportRun::query()
             ->with('generatedBy:id,name')
@@ -39,7 +42,7 @@ class TaxReportRunController extends Controller
             ->betweenPeriods($from, $to)
             ->orderByDesc('generated_at')
             ->orderByDesc('id')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (TaxReportRun $taxReportRun) => $this->reportRunListItem($request, $taxReportRun));
 
@@ -50,6 +53,7 @@ class TaxReportRunController extends Controller
                 'type' => $type,
                 'from' => $from,
                 'to' => $to,
+                'per_page' => $perPage,
             ],
             'reportTypeOptions' => $this->reportTypeOptions(),
             'can' => [
@@ -245,5 +249,17 @@ class TaxReportRunController extends Controller
     private function normalizeDateFilter(string $value): ?string
     {
         return filled($value) ? $value : null;
+    }
+
+    /**
+     * Resolve the validated page size for the tax report table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

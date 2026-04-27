@@ -21,6 +21,8 @@ class PayrollRunController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -32,6 +34,7 @@ class PayrollRunController extends Controller
         $status = $request->string('status')->toString();
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
+        $perPage = $this->resolvePerPage($request);
 
         $payrollRuns = PayrollRun::query()
             ->with('preparedBy:id,name')
@@ -41,7 +44,7 @@ class PayrollRunController extends Controller
             ->betweenPayrollDates($from, $to)
             ->orderByDesc('payroll_date')
             ->orderByDesc('id')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (PayrollRun $payrollRun) => $this->payrollRunListItem($request, $payrollRun));
 
@@ -52,6 +55,7 @@ class PayrollRunController extends Controller
                 'status' => $status,
                 'from' => $from,
                 'to' => $to,
+                'per_page' => $perPage,
             ],
             'statusOptions' => $this->statusOptions(),
             'can' => [
@@ -357,5 +361,17 @@ class PayrollRunController extends Controller
     private function normalizeDateFilter(string $value): ?string
     {
         return filled($value) ? $value : null;
+    }
+
+    /**
+     * Resolve the validated page size for the payroll run table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

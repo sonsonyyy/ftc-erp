@@ -1,6 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { index as purchaseOrdersIndex, show as purchaseOrdersShow } from '@/routes/purchase-orders';
+import {
+    index as purchaseOrdersIndex,
+    show as purchaseOrdersShow,
+} from '@/routes/purchase-orders';
 import { PurchaseOrderForm } from '@/components/purchasing/purchase-order-form';
 import type {
     PurchaseOrderDetail,
@@ -25,7 +28,7 @@ export default function PurchaseOrdersEdit(props: Props) {
         <>
             <Head title={`Edit ${props.purchaseOrder.po_no}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <PurchaseOrderForm
                     {...props}
                     title={`Edit ${props.purchaseOrder.po_no}`}

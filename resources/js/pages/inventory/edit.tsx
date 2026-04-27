@@ -1,6 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { index as inventoryIndex, show as inventoryShow } from '@/routes/inventory';
+import {
+    index as inventoryIndex,
+    show as inventoryShow,
+} from '@/routes/inventory';
 import { InventoryItemForm } from '@/components/inventory/inventory-item-form';
 import type { InventoryFormData, SelectOption } from '@/types';
 
@@ -10,12 +13,16 @@ type Props = {
     statusOptions: SelectOption[];
 };
 
-export default function InventoryEdit({ inventoryItem, categoryOptions, statusOptions }: Props) {
+export default function InventoryEdit({
+    inventoryItem,
+    categoryOptions,
+    statusOptions,
+}: Props) {
     return (
         <>
             <Head title={`Edit ${inventoryItem.item_code}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <InventoryItemForm
                     inventoryItem={inventoryItem}
                     categoryOptions={categoryOptions}

@@ -1,8 +1,15 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { index as quotationsIndex, show as quotationsShow } from '@/routes/quotations';
+import {
+    index as quotationsIndex,
+    show as quotationsShow,
+} from '@/routes/quotations';
 import { QuotationForm } from '@/components/quotations/quotation-form';
-import type { QuotationDetail, QuotationSiteOption, SelectOption } from '@/types';
+import type {
+    QuotationDetail,
+    QuotationSiteOption,
+    SelectOption,
+} from '@/types';
 
 type Props = {
     quotation: QuotationDetail;
@@ -21,7 +28,7 @@ export default function QuotationsEdit({
         <>
             <Head title={`Edit ${quotation.quotation_no}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <QuotationForm
                     quotation={quotation}
                     customerOptions={customerOptions}

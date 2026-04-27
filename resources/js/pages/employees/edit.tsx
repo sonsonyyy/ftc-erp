@@ -1,7 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import EmployeeController from '@/actions/App/Http/Controllers/Payroll/EmployeeController';
 import { dashboard } from '@/routes';
-import { edit as employeesEdit, index as employeesIndex } from '@/routes/employees';
+import {
+    edit as employeesEdit,
+    index as employeesIndex,
+} from '@/routes/employees';
 import { EmployeeForm } from '@/components/payroll/employee-form';
 import { Button } from '@/components/ui/button';
 import type { EmployeeDetail, PositionOption, SelectOption } from '@/types';
@@ -23,11 +26,15 @@ export default function EmployeesEdit({
         <>
             <Head title={employee.full_name} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex justify-end">
                     {employee.can.delete && (
                         <Button variant="outline" asChild>
-                            <Link href={EmployeeController.destroy(employee.id)} method="delete" as="button">
+                            <Link
+                                href={EmployeeController.destroy(employee.id)}
+                                method="delete"
+                                as="button"
+                            >
                                 Archive employee
                             </Link>
                         </Button>

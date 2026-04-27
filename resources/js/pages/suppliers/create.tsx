@@ -8,7 +8,7 @@ export default function SuppliersCreate() {
         <>
             <Head title="New Supplier" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <SupplierForm
                     title="New supplier"
                     description="Register the supplier record before linking it to purchase requests, POs, and receiving."

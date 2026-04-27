@@ -28,7 +28,7 @@ export default function ProjectsCreate({
         <>
             <Head title="New Project" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <ProjectForm
                     customerOptions={customerOptions}
                     siteOptions={siteOptions}

@@ -1,17 +1,37 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    Archive,
+    ChevronDown,
+    Eye,
+    Pencil,
+    Plus,
+    Search,
+    SlidersHorizontal,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     create as payrollRunsCreate,
+    destroy as payrollRunsDestroy,
     edit as payrollRunsEdit,
     index as payrollRunsIndex,
     show as payrollRunsShow,
 } from '@/routes/payroll-runs';
-import { DataTableCard } from '@/components/data-table-card';
-import { FilterSelect } from '@/components/filter-select';
-import { IndexFiltersCard } from '@/components/index-filters-card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import type { PaginatedData, PayrollRunListItem, SelectOption } from '@/types';
 
 type Props = {
@@ -21,12 +41,15 @@ type Props = {
         status: string;
         from: string | null;
         to: string | null;
+        per_page: number;
     };
     statusOptions: SelectOption[];
     can: {
         create: boolean;
     };
 };
+
+const perPageOptions = ['5', '10', '15', '25'];
 
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {
@@ -64,97 +87,256 @@ export default function PayrollRunsIndex({
     statusOptions,
     can,
 }: Props) {
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [tableFilters, setTableFilters] = useState({
+        status: filters.status,
+        from: filters.from ?? '',
+        to: filters.to ?? '',
+        per_page: String(filters.per_page),
+    });
+
+    useEffect(() => {
+        setTableFilters((currentFilters) => {
+            const nextFilters = {
+                status: filters.status,
+                from: filters.from ?? '',
+                to: filters.to ?? '',
+                per_page: String(filters.per_page),
+            };
+
+            if (
+                currentFilters.status === nextFilters.status &&
+                currentFilters.from === nextFilters.from &&
+                currentFilters.to === nextFilters.to &&
+                currentFilters.per_page === nextFilters.per_page
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [filters.from, filters.per_page, filters.status, filters.to]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentPerPage = String(filters.per_page);
+
+        if (
+            normalizedSearch === filters.search &&
+            tableFilters.status === filters.status &&
+            tableFilters.from === (filters.from ?? '') &&
+            tableFilters.to === (filters.to ?? '') &&
+            tableFilters.per_page === currentPerPage
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(payrollRunsIndex()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    status: tableFilters.status,
+                    from: tableFilters.from,
+                    to: tableFilters.to,
+                    per_page: Number(tableFilters.per_page),
+                    page: 1,
+                }),
+                {
+                    only: ['payrollRuns', 'filters'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.from,
+        filters.per_page,
+        filters.search,
+        filters.status,
+        filters.to,
+        searchInput,
+        tableFilters,
+    ]);
+
+    const activeFilterCount =
+        (tableFilters.status === '' ? 0 : 1) +
+        (tableFilters.from === '' ? 0 : 1) +
+        (tableFilters.to === '' ? 0 : 1);
+
     return (
         <>
             <Head title="Payroll Runs" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Payroll Runs
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Prepare payroll batches with per-employee
-                            deductions, then review totals before payout.
+                            Payroll batches, coverage dates, and payout totals.
                         </p>
                     </div>
 
                     {can.create && (
                         <Button asChild>
                             <Link href={payrollRunsCreate()}>
+                                <Plus />
                                 New payroll run
                             </Link>
                         </Button>
                     )}
                 </div>
 
-                <IndexFiltersCard
-                    action={payrollRunsIndex()}
-                    resetHref={payrollRunsIndex()}
-                    filters={filters}
-                    description="Search by payroll run number or employee, then narrow by run status and payroll date window."
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={searchInput}
+                                onChange={(event) =>
+                                    setSearchInput(event.currentTarget.value)
+                                }
+                                placeholder="Search payroll runs"
+                                className="h-9 pl-9"
+                            />
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <SlidersHorizontal />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                    <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="start" className="w-72">
+                                <DropdownMenuRadioGroup
+                                    value={
+                                        tableFilters.status === ''
+                                            ? 'all'
+                                            : tableFilters.status
+                                    }
+                                    onValueChange={(value) => {
+                                        router.cancelAll();
+                                        setTableFilters((currentFilters) => ({
+                                            ...currentFilters,
+                                            status:
+                                                value === 'all' ? '' : value,
+                                        }));
+                                    }}
+                                >
+                                    <DropdownMenuRadioItem value="all">
+                                        All statuses
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuSeparator />
+                                    {statusOptions.map((option) => (
+                                        <DropdownMenuRadioItem
+                                            key={option.value}
+                                            value={String(option.value)}
+                                        >
+                                            {option.label}
+                                        </DropdownMenuRadioItem>
+                                    ))}
+                                </DropdownMenuRadioGroup>
+
+                                <DropdownMenuSeparator />
+                                <div className="space-y-3 p-2">
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            Payroll date from
+                                        </p>
+                                        <Input
+                                            type="date"
+                                            value={tableFilters.from}
+                                            onChange={(event) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        from: event
+                                                            .currentTarget
+                                                            .value,
+                                                    }),
+                                                );
+                                            }}
+                                            className="h-9"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            Payroll date to
+                                        </p>
+                                        <Input
+                                            type="date"
+                                            value={tableFilters.to}
+                                            onChange={(event) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        to: event.currentTarget
+                                                            .value,
+                                                    }),
+                                                );
+                                            }}
+                                            className="h-9"
+                                        />
+                                    </div>
+                                </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={payrollRuns}
+                            perPage={tableFilters.per_page}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    per_page: value,
+                                }));
+                            }}
+                        />
+                    }
                 >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search payroll runs"
-                    />
-
-                    <FilterSelect name="status" defaultValue={filters.status}>
-                        <option value="">All statuses</option>
-                        {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <Input
-                        name="from"
-                        type="date"
-                        defaultValue={filters.from ?? ''}
-                    />
-                    <Input
-                        name="to"
-                        type="date"
-                        defaultValue={filters.to ?? ''}
-                    />
-                </IndexFiltersCard>
-
-                <DataTableCard
-                    title="Payroll run list"
-                    description={`${payrollRuns.total} payroll runs recorded`}
-                    pagination={payrollRuns}
-                >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">Run</th>
-                                <th className="px-6 py-3 font-medium">
-                                    Coverage
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Totals
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Prepared by
-                                </th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>Run</th>
+                                <th>Coverage</th>
+                                <th className="text-right">Totals</th>
+                                <th>Status</th>
+                                <th>Prepared by</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
-
                         <tbody>
                             {payrollRuns.data.length === 0 && (
                                 <tr>
                                     <td
                                         colSpan={6}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        className="py-10 text-center text-muted-foreground"
                                     >
                                         No payroll runs matched the current
                                         filters.
@@ -163,38 +345,30 @@ export default function PayrollRunsIndex({
                             )}
 
                             {payrollRuns.data.map((payrollRun) => (
-                                <tr
-                                    key={payrollRun.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
+                                <tr key={payrollRun.id}>
+                                    <td>
                                         <div className="space-y-1">
-                                            <p className="font-medium">
+                                            <p className="truncate font-medium text-foreground">
                                                 {payrollRun.payroll_run_no}
                                             </p>
-                                            <p className="text-muted-foreground">
+                                            <p className="truncate text-[13px] text-muted-foreground">
                                                 Payroll date:{' '}
                                                 {formatDate(
                                                     payrollRun.payroll_date,
                                                 )}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {payrollRun.entry_count}{' '}
-                                                employees
-                                            </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        <div className="space-y-1">
-                                            <p>
-                                                From:{' '}
+                                    <td>
+                                        <div className="space-y-1 text-[13px]">
+                                            <p className="truncate font-medium text-foreground">
                                                 {formatDate(
                                                     payrollRun.period_from,
                                                 )}
                                             </p>
-                                            <p>
-                                                To:{' '}
+                                            <p className="truncate text-muted-foreground">
+                                                to{' '}
                                                 {formatDate(
                                                     payrollRun.period_to,
                                                 )}
@@ -202,80 +376,106 @@ export default function PayrollRunsIndex({
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <div className="space-y-1">
-                                            <p className="font-medium">
-                                                {formatCurrency(
-                                                    payrollRun.gross_total,
-                                                )}
-                                            </p>
-                                            <p className="text-muted-foreground">
-                                                Deductions:{' '}
-                                                {formatCurrency(
-                                                    payrollRun.total_deductions,
-                                                )}
-                                            </p>
-                                            <p className="text-muted-foreground">
-                                                Net:{' '}
+                                    <td className="text-right text-[13px]">
+                                        <p className="font-medium text-foreground tabular-nums">
+                                            {formatCurrency(
+                                                payrollRun.gross_total,
+                                            )}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                            Net{' '}
+                                            <span className="tabular-nums">
                                                 {formatCurrency(
                                                     payrollRun.net_total,
                                                 )}
+                                            </span>
+                                        </p>
+                                    </td>
+
+                                    <td>
+                                        <div className="space-y-1">
+                                            <Badge
+                                                variant="outline"
+                                                className={statusBadgeClass(
+                                                    payrollRun.status,
+                                                )}
+                                            >
+                                                {payrollRun.status_label}
+                                            </Badge>
+                                            <p className="text-[13px] text-muted-foreground">
+                                                <span className="tabular-nums">
+                                                    {payrollRun.entry_count}
+                                                </span>{' '}
+                                                employees
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <Badge
-                                            variant="outline"
-                                            className={statusBadgeClass(
-                                                payrollRun.status,
-                                            )}
-                                        >
-                                            {payrollRun.status_label}
-                                        </Badge>
-                                    </td>
-
-                                    <td className="px-6 py-4 text-muted-foreground">
+                                    <td className="text-[13px] text-muted-foreground">
                                         {payrollRun.prepared_by ??
                                             'Not recorded'}
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-2">
-                                            {payrollRun.can.view && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link
-                                                        href={payrollRunsShow(
-                                                            payrollRun.id,
-                                                        )}
-                                                    >
-                                                        Open
-                                                    </Link>
-                                                </Button>
-                                            )}
-
-                                            {payrollRun.can.update && (
-                                                <Button size="sm" asChild>
-                                                    <Link
-                                                        href={payrollRunsEdit(
-                                                            payrollRun.id,
-                                                        )}
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                </Button>
-                                            )}
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={[
+                                                    ...(payrollRun.can.view
+                                                        ? [
+                                                              {
+                                                                  key: 'open',
+                                                                  label: 'Open',
+                                                                  icon: Eye,
+                                                                  href: payrollRunsShow(
+                                                                      payrollRun.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(payrollRun.can.update
+                                                        ? [
+                                                              {
+                                                                  key: 'edit',
+                                                                  label: 'Edit',
+                                                                  icon: Pencil,
+                                                                  href: payrollRunsEdit(
+                                                                      payrollRun.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(payrollRun.can.delete
+                                                        ? [
+                                                              {
+                                                                  key: 'archive',
+                                                                  label: 'Archive',
+                                                                  icon: Archive,
+                                                                  destructive: true,
+                                                                  onSelect:
+                                                                      () =>
+                                                                          router.delete(
+                                                                              toUrl(
+                                                                                  payrollRunsDestroy(
+                                                                                      payrollRun.id,
+                                                                                  ),
+                                                                              ),
+                                                                              {
+                                                                                  preserveScroll: true,
+                                                                              },
+                                                                          ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                ]}
+                                                label={`Open actions for ${payrollRun.payroll_run_no}`}
+                                            />
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );

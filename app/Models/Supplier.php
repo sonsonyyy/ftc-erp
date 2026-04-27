@@ -75,16 +75,18 @@ class Supplier extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $likeOperator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+        return $query->where(function (Builder $builder) use ($likeOperator, $term): void {
             $builder
-                ->where('supplier_code', 'like', "%{$term}%")
-                ->orWhere('company_name', 'like', "%{$term}%")
-                ->orWhere('contact_person', 'like', "%{$term}%")
-                ->orWhere('phone', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%")
-                ->orWhere('tin', 'like', "%{$term}%")
-                ->orWhere('payment_terms', 'like', "%{$term}%")
-                ->orWhere('notes', 'like', "%{$term}%");
+                ->where('supplier_code', $likeOperator, "%{$term}%")
+                ->orWhere('company_name', $likeOperator, "%{$term}%")
+                ->orWhere('contact_person', $likeOperator, "%{$term}%")
+                ->orWhere('phone', $likeOperator, "%{$term}%")
+                ->orWhere('email', $likeOperator, "%{$term}%")
+                ->orWhere('tin', $likeOperator, "%{$term}%")
+                ->orWhere('payment_terms', $likeOperator, "%{$term}%")
+                ->orWhere('notes', $likeOperator, "%{$term}%");
         });
     }
 

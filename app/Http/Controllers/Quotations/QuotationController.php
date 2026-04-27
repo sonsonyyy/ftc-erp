@@ -30,6 +30,8 @@ class QuotationController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     private const KPI_TOP_LIMIT = 5;
 
     /**
@@ -46,6 +48,7 @@ class QuotationController extends Controller
         $status = $request->string('status')->toString();
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
+        $perPage = $this->resolvePerPage($request);
 
         $query = Quotation::query()
             ->with([
@@ -66,24 +69,25 @@ class QuotationController extends Controller
         }
 
         $quotations = (clone $query)
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Quotation $quotation) => $this->quotationListItem($request, $quotation));
 
         return Inertia::render('quotations/index', [
             'quotations' => $quotations,
+            'summary' => $this->quotationSummary(),
             'filters' => [
                 'search' => $search,
                 'customer' => $customerId,
                 'status' => $status,
                 'from' => $from,
                 'to' => $to,
+                'per_page' => $perPage,
             ],
             'customerOptions' => $this->customerOptions(),
             'statusOptions' => $this->statusOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Quotation::class) ?? false,
-                'view_kpi' => $request->user()?->can('viewAny', Quotation::class) ?? false,
             ],
         ]);
     }
@@ -664,6 +668,30 @@ class QuotationController extends Controller
     }
 
     /**
+     * Build the top-line quotation summary cards.
+     *
+     * @return array<string, int|float>
+     */
+    private function quotationSummary(): array
+    {
+        $baseQuery = Quotation::query();
+
+        return [
+            'total_quotations' => (clone $baseQuery)->count(),
+            'pending_quotations' => (clone $baseQuery)
+                ->whereIn('status', $this->pendingStatuses())
+                ->count(),
+            'awarded_quotations' => (clone $baseQuery)
+                ->where('status', QuotationStatus::Awarded->value)
+                ->count(),
+            'total_quotation_value' => round(
+                (float) (clone $baseQuery)->sum('quotation_amount'),
+                2,
+            ),
+        ];
+    }
+
+    /**
      * Build the customer dropdown options.
      *
      * @return array<int, array<string, int|string>>
@@ -677,6 +705,18 @@ class QuotationController extends Controller
                 'value' => $customer->getKey(),
                 'label' => "{$customer->customer_code} - {$customer->company_name}",
             ])->all();
+    }
+
+    /**
+     * Resolve the validated page size for the quotation table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 
     /**

@@ -1,6 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { index as customersIndex, show as customersShow } from '@/routes/customers';
+import {
+    index as customersIndex,
+    show as customersShow,
+} from '@/routes/customers';
 import { CustomerForm } from '@/components/customers/customer-form';
 import type { CustomerDetail, SelectOption } from '@/types';
 
@@ -14,7 +17,7 @@ export default function CustomersEdit({ customer, statusOptions }: Props) {
         <>
             <Head title={`Edit ${customer.company_name}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <CustomerForm
                     customer={customer}
                     statusOptions={statusOptions}

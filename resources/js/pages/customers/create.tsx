@@ -1,6 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { create as customersCreate, index as customersIndex } from '@/routes/customers';
+import {
+    create as customersCreate,
+    index as customersIndex,
+} from '@/routes/customers';
 import { CustomerForm } from '@/components/customers/customer-form';
 import type { SelectOption } from '@/types';
 
@@ -13,7 +16,7 @@ export default function CustomersCreate({ statusOptions }: Props) {
         <>
             <Head title="New customer" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <CustomerForm
                     statusOptions={statusOptions}
                     title="New customer"

@@ -1,23 +1,29 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { ChevronDown, Eye, Search, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     index as inventoryIndex,
     lowStock as inventoryLowStock,
     show as inventoryShow,
 } from '@/routes/inventory';
-import { FilterSelect } from '@/components/filter-select';
-import { DataTableCard } from '@/components/data-table-card';
-import { IndexFiltersCard } from '@/components/index-filters-card';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { countActiveFilters } from '@/lib/utils';
 import type {
     LowStockFilters,
     LowStockItem,
@@ -32,98 +38,269 @@ type Props = {
     warehouseOptions: SelectOption[];
 };
 
+const lowStockBreadcrumbs = [
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+    },
+    {
+        title: 'Inventory Items',
+        href: inventoryIndex(),
+    },
+    {
+        title: 'Low Stock',
+        href: inventoryLowStock(),
+    },
+];
+
+const perPageOptions = ['5', '10', '15', '25'];
+
 export default function InventoryLowStock({
     lowStockItems,
     filters,
     categoryOptions,
     warehouseOptions,
 }: Props) {
-    const activeFilterCount = countActiveFilters(filters);
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [tableFilters, setTableFilters] = useState({
+        category: filters.category === null ? '' : String(filters.category),
+        warehouse: filters.warehouse === null ? '' : String(filters.warehouse),
+        per_page: String(filters.per_page),
+    });
+
+    useEffect(() => {
+        setTableFilters((currentFilters) => {
+            const nextFilters = {
+                category:
+                    filters.category === null ? '' : String(filters.category),
+                warehouse:
+                    filters.warehouse === null ? '' : String(filters.warehouse),
+                per_page: String(filters.per_page),
+            };
+
+            if (
+                currentFilters.category === nextFilters.category &&
+                currentFilters.warehouse === nextFilters.warehouse &&
+                currentFilters.per_page === nextFilters.per_page
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [filters.category, filters.per_page, filters.warehouse]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentCategory =
+            filters.category === null ? '' : String(filters.category);
+        const currentWarehouse =
+            filters.warehouse === null ? '' : String(filters.warehouse);
+        const currentPerPage = String(filters.per_page);
+
+        if (
+            normalizedSearch === filters.search &&
+            tableFilters.category === currentCategory &&
+            tableFilters.warehouse === currentWarehouse &&
+            tableFilters.per_page === currentPerPage
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(inventoryLowStock()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    category:
+                        tableFilters.category === ''
+                            ? undefined
+                            : Number(tableFilters.category),
+                    warehouse:
+                        tableFilters.warehouse === ''
+                            ? undefined
+                            : Number(tableFilters.warehouse),
+                    per_page: Number(tableFilters.per_page),
+                    page: 1,
+                }),
+                {
+                    only: ['lowStockItems', 'filters'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.category,
+        filters.per_page,
+        filters.search,
+        filters.warehouse,
+        searchInput,
+        tableFilters,
+    ]);
+
+    const activeFilterCount =
+        (tableFilters.category === '' ? 0 : 1) +
+        (tableFilters.warehouse === '' ? 0 : 1);
 
     return (
         <>
             <Head title="Low Stock" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl font-semibold tracking-tight">
-                            Low Stock
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Review items already below reorder level, either
-                            across all warehouses or within a selected
-                            warehouse.
-                        </p>
-                    </div>
-
-                    <Button variant="outline" asChild>
-                        <Link href={inventoryIndex()}>Back to inventory</Link>
-                    </Button>
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="space-y-1.5">
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        Low Stock
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Review active items already below reorder level.
+                    </p>
                 </div>
 
-                <IndexFiltersCard
-                    action={inventoryLowStock()}
-                    resetHref={inventoryLowStock()}
-                    filters={filters}
-                    description="Filter the low-stock view by item search, category, or warehouse."
-                    activeFilterCount={activeFilterCount}
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={searchInput}
+                                onChange={(event) =>
+                                    setSearchInput(event.currentTarget.value)
+                                }
+                                placeholder="Search low-stock items"
+                                className="h-9 pl-9"
+                            />
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <SlidersHorizontal />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                    <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="start" className="w-56">
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Category
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.category === ''
+                                                    ? 'all'
+                                                    : tableFilters.category
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        category:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All categories
+                                            </DropdownMenuRadioItem>
+                                            {categoryOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Warehouse
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.warehouse === ''
+                                                    ? 'all'
+                                                    : tableFilters.warehouse
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        warehouse:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All warehouses
+                                            </DropdownMenuRadioItem>
+                                            {warehouseOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={lowStockItems}
+                            perPage={tableFilters.per_page}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    per_page: value,
+                                }));
+                            }}
+                        />
+                    }
                 >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search low-stock items"
-                    />
-
-                    <FilterSelect
-                        name="category"
-                        defaultValue={filters.category ?? ''}
-                    >
-                        <option value="">All categories</option>
-                        {categoryOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect
-                        name="warehouse"
-                        defaultValue={filters.warehouse ?? ''}
-                    >
-                        <option value="">All warehouses</option>
-                        {warehouseOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-                </IndexFiltersCard>
-
-                <DataTableCard
-                    title="Low-stock list"
-                    description={`${lowStockItems.total} low-stock records`}
-                    pagination={lowStockItems}
-                >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">Item</th>
-                                <th className="px-6 py-3 font-medium">
-                                    Category
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    On hand
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Reorder level
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Shortage
-                                </th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th className="text-right">On hand</th>
+                                <th className="text-right">Reorder</th>
+                                <th className="text-right">Shortage</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
 
@@ -132,7 +309,7 @@ export default function InventoryLowStock({
                                 <tr>
                                     <td
                                         colSpan={6}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No low-stock items matched the current
                                         filters.
@@ -141,68 +318,74 @@ export default function InventoryLowStock({
                             )}
 
                             {lowStockItems.data.map((item) => (
-                                <tr
-                                    key={item.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
-                                        <div className="space-y-1">
-                                            <p className="font-medium">
-                                                {item.item_code}
-                                            </p>
-                                            <p className="text-muted-foreground">
+                                <tr key={item.id}>
+                                    <td>
+                                        <div className="space-y-0.5">
+                                            <p className="max-w-[18rem] truncate font-semibold text-foreground">
                                                 {item.item_name}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {item.sku ?? 'No SKU'} •{' '}
-                                                {item.unit}
+                                            <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
+                                                {[
+                                                    item.item_code,
+                                                    item.sku,
+                                                    item.unit,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' • ')}
                                             </p>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-muted-foreground">
-                                        {item.category.name ?? 'Uncategorized'}
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[12rem] truncate">
+                                            {item.category.name ??
+                                                'Uncategorized'}
+                                        </p>
                                     </td>
-                                    <td className="px-6 py-4 text-muted-foreground">
+
+                                    <td className="text-right font-medium text-muted-foreground tabular-nums">
                                         {item.quantity_on_hand.toFixed(2)}
                                     </td>
-                                    <td className="px-6 py-4 text-muted-foreground">
+
+                                    <td className="text-right font-medium text-muted-foreground tabular-nums">
                                         {item.reorder_level.toFixed(2)}
                                     </td>
-                                    <td className="px-6 py-4 font-medium text-amber-700">
+
+                                    <td className="text-right font-semibold text-amber-700 tabular-nums">
                                         {item.shortage.toFixed(2)}
                                     </td>
-                                    <td className="px-6 py-4 text-right">
-                                        {item.can.view && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                asChild
-                                            >
-                                                <Link
-                                                    href={inventoryShow(
-                                                        item.id,
-                                                    )}
-                                                >
-                                                    Open
-                                                </Link>
-                                            </Button>
-                                        )}
+
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={[
+                                                    ...(item.can.view
+                                                        ? [
+                                                              {
+                                                                  key: 'open',
+                                                                  label: 'Open',
+                                                                  icon: Eye,
+                                                                  href: inventoryShow(
+                                                                      item.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                ]}
+                                                label={`Open actions for ${item.item_name}`}
+                                            />
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );
 }
 
 InventoryLowStock.layout = {
-    breadcrumbs: [
-        { title: 'Dashboard', href: dashboard() },
-        { title: 'Inventory', href: inventoryIndex() },
-        { title: 'Low stock', href: inventoryLowStock() },
-    ],
+    breadcrumbs: lowStockBreadcrumbs,
 };

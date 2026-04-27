@@ -2,7 +2,11 @@ import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { show as purchaseOrdersShow } from '@/routes/purchase-orders';
 import { PurchaseReceiptForm } from '@/components/purchasing/purchase-receipt-form';
-import type { PurchaseReceiptFormDefaults, PurchaseReceiptSourceOrder, SelectOption } from '@/types';
+import type {
+    PurchaseReceiptFormDefaults,
+    PurchaseReceiptSourceOrder,
+    SelectOption,
+} from '@/types';
 
 type Props = {
     purchaseOrder: PurchaseReceiptSourceOrder;
@@ -15,7 +19,7 @@ export default function PurchaseReceiptsCreate(props: Props) {
         <>
             <Head title={`Receive ${props.purchaseOrder.po_no}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <PurchaseReceiptForm
                     {...props}
                     title={`Record receipt for ${props.purchaseOrder.po_no}`}

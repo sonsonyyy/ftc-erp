@@ -22,6 +22,8 @@ class InventoryItemController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -35,6 +37,7 @@ class InventoryItemController extends Controller
         $categoryId = $request->integer('category') ?: null;
         $status = $request->string('status')->toString();
         $lowStockOnly = $request->string('low_stock')->toString() === '1';
+        $perPage = $this->resolvePerPage($request);
 
         $query = InventoryItem::query()
             ->with('inventoryCategory:id,name')
@@ -51,7 +54,7 @@ class InventoryItemController extends Controller
         }
 
         $inventoryItems = (clone $query)
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (InventoryItem $inventoryItem) => $this->inventoryListItem($request, $inventoryItem));
 
@@ -62,14 +65,13 @@ class InventoryItemController extends Controller
                 'category' => $categoryId,
                 'status' => $status,
                 'low_stock' => $lowStockOnly ? '1' : '',
+                'per_page' => $perPage,
             ],
             'categoryOptions' => $this->categoryOptions(),
             'statusOptions' => $this->statusOptions(),
             'summary' => $this->inventorySummary(),
             'can' => [
                 'create' => $request->user()?->can('create', InventoryItem::class) ?? false,
-                'manage_categories' => $request->user()?->can('viewAny', InventoryCategory::class) ?? false,
-                'view_low_stock' => $request->user()?->can('viewAny', InventoryItem::class) ?? false,
             ],
         ]);
     }
@@ -125,6 +127,7 @@ class InventoryItemController extends Controller
         $search = $request->string('search')->toString();
         $categoryId = $request->integer('category') ?: null;
         $warehouseId = $request->integer('warehouse') ?: null;
+        $perPage = $this->resolvePerPage($request);
 
         $lowStockItems = InventoryItem::query()
             ->with('inventoryCategory:id,name')
@@ -134,7 +137,7 @@ class InventoryItemController extends Controller
             ->status(InventoryItemStatus::Active->value)
             ->belowReorderLevel($warehouseId)
             ->orderBy('item_name')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (InventoryItem $inventoryItem) => [
                 'id' => $inventoryItem->getKey(),
@@ -167,6 +170,7 @@ class InventoryItemController extends Controller
                 'search' => $search,
                 'category' => $categoryId,
                 'warehouse' => $warehouseId,
+                'per_page' => $perPage,
             ],
             'categoryOptions' => $this->categoryOptions(),
             'warehouseOptions' => $this->warehouseOptions(),
@@ -438,6 +442,18 @@ class InventoryItemController extends Controller
                 'value' => $warehouse->getKey(),
                 'label' => "{$warehouse->warehouse_code} - {$warehouse->warehouse_name}",
             ])->all();
+    }
+
+    /**
+     * Resolve the validated page size for inventory tables.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 
     /**

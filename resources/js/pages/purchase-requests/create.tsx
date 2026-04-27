@@ -23,7 +23,7 @@ export default function PurchaseRequestsCreate(props: Props) {
         <>
             <Head title="New Purchase Request" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <PurchaseRequestForm
                     {...props}
                     title="New purchase request"

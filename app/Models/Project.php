@@ -120,22 +120,26 @@ class Project extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('project_no', 'like', "%{$term}%")
-                ->orWhere('title', 'like', "%{$term}%")
-                ->orWhere('project_type', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%")
-                ->orWhereHas('customer', function (Builder $customerQuery) use ($term): void {
+                ->where('project_no', $operator, "%{$term}%")
+                ->orWhere('title', $operator, "%{$term}%")
+                ->orWhere('project_type', $operator, "%{$term}%")
+                ->orWhere('description', $operator, "%{$term}%")
+                ->orWhereHas('customer', function (Builder $customerQuery) use ($term, $operator): void {
                     $customerQuery
-                        ->where('customer_code', 'like', "%{$term}%")
-                        ->orWhere('company_name', 'like', "%{$term}%")
-                        ->orWhere('trade_name', 'like', "%{$term}%");
+                        ->where('customer_code', $operator, "%{$term}%")
+                        ->orWhere('company_name', $operator, "%{$term}%")
+                        ->orWhere('trade_name', $operator, "%{$term}%");
                 })
-                ->orWhereHas('customerSite', function (Builder $siteQuery) use ($term): void {
+                ->orWhereHas('customerSite', function (Builder $siteQuery) use ($term, $operator): void {
                     $siteQuery
-                        ->where('site_code', 'like', "%{$term}%")
-                        ->orWhere('site_name', 'like', "%{$term}%");
+                        ->where('site_code', $operator, "%{$term}%")
+                        ->orWhere('site_name', $operator, "%{$term}%");
                 });
         });
     }

@@ -13,7 +13,7 @@ export default function InventoryCategoriesEdit({ inventoryCategory }: Props) {
         <>
             <Head title={`Edit ${inventoryCategory.name}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <InventoryCategoryForm
                     inventoryCategory={inventoryCategory}
                     title={`Edit ${inventoryCategory.name}`}

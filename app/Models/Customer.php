@@ -61,14 +61,18 @@ class Customer extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('customer_code', 'like', "%{$term}%")
-                ->orWhere('company_name', 'like', "%{$term}%")
-                ->orWhere('trade_name', 'like', "%{$term}%")
-                ->orWhere('tin', 'like', "%{$term}%")
-                ->orWhere('phone', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%");
+                ->where('customer_code', $operator, "%{$term}%")
+                ->orWhere('company_name', $operator, "%{$term}%")
+                ->orWhere('trade_name', $operator, "%{$term}%")
+                ->orWhere('tin', $operator, "%{$term}%")
+                ->orWhere('phone', $operator, "%{$term}%")
+                ->orWhere('email', $operator, "%{$term}%");
         });
     }
 

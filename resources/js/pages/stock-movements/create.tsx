@@ -21,7 +21,7 @@ export default function StockMovementsCreate({
         <>
             <Head title="Manual Stock Movement" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <StockMovementForm
                     warehouseOptions={warehouseOptions}
                     itemOptions={itemOptions}

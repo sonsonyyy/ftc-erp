@@ -176,6 +176,14 @@ export type WorkOrderFilters = {
     status: string;
     priority: string;
     service_type: string;
+    per_page: number;
+};
+
+export type WorkOrderIndexSummary = {
+    total_work_orders: number;
+    scheduled_work_orders: number;
+    in_progress_work_orders: number;
+    urgent_work_orders: number;
 };
 
 export type WorkOrderStatusOption = SelectOption;

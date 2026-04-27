@@ -14,7 +14,7 @@ export default function UsersEdit({ managedUser, roleOptions }: Props) {
         <>
             <Head title={`Edit ${managedUser.name}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <UserForm
                     managedUser={managedUser}
                     roleOptions={roleOptions}

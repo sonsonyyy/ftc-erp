@@ -2,7 +2,11 @@ import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { index as stockIssuancesIndex } from '@/routes/stock-issuances';
 import { StockIssuanceForm } from '@/components/inventory/stock-issuance-form';
-import type { SelectOption, StockIssuanceDefaults, StockWorkOrderOption } from '@/types';
+import type {
+    SelectOption,
+    StockIssuanceDefaults,
+    StockWorkOrderOption,
+} from '@/types';
 
 type Props = {
     warehouseOptions: SelectOption[];
@@ -23,7 +27,7 @@ export default function StockIssuancesCreate({
         <>
             <Head title="New Stock Issuance" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <StockIssuanceForm
                     warehouseOptions={warehouseOptions}
                     projectOptions={projectOptions}

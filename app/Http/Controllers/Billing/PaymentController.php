@@ -19,6 +19,8 @@ class PaymentController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of payments.
      */
@@ -30,6 +32,7 @@ class PaymentController extends Controller
         $customerId = $request->integer('customer') ?: null;
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
+        $perPage = $this->resolvePerPage($request);
 
         $payments = Payment::query()
             ->with([
@@ -42,7 +45,7 @@ class PaymentController extends Controller
             ->betweenPaymentDates($from, $to)
             ->orderByDesc('payment_date')
             ->orderByDesc('id')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Payment $payment) => $this->paymentListItem($request, $payment));
 
@@ -53,6 +56,7 @@ class PaymentController extends Controller
                 'customer' => $customerId,
                 'from' => $from,
                 'to' => $to,
+                'per_page' => $perPage,
             ],
             'customerOptions' => $this->customerOptions(),
             'can' => [
@@ -321,5 +325,17 @@ class PaymentController extends Controller
     private function normalizeDateFilter(string $value): ?string
     {
         return filled($value) ? $value : null;
+    }
+
+    /**
+     * Resolve a supported page size for paginated listings.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

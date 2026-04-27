@@ -52,11 +52,15 @@ class VatRecord extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('reference_no', 'like', "%{$term}%")
-                ->orWhere('counterparty_name', 'like', "%{$term}%")
-                ->orWhere('counterparty_tin', 'like', "%{$term}%");
+                ->where('reference_no', $operator, "%{$term}%")
+                ->orWhere('counterparty_name', $operator, "%{$term}%")
+                ->orWhere('counterparty_tin', $operator, "%{$term}%");
         });
     }
 

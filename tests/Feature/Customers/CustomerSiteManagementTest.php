@@ -33,7 +33,13 @@ function actingAsSiteRole(string $roleName): User
 test('authorized users can browse paginated sites', function () {
     actingAsSiteRole('Sales Admin / Business Development');
 
-    CustomerSite::factory()->count(16)->create();
+    CustomerSite::factory()->count(12)->create([
+        'is_active' => true,
+    ]);
+
+    CustomerSite::factory()->count(4)->create([
+        'is_active' => false,
+    ]);
 
     $this->get(route('sites.index'))
         ->assertOk()
@@ -41,8 +47,31 @@ test('authorized users can browse paginated sites', function () {
             ->component('sites/index')
             ->where('sites.total', 16)
             ->where('sites.current_page', 1)
+            ->where('sites.per_page', 15)
             ->has('sites.data', 15)
+            ->where('summary.total_sites', 16)
+            ->where('summary.active_sites', 12)
+            ->where('summary.inactive_sites', 4)
+            ->where('summary.linked_customers', 16)
+            ->where('filters.per_page', 15)
             ->where('can.create', true),
+        );
+});
+
+test('site list supports custom page size', function () {
+    actingAsSiteRole('Sales Admin / Business Development');
+
+    CustomerSite::factory()->count(12)->create();
+
+    $this->get(route('sites.index', [
+        'per_page' => 5,
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('sites/index')
+            ->where('sites.per_page', 5)
+            ->has('sites.data', 5)
+            ->where('filters.per_page', 5),
         );
 });
 
@@ -76,6 +105,66 @@ test('site list can be filtered by customer and active status', function () {
             ->where('sites.total', 1)
             ->where('sites.data.0.site_name', 'North HQ'),
         );
+});
+
+test('site list search is case insensitive', function () {
+    actingAsSiteRole('Sales Admin / Business Development');
+
+    $customer = Customer::factory()->create([
+        'company_name' => 'North Fire',
+    ]);
+
+    CustomerSite::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'site_name' => 'North HQ',
+    ]);
+
+    CustomerSite::factory()->create([
+        'site_name' => 'South Branch',
+    ]);
+
+    $this->get(route('sites.index', [
+        'search' => 'north',
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('sites/index')
+            ->where('filters.search', 'north')
+            ->where('sites.total', 1)
+            ->where('sites.data.0.site_name', 'North HQ'),
+        );
+});
+
+test('site export respects the active filters', function () {
+    actingAsSiteRole('Sales Admin / Business Development');
+
+    $customer = Customer::factory()->create([
+        'company_name' => 'North Fire',
+    ]);
+
+    CustomerSite::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'site_name' => 'North HQ',
+        'is_active' => true,
+    ]);
+
+    CustomerSite::factory()->create([
+        'site_name' => 'Dormant Branch',
+        'is_active' => false,
+    ]);
+
+    $response = $this->get(route('sites.index', [
+        'customer' => $customer->getKey(),
+        'active' => 'active',
+        'export' => 'csv',
+    ]));
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+    expect($response->streamedContent())
+        ->toContain('North HQ')
+        ->not->toContain('Dormant Branch');
 });
 
 test('authorized users can create sites', function () {

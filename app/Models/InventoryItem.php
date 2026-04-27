@@ -104,15 +104,19 @@ class InventoryItem extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('sku', 'like', "%{$term}%")
-                ->orWhere('item_code', 'like', "%{$term}%")
-                ->orWhere('item_name', 'like', "%{$term}%")
-                ->orWhere('unit', 'like', "%{$term}%")
-                ->orWhere('notes', 'like', "%{$term}%")
-                ->orWhereHas('inventoryCategory', function (Builder $categoryQuery) use ($term): void {
-                    $categoryQuery->where('name', 'like', "%{$term}%");
+                ->where('sku', $operator, "%{$term}%")
+                ->orWhere('item_code', $operator, "%{$term}%")
+                ->orWhere('item_name', $operator, "%{$term}%")
+                ->orWhere('unit', $operator, "%{$term}%")
+                ->orWhere('notes', $operator, "%{$term}%")
+                ->orWhereHas('inventoryCategory', function (Builder $categoryQuery) use ($term, $operator): void {
+                    $categoryQuery->where('name', $operator, "%{$term}%");
                 });
         });
     }

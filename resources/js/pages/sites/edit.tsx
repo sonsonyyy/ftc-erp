@@ -15,7 +15,7 @@ export default function SitesEdit({ site, customerOptions }: Props) {
         <>
             <Head title={`Edit ${site.site_name}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <SiteForm
                     site={site}
                     customerOptions={customerOptions}

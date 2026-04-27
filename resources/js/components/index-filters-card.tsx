@@ -1,20 +1,19 @@
 import { Link, router, type InertiaLinkProps } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn, cleanQueryParams, countActiveFilters, toUrl } from '@/lib/utils';
-import { Download, Ellipsis, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import {
+    Download,
+    Ellipsis,
+    RotateCcw,
+    Search,
+    SlidersHorizontal,
+} from 'lucide-react';
 import {
     Children,
     cloneElement,
@@ -37,6 +36,7 @@ type FilterFieldProps = {
     onChange?: (
         event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     ) => void;
+    className?: string;
     defaultValue?: string | number | readonly string[];
     value?: string | number | readonly string[];
 };
@@ -92,16 +92,6 @@ export function IndexFiltersCard({
         [normalizedFilters],
     );
     const [formValues, setFormValues] = useState(normalizedFilters);
-    const [isAdvancedOpen, setIsAdvancedOpen] = useState(
-        countActiveFilters(filters) > 0,
-    );
-    const querySignature = useMemo(
-        () => JSON.stringify(cleanQueryParams(formValues)),
-        [formValues],
-    );
-    const resolvedActiveFilterCount =
-        activeFilterCount ?? countActiveFilters(filters);
-    const hasActiveFilters = resolvedActiveFilterCount > 0;
     const allFields = Children.toArray(children).filter(
         (child): child is FilterFieldElement => {
             return (
@@ -111,6 +101,27 @@ export function IndexFiltersCard({
         },
     );
     const [primaryField, ...advancedFields] = allFields;
+    const primaryFieldName = primaryField?.props.name;
+    const advancedFilterSource = primaryFieldName
+        ? Object.fromEntries(
+              Object.entries(filters).filter(
+                  ([key]) => key !== primaryFieldName,
+              ),
+          )
+        : filters;
+    const [isAdvancedOpen, setIsAdvancedOpen] = useState(
+        countActiveFilters(advancedFilterSource) > 0,
+    );
+    const querySignature = useMemo(
+        () => JSON.stringify(cleanQueryParams(formValues)),
+        [formValues],
+    );
+    const secondaryFilterCount = countActiveFilters(advancedFilterSource);
+    const resolvedActiveFilterCount =
+        activeFilterCount === undefined
+            ? secondaryFilterCount
+            : Math.min(activeFilterCount, secondaryFilterCount);
+    const hasActiveFilters = resolvedActiveFilterCount > 0;
 
     useEffect(() => {
         setFormValues(normalizedFilters);
@@ -156,6 +167,10 @@ export function IndexFiltersCard({
             key: `${name}-${index}`,
             value: formValues[name] ?? '',
             defaultValue: undefined,
+            className: cn(
+                name === primaryFieldName ? undefined : 'w-full',
+                field.props.className,
+            ),
             onChange: (
                 event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
             ) => {
@@ -165,99 +180,125 @@ export function IndexFiltersCard({
         });
     }
 
+    function renderPrimaryField() {
+        if (!primaryField) {
+            return null;
+        }
+
+        const renderedField = renderField(primaryField, 0);
+
+        if (primaryField.props.name !== 'search') {
+            return renderedField;
+        }
+
+        return (
+            <div className="relative w-full">
+                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                {cloneElement(renderedField, {
+                    className: cn('h-9 pl-9', renderedField.props.className),
+                })}
+            </div>
+        );
+    }
+
     return (
-        <Card className="border-border/70 shadow-sm">
-            <CardHeader className="gap-1 pb-0">
-                <CardTitle>{title}</CardTitle>
-                <CardDescription>{description}</CardDescription>
-                {hasActiveFilters && (
-                    <p className="text-xs text-muted-foreground">
-                        {resolvedActiveFilterCount} active filter
-                        {resolvedActiveFilterCount === 1 ? '' : 's'}
-                    </p>
-                )}
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                    <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
-                        <div className="w-full md:max-w-lg">
-                            {primaryField && renderField(primaryField, 0)}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                            {advancedFields.length > 0 && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() =>
-                                        setIsAdvancedOpen(
-                                            (currentValue) => !currentValue,
-                                        )
-                                    }
-                                >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {hasActiveFilters && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                                            {resolvedActiveFilterCount}
-                                        </span>
-                                    )}
-                                </Button>
-                            )}
-
-                            {hasActiveFilters && (
-                                <Button variant="ghost" asChild>
-                                    <Link href={resetHref} preserveScroll>
-                                        <RotateCcw />
-                                        Reset
-                                    </Link>
-                                </Button>
-                            )}
-                        </div>
+        <div className="space-y-3">
+            <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="w-full sm:max-w-sm">
+                        {renderPrimaryField()}
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        {exportHref && (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button type="button" variant="outline">
-                                        <Ellipsis />
-                                        Actions
-                                    </Button>
-                                </DropdownMenuTrigger>
+                    <div className="flex flex-wrap items-center gap-2">
+                        {advancedFields.length > 0 && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-9 bg-background"
+                                onClick={() =>
+                                    setIsAdvancedOpen(
+                                        (currentValue) => !currentValue,
+                                    )
+                                }
+                            >
+                                <SlidersHorizontal />
+                                {title}
+                                {hasActiveFilters && (
+                                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                        {resolvedActiveFilterCount}
+                                    </span>
+                                )}
+                            </Button>
+                        )}
 
-                                <DropdownMenuContent
-                                    align="end"
-                                    className="min-w-48"
-                                >
-                                    <DropdownMenuItem asChild>
-                                        <a href={toUrl(exportHref)}>
-                                            <Download />
-                                            Export CSV
-                                        </a>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                        {hasActiveFilters && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-9"
+                                asChild
+                            >
+                                <Link href={resetHref} preserveScroll>
+                                    <RotateCcw />
+                                    Reset
+                                </Link>
+                            </Button>
                         )}
                     </div>
                 </div>
 
-                {advancedFields.length > 0 && isAdvancedOpen && (
-                    <div className="rounded-xl border bg-muted/15 p-4">
-                        <div
-                            className={cn(
-                                'grid gap-3 md:grid-cols-2 xl:grid-cols-4',
-                                fieldsClassName,
-                            )}
-                        >
-                            {advancedFields.map((field, index) =>
-                                renderField(field, index + 1),
-                            )}
-                        </div>
+                <div className="flex items-center gap-2">
+                    {exportHref && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <Ellipsis />
+                                    Actions
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent
+                                align="end"
+                                className="min-w-48"
+                            >
+                                <DropdownMenuItem asChild>
+                                    <a href={toUrl(exportHref)}>
+                                        <Download />
+                                        Export CSV
+                                    </a>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
+            </div>
+
+            {advancedFields.length > 0 && isAdvancedOpen && (
+                <div className="rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+                    {description && (
+                        <p className="mb-3 text-[13px] text-muted-foreground">
+                            {description}
+                        </p>
+                    )}
+
+                    <div
+                        className={cn(
+                            'grid gap-3 md:grid-cols-2 xl:grid-cols-4',
+                            fieldsClassName,
+                        )}
+                    >
+                        {advancedFields.map((field, index) =>
+                            renderField(field, index + 1),
+                        )}
                     </div>
-                )}
-            </CardContent>
-        </Card>
+                </div>
+            )}
+        </div>
     );
 }

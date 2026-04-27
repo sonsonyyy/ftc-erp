@@ -66,15 +66,17 @@ function formatDateTime(date: string | null): string {
 }
 
 function statusBadgeClass(status: string): string {
-    return {
-        draft: 'border-slate-200 bg-slate-100 text-slate-700',
-        submitted: 'border-sky-200 bg-sky-50 text-sky-700',
-        under_review: 'border-amber-200 bg-amber-50 text-amber-700',
-        awarded: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        lost: 'border-rose-200 bg-rose-50 text-rose-700',
-        cancelled: 'border-stone-200 bg-stone-100 text-stone-700',
-        expired: 'border-orange-200 bg-orange-50 text-orange-700',
-    }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700';
+    return (
+        {
+            draft: 'border-slate-200 bg-slate-100 text-slate-700',
+            submitted: 'border-sky-200 bg-sky-50 text-sky-700',
+            under_review: 'border-amber-200 bg-amber-50 text-amber-700',
+            awarded: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+            lost: 'border-rose-200 bg-rose-50 text-rose-700',
+            cancelled: 'border-stone-200 bg-stone-100 text-stone-700',
+            expired: 'border-orange-200 bg-orange-50 text-orange-700',
+        }[status] ?? 'border-slate-200 bg-slate-100 text-slate-700'
+    );
 }
 
 export default function QuotationsShow({ quotation, statusOptions }: Props) {
@@ -82,7 +84,8 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
         status: quotation.status,
         remarks: '',
         lost_reason: quotation.lost_reason ?? '',
-        materialized_at: quotation.materialized_at ?? quotation.quotation_date ?? '',
+        materialized_at:
+            quotation.materialized_at ?? quotation.quotation_date ?? '',
     });
 
     const requiresLostReason = statusForm.data.status === 'lost';
@@ -107,7 +110,7 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
         <>
             <Head title={quotation.quotation_no} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
@@ -130,7 +133,9 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                     <div className="flex flex-wrap gap-2">
                         {quotation.customer.id && (
                             <Button variant="outline" asChild>
-                                <Link href={customersShow(quotation.customer.id)}>
+                                <Link
+                                    href={customersShow(quotation.customer.id)}
+                                >
                                     View customer
                                 </Link>
                             </Button>
@@ -150,7 +155,11 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
 
                         {quotation.can.convert_to_project && (
                             <Button variant="secondary" asChild>
-                                <Link href={QuotationController.convertToProject(quotation.id)}>
+                                <Link
+                                    href={QuotationController.convertToProject(
+                                        quotation.id,
+                                    )}
+                                >
                                     Convert to project
                                 </Link>
                             </Button>
@@ -158,7 +167,11 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
 
                         {quotation.can.convert_to_work_order && (
                             <Button variant="secondary" asChild>
-                                <Link href={QuotationController.convertToWorkOrder(quotation.id)}>
+                                <Link
+                                    href={QuotationController.convertToWorkOrder(
+                                        quotation.id,
+                                    )}
+                                >
                                     Convert to work order
                                 </Link>
                             </Button>
@@ -167,7 +180,9 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                         {quotation.can.delete && (
                             <Button variant="outline" asChild>
                                 <Link
-                                    href={QuotationController.destroy(quotation.id)}
+                                    href={QuotationController.destroy(
+                                        quotation.id,
+                                    )}
                                     method="delete"
                                     as="button"
                                 >
@@ -182,7 +197,9 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                     <Card>
                         <CardHeader>
                             <CardDescription>Quoted amount</CardDescription>
-                            <CardTitle>{formatCurrency(quotation.quotation_amount)}</CardTitle>
+                            <CardTitle>
+                                {formatCurrency(quotation.quotation_amount)}
+                            </CardTitle>
                         </CardHeader>
                     </Card>
 
@@ -209,7 +226,8 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                             <CardHeader>
                                 <CardTitle>Quotation information</CardTitle>
                                 <CardDescription>
-                                    Core quotation record details used for KPI reporting and downstream handoff.
+                                    Core quotation record details used for KPI
+                                    reporting and downstream handoff.
                                 </CardDescription>
                             </CardHeader>
 
@@ -220,19 +238,25 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                     </p>
                                     {quotation.customer.id ? (
                                         <Link
-                                            href={customersShow(quotation.customer.id)}
+                                            href={customersShow(
+                                                quotation.customer.id,
+                                            )}
                                             className="mt-1 inline-flex font-medium hover:underline"
                                         >
                                             {quotation.customer.customer_code} -{' '}
                                             {quotation.customer.company_name}
                                         </Link>
                                     ) : (
-                                        <p className="mt-1 font-medium">Not linked</p>
+                                        <p className="mt-1 font-medium">
+                                            Not linked
+                                        </p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Site</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Site
+                                    </p>
                                     {quotation.site.id ? (
                                         <Link
                                             href={sitesShow(quotation.site.id)}
@@ -243,7 +267,9 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                                 ` (${quotation.site.site_code})`}
                                         </Link>
                                     ) : (
-                                        <p className="mt-1 font-medium">No site linked</p>
+                                        <p className="mt-1 font-medium">
+                                            No site linked
+                                        </p>
                                     )}
                                 </div>
 
@@ -270,7 +296,8 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                         Prepared by
                                     </p>
                                     <p className="mt-1 font-medium">
-                                        {quotation.prepared_by.name ?? 'Not set'}
+                                        {quotation.prepared_by.name ??
+                                            'Not set'}
                                     </p>
                                 </div>
 
@@ -279,7 +306,8 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                         Assigned sales owner
                                     </p>
                                     <p className="mt-1 font-medium">
-                                        {quotation.assigned_sales_user.name ?? 'Unassigned'}
+                                        {quotation.assigned_sales_user.name ??
+                                            'Unassigned'}
                                     </p>
                                 </div>
 
@@ -287,9 +315,12 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                     <p className="text-sm text-muted-foreground">
                                         Site address
                                     </p>
-                                    <p className="mt-1 whitespace-pre-line font-medium">
+                                    <p className="mt-1 font-medium whitespace-pre-line">
                                         {quotation.site.address ??
-                                            ([quotation.site.city, quotation.site.province]
+                                            ([
+                                                quotation.site.city,
+                                                quotation.site.province,
+                                            ]
                                                 .filter(Boolean)
                                                 .join(', ') ||
                                                 'Not set')}
@@ -300,8 +331,9 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                     <p className="text-sm text-muted-foreground">
                                         Lost reason
                                     </p>
-                                    <p className="mt-1 whitespace-pre-line font-medium">
-                                        {quotation.lost_reason ?? 'Not applicable'}
+                                    <p className="mt-1 font-medium whitespace-pre-line">
+                                        {quotation.lost_reason ??
+                                            'Not applicable'}
                                     </p>
                                 </div>
 
@@ -309,7 +341,7 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                     <p className="text-sm text-muted-foreground">
                                         Remarks
                                     </p>
-                                    <p className="mt-1 whitespace-pre-line font-medium">
+                                    <p className="mt-1 font-medium whitespace-pre-line">
                                         {quotation.remarks ?? 'No remarks'}
                                     </p>
                                 </div>
@@ -320,13 +352,20 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                     </p>
                                     {quotation.converted_project.id ? (
                                         <Link
-                                            href={projectsShow(quotation.converted_project.id)}
+                                            href={projectsShow(
+                                                quotation.converted_project.id,
+                                            )}
                                             className="mt-1 inline-flex font-medium hover:underline"
                                         >
-                                            {quotation.converted_project.project_no}
+                                            {
+                                                quotation.converted_project
+                                                    .project_no
+                                            }
                                         </Link>
                                     ) : (
-                                        <p className="mt-1 font-medium">Not converted</p>
+                                        <p className="mt-1 font-medium">
+                                            Not converted
+                                        </p>
                                     )}
                                 </div>
 
@@ -336,13 +375,21 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                     </p>
                                     {quotation.converted_work_order.id ? (
                                         <Link
-                                            href={workOrdersShow(quotation.converted_work_order.id)}
+                                            href={workOrdersShow(
+                                                quotation.converted_work_order
+                                                    .id,
+                                            )}
                                             className="mt-1 inline-flex font-medium hover:underline"
                                         >
-                                            {quotation.converted_work_order.work_order_no}
+                                            {
+                                                quotation.converted_work_order
+                                                    .work_order_no
+                                            }
                                         </Link>
                                     ) : (
-                                        <p className="mt-1 font-medium">Not converted</p>
+                                        <p className="mt-1 font-medium">
+                                            Not converted
+                                        </p>
                                     )}
                                 </div>
                             </CardContent>
@@ -352,55 +399,63 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                             <CardHeader>
                                 <CardTitle>Status history</CardTitle>
                                 <CardDescription>
-                                    Every recorded quotation status transition appears here.
+                                    Every recorded quotation status transition
+                                    appears here.
                                 </CardDescription>
                             </CardHeader>
 
                             <CardContent className="space-y-3">
-                                {(quotation.status_history ?? []).map((entry) => (
-                                    <div
-                                        key={entry.id}
-                                        className="rounded-lg border px-4 py-3"
-                                    >
-                                        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <Badge variant="outline">
-                                                    {entry.from_status_label ?? 'Created'}
-                                                </Badge>
-                                                <span className="text-muted-foreground">
-                                                    to
-                                                </span>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={statusBadgeClass(
-                                                        entry.to_status,
+                                {(quotation.status_history ?? []).map(
+                                    (entry) => (
+                                        <div
+                                            key={entry.id}
+                                            className="rounded-lg border px-4 py-3"
+                                        >
+                                            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <Badge variant="outline">
+                                                        {entry.from_status_label ??
+                                                            'Created'}
+                                                    </Badge>
+                                                    <span className="text-muted-foreground">
+                                                        to
+                                                    </span>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={statusBadgeClass(
+                                                            entry.to_status,
+                                                        )}
+                                                    >
+                                                        {entry.to_status_label}
+                                                    </Badge>
+                                                </div>
+
+                                                <p className="text-sm text-muted-foreground">
+                                                    {formatDateTime(
+                                                        entry.changed_at,
                                                     )}
-                                                >
-                                                    {entry.to_status_label}
-                                                </Badge>
+                                                </p>
                                             </div>
 
-                                            <p className="text-sm text-muted-foreground">
-                                                {formatDateTime(entry.changed_at)}
-                                            </p>
+                                            <div className="mt-3 space-y-1 text-sm">
+                                                <p className="text-muted-foreground">
+                                                    Changed by:{' '}
+                                                    <span className="font-medium text-foreground">
+                                                        {entry.changed_by ??
+                                                            'System'}
+                                                    </span>
+                                                </p>
+                                                <p className="text-muted-foreground">
+                                                    Remarks:{' '}
+                                                    <span className="font-medium text-foreground">
+                                                        {entry.remarks ??
+                                                            'No remarks'}
+                                                    </span>
+                                                </p>
+                                            </div>
                                         </div>
-
-                                        <div className="mt-3 space-y-1 text-sm">
-                                            <p className="text-muted-foreground">
-                                                Changed by:{' '}
-                                                <span className="font-medium text-foreground">
-                                                    {entry.changed_by ?? 'System'}
-                                                </span>
-                                            </p>
-                                            <p className="text-muted-foreground">
-                                                Remarks:{' '}
-                                                <span className="font-medium text-foreground">
-                                                    {entry.remarks ?? 'No remarks'}
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ),
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -414,22 +469,36 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                 <CardHeader>
                                     <CardTitle>Conversion handoff</CardTitle>
                                     <CardDescription>
-                                        Move awarded quotations into execution records and keep the cross-links intact.
+                                        Move awarded quotations into execution
+                                        records and keep the cross-links intact.
                                     </CardDescription>
                                 </CardHeader>
 
                                 <CardContent className="space-y-3">
                                     {quotation.can.convert_to_project && (
                                         <Button className="w-full" asChild>
-                                            <Link href={QuotationController.convertToProject(quotation.id)}>
+                                            <Link
+                                                href={QuotationController.convertToProject(
+                                                    quotation.id,
+                                                )}
+                                            >
                                                 Create project from quotation
                                             </Link>
                                         </Button>
                                     )}
 
                                     {quotation.converted_project.id && (
-                                        <Button variant="outline" className="w-full" asChild>
-                                            <Link href={projectsShow(quotation.converted_project.id)}>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full"
+                                            asChild
+                                        >
+                                            <Link
+                                                href={projectsShow(
+                                                    quotation.converted_project
+                                                        .id,
+                                                )}
+                                            >
                                                 View linked project
                                             </Link>
                                         </Button>
@@ -437,19 +506,37 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
 
                                     {quotation.can.convert_to_work_order && (
                                         <Button
-                                            variant={quotation.can.convert_to_project ? 'outline' : 'default'}
+                                            variant={
+                                                quotation.can.convert_to_project
+                                                    ? 'outline'
+                                                    : 'default'
+                                            }
                                             className="w-full"
                                             asChild
                                         >
-                                            <Link href={QuotationController.convertToWorkOrder(quotation.id)}>
+                                            <Link
+                                                href={QuotationController.convertToWorkOrder(
+                                                    quotation.id,
+                                                )}
+                                            >
                                                 Create work order from quotation
                                             </Link>
                                         </Button>
                                     )}
 
                                     {quotation.converted_work_order.id && (
-                                        <Button variant="outline" className="w-full" asChild>
-                                            <Link href={workOrdersShow(quotation.converted_work_order.id)}>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full"
+                                            asChild
+                                        >
+                                            <Link
+                                                href={workOrdersShow(
+                                                    quotation
+                                                        .converted_work_order
+                                                        .id,
+                                                )}
+                                            >
                                                 View linked work order
                                             </Link>
                                         </Button>
@@ -463,7 +550,8 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                 <CardHeader>
                                     <CardTitle>Update status</CardTitle>
                                     <CardDescription>
-                                        Move the quotation forward and keep the KPI trail accurate.
+                                        Move the quotation forward and keep the
+                                        KPI trail accurate.
                                     </CardDescription>
                                 </CardHeader>
 
@@ -473,17 +561,20 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                         className="space-y-4"
                                     >
                                         <div className="grid gap-2">
-                                            <Label htmlFor="status">New status</Label>
+                                            <Label htmlFor="status">
+                                                New status
+                                            </Label>
                                             <select
                                                 id="status"
                                                 value={statusForm.data.status}
                                                 onChange={(event) =>
                                                     statusForm.setData(
                                                         'status',
-                                                        event.currentTarget.value,
+                                                        event.currentTarget
+                                                            .value,
                                                     )
                                                 }
-                                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                             >
                                                 {statusOptions.map((option) => (
                                                     <option
@@ -495,7 +586,9 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                                 ))}
                                             </select>
                                             <InputError
-                                                message={statusForm.errors.status}
+                                                message={
+                                                    statusForm.errors.status
+                                                }
                                             />
                                         </div>
 
@@ -507,11 +600,15 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                                 <Input
                                                     id="materialized_at"
                                                     type="date"
-                                                    value={statusForm.data.materialized_at}
+                                                    value={
+                                                        statusForm.data
+                                                            .materialized_at
+                                                    }
                                                     onChange={(event) =>
                                                         statusForm.setData(
                                                             'materialized_at',
-                                                            event.currentTarget.value,
+                                                            event.currentTarget
+                                                                .value,
                                                         )
                                                     }
                                                 />
@@ -531,11 +628,15 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                                 </Label>
                                                 <Textarea
                                                     id="lost_reason"
-                                                    value={statusForm.data.lost_reason}
+                                                    value={
+                                                        statusForm.data
+                                                            .lost_reason
+                                                    }
                                                     onChange={(event) =>
                                                         statusForm.setData(
                                                             'lost_reason',
-                                                            event.currentTarget.value,
+                                                            event.currentTarget
+                                                                .value,
                                                         )
                                                     }
                                                     placeholder="Explain why the quotation was lost"
@@ -559,13 +660,16 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                                 onChange={(event) =>
                                                     statusForm.setData(
                                                         'remarks',
-                                                        event.currentTarget.value,
+                                                        event.currentTarget
+                                                            .value,
                                                     )
                                                 }
                                                 placeholder="Add context for this transition"
                                             />
                                             <InputError
-                                                message={statusForm.errors.remarks}
+                                                message={
+                                                    statusForm.errors.remarks
+                                                }
                                             />
                                         </div>
 

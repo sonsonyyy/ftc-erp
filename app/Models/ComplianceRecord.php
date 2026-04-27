@@ -118,15 +118,19 @@ class ComplianceRecord extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('record_no', 'like', "%{$term}%")
-                ->orWhere('title', 'like', "%{$term}%")
-                ->orWhere('agency', 'like', "%{$term}%")
-                ->orWhere('category', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%")
-                ->orWhere('latest_submission_reference', 'like', "%{$term}%")
-                ->orWhere('notes', 'like', "%{$term}%");
+                ->where('record_no', $operator, "%{$term}%")
+                ->orWhere('title', $operator, "%{$term}%")
+                ->orWhere('agency', $operator, "%{$term}%")
+                ->orWhere('category', $operator, "%{$term}%")
+                ->orWhere('description', $operator, "%{$term}%")
+                ->orWhere('latest_submission_reference', $operator, "%{$term}%")
+                ->orWhere('notes', $operator, "%{$term}%");
         });
     }
 

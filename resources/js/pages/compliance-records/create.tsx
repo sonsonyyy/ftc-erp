@@ -32,7 +32,7 @@ export default function ComplianceRecordsCreate({
         <>
             <Head title="New Compliance Record" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <ComplianceRecordForm
                     templateOptions={templateOptions}
                     assignedUserOptions={assignedUserOptions}

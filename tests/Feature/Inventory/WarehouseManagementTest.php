@@ -38,7 +38,23 @@ test('authorized users can browse paginated warehouses', function () {
             ->where('warehouses.total', 16)
             ->where('warehouses.current_page', 1)
             ->has('warehouses.data', 15)
+            ->where('filters.per_page', 15)
             ->where('can.create', true),
+        );
+});
+
+test('warehouse page size can be customized', function () {
+    actingAsWarehouseInventoryRole('Warehouse / Inventory Officer');
+
+    Warehouse::factory()->count(12)->create();
+
+    $this->get(route('warehouses.index', ['per_page' => 5]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('warehouses/index')
+            ->where('warehouses.total', 12)
+            ->has('warehouses.data', 5)
+            ->where('filters.per_page', 5),
         );
 });
 
@@ -58,13 +74,13 @@ test('warehouse list can be filtered by search and activity', function () {
     ]);
 
     $this->get(route('warehouses.index', [
-        'search' => 'Main',
+        'search' => 'main',
         'activity' => 'active',
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('warehouses/index')
-            ->where('filters.search', 'Main')
+            ->where('filters.search', 'main')
             ->where('filters.activity', 'active')
             ->where('warehouses.total', 1)
             ->where('warehouses.data.0.warehouse_code', 'WH-ACTIVE'),

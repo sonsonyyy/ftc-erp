@@ -27,7 +27,7 @@ export default function QuotationsCreate({
         <>
             <Head title="New Quotation" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <QuotationForm
                     customerOptions={customerOptions}
                     siteOptions={siteOptions}

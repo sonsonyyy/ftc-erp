@@ -47,7 +47,24 @@ test('authorized users can browse paginated projects', function () {
             ->where('projects.total', 16)
             ->where('projects.current_page', 1)
             ->has('projects.data', 15)
+            ->where('summary.total_projects', 16)
+            ->where('filters.per_page', 15)
             ->where('can.create', true),
+        );
+});
+
+test('project page size can be customized', function () {
+    actingAsProjectRole('Operations Admin');
+
+    Project::factory()->count(12)->create();
+
+    $this->get(route('projects.index', ['per_page' => 5]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('projects/index')
+            ->where('projects.total', 12)
+            ->has('projects.data', 5)
+            ->where('filters.per_page', 5),
         );
 });
 
@@ -89,14 +106,14 @@ test('project list can be filtered by search customer and status', function () {
     ]);
 
     $this->get(route('projects.index', [
-        'search' => 'Alpha',
+        'search' => 'alpha',
         'customer' => $alphaCustomer->getKey(),
         'status' => ProjectStatus::Open->value,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('projects/index')
-            ->where('filters.search', 'Alpha')
+            ->where('filters.search', 'alpha')
             ->where('filters.customer', $alphaCustomer->getKey())
             ->where('filters.status', ProjectStatus::Open->value)
             ->where('projects.total', 1)

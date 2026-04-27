@@ -1,7 +1,10 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { dashboard } from '@/routes';
-import { index as quotationsIndex, kpi as quotationsKpi } from '@/routes/quotations';
+import {
+    index as quotationsIndex,
+    kpi as quotationsKpi,
+} from '@/routes/quotations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -65,20 +68,24 @@ export default function QuotationsKpi({
         <>
             <Head title="Quotation Sales KPI" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div className="space-y-1">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Quotation Sales KPI
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Monitor quotation throughput, conversion, awarded value, and loss patterns using source transactions only.
+                            Monitor quotation throughput, conversion, awarded
+                            value, and loss patterns using source transactions
+                            only.
                         </p>
                     </div>
 
                     {can.view_registry && (
                         <Button variant="outline" asChild>
-                            <Link href={quotationsIndex()}>Back to registry</Link>
+                            <Link href={quotationsIndex()}>
+                                Back to registry
+                            </Link>
                         </Button>
                     )}
                 </div>
@@ -87,7 +94,8 @@ export default function QuotationsKpi({
                     <CardHeader>
                         <CardTitle>Filters</CardTitle>
                         <CardDescription>
-                            Adjust the reporting window and optionally focus on one customer.
+                            Adjust the reporting window and optionally focus on
+                            one customer.
                         </CardDescription>
                     </CardHeader>
 
@@ -101,11 +109,14 @@ export default function QuotationsKpi({
                             <select
                                 name="customer"
                                 defaultValue={filters.customer ?? ''}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">All customers</option>
                                 {customerOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
@@ -117,10 +128,13 @@ export default function QuotationsKpi({
                                 onChange={(event) =>
                                     setSelectedRange(event.currentTarget.value)
                                 }
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {rangeOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
@@ -167,13 +181,17 @@ export default function QuotationsKpi({
                     <Card>
                         <CardHeader>
                             <CardDescription>Conversion rate</CardDescription>
-                            <CardTitle>{formatPercent(metrics.conversion_rate)}</CardTitle>
+                            <CardTitle>
+                                {formatPercent(metrics.conversion_rate)}
+                            </CardTitle>
                         </CardHeader>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardDescription>Value conversion rate</CardDescription>
+                            <CardDescription>
+                                Value conversion rate
+                            </CardDescription>
                             <CardTitle>
                                 {formatPercent(metrics.value_conversion_rate)}
                             </CardTitle>
@@ -182,7 +200,9 @@ export default function QuotationsKpi({
 
                     <Card>
                         <CardHeader>
-                            <CardDescription>Total quotation value</CardDescription>
+                            <CardDescription>
+                                Total quotation value
+                            </CardDescription>
                             <CardTitle className="text-base">
                                 {formatCurrency(metrics.total_quotation_value)}
                             </CardTitle>
@@ -200,14 +220,18 @@ export default function QuotationsKpi({
 
                     <Card>
                         <CardHeader>
-                            <CardDescription>Pending quotations</CardDescription>
+                            <CardDescription>
+                                Pending quotations
+                            </CardDescription>
                             <CardTitle>{metrics.pending_count}</CardTitle>
                         </CardHeader>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardDescription>Average days to materialize</CardDescription>
+                            <CardDescription>
+                                Average days to materialize
+                            </CardDescription>
                             <CardTitle>
                                 {metrics.average_days_to_materialize ?? 'N/A'}
                             </CardTitle>
@@ -252,13 +276,16 @@ export default function QuotationsKpi({
                 <div className="grid gap-6 xl:grid-cols-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Top customers by quotation value</CardTitle>
+                            <CardTitle>
+                                Top customers by quotation value
+                            </CardTitle>
                         </CardHeader>
 
                         <CardContent className="space-y-3">
                             {topCustomersByQuotationValue.length === 0 && (
                                 <div className="rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
-                                    No quotation data matched the current filters.
+                                    No quotation data matched the current
+                                    filters.
                                 </div>
                             )}
 
@@ -274,7 +301,8 @@ export default function QuotationsKpi({
                                                 {item.customer.company_name}
                                             </p>
                                             <p className="text-sm text-muted-foreground">
-                                                {item.quotation_count} quotation(s)
+                                                {item.quotation_count}{' '}
+                                                quotation(s)
                                             </p>
                                         </div>
 
@@ -289,13 +317,16 @@ export default function QuotationsKpi({
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Top customers by awarded value</CardTitle>
+                            <CardTitle>
+                                Top customers by awarded value
+                            </CardTitle>
                         </CardHeader>
 
                         <CardContent className="space-y-3">
                             {topCustomersByAwardedValue.length === 0 && (
                                 <div className="rounded-lg border border-dashed px-4 py-6 text-sm text-muted-foreground">
-                                    No awarded quotations matched the current filters.
+                                    No awarded quotations matched the current
+                                    filters.
                                 </div>
                             )}
 
@@ -311,7 +342,8 @@ export default function QuotationsKpi({
                                                 {item.customer.company_name}
                                             </p>
                                             <p className="text-sm text-muted-foreground">
-                                                {item.quotation_count} awarded quotation(s)
+                                                {item.quotation_count} awarded
+                                                quotation(s)
                                             </p>
                                         </div>
 
@@ -345,8 +377,12 @@ export default function QuotationsKpi({
                                 key={item.lost_reason}
                                 className="flex items-center justify-between rounded-lg border px-4 py-3"
                             >
-                                <p className="font-medium">{item.lost_reason}</p>
-                                <Badge variant="outline">{item.lost_count}</Badge>
+                                <p className="font-medium">
+                                    {item.lost_reason}
+                                </p>
+                                <Badge variant="outline">
+                                    {item.lost_count}
+                                </Badge>
                             </div>
                         ))}
                     </CardContent>

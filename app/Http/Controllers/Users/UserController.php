@@ -18,6 +18,8 @@ class UserController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -25,22 +27,29 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
+        $search = $request->string('search')->toString();
+        $roleId = $request->integer('role') ?: null;
+        $active = $request->string('active')->toString();
+        $perPage = $this->resolvePerPage($request);
+
         $users = User::query()
             ->with('roles:id,name')
-            ->search($request->string('search')->toString())
-            ->forRole($request->integer('role') ?: null)
-            ->active($request->string('active')->toString())
+            ->search($search)
+            ->forRole($roleId)
+            ->active($active)
             ->orderBy('name')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (User $managedUser) => $this->userListItem($request, $managedUser));
 
         return Inertia::render('users/index', [
             'users' => $users,
+            'summary' => $this->userSummary(),
             'filters' => [
-                'search' => $request->string('search')->toString(),
-                'role' => $request->integer('role') ?: null,
-                'active' => $request->string('active')->toString(),
+                'search' => $search,
+                'role' => $roleId,
+                'active' => $active,
+                'per_page' => $perPage,
             ],
             'roleOptions' => $this->roleOptions(),
             'activityOptions' => $this->activityOptions(),
@@ -247,6 +256,21 @@ class UserController extends Controller
     }
 
     /**
+     * Build user summary metrics for the index.
+     *
+     * @return array<string, int>
+     */
+    private function userSummary(): array
+    {
+        return [
+            'total_users' => User::query()->count(),
+            'active_users' => User::query()->where('is_active', true)->count(),
+            'inactive_users' => User::query()->where('is_active', false)->count(),
+            'roles_in_use' => Role::query()->whereHas('users')->count(),
+        ];
+    }
+
+    /**
      * Build the activity filter options.
      *
      * @return array<int, array<string, string>>
@@ -257,5 +281,17 @@ class UserController extends Controller
             ['value' => 'active', 'label' => 'Active only'],
             ['value' => 'inactive', 'label' => 'Inactive only'],
         ];
+    }
+
+    /**
+     * Resolve the validated page size for the user table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

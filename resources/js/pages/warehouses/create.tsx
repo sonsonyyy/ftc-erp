@@ -8,7 +8,7 @@ export default function WarehousesCreate() {
         <>
             <Head title="New Warehouse" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <WarehouseForm
                     title="New warehouse"
                     description="Register a warehouse or stock room before recording balances, issuances, returns, or stock movements."

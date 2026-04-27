@@ -134,32 +134,36 @@ class WorkOrder extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('work_order_no', 'like', "%{$term}%")
-                ->orWhere('summary', 'like', "%{$term}%")
-                ->orWhere('findings', 'like', "%{$term}%")
-                ->orWhere('service_type', 'like', "%{$term}%")
-                ->orWhereHas('customer', function (Builder $customerQuery) use ($term): void {
+                ->where('work_order_no', $operator, "%{$term}%")
+                ->orWhere('summary', $operator, "%{$term}%")
+                ->orWhere('findings', $operator, "%{$term}%")
+                ->orWhere('service_type', $operator, "%{$term}%")
+                ->orWhereHas('customer', function (Builder $customerQuery) use ($term, $operator): void {
                     $customerQuery
-                        ->where('customer_code', 'like', "%{$term}%")
-                        ->orWhere('company_name', 'like', "%{$term}%")
-                        ->orWhere('trade_name', 'like', "%{$term}%");
+                        ->where('customer_code', $operator, "%{$term}%")
+                        ->orWhere('company_name', $operator, "%{$term}%")
+                        ->orWhere('trade_name', $operator, "%{$term}%");
                 })
-                ->orWhereHas('customerSite', function (Builder $siteQuery) use ($term): void {
+                ->orWhereHas('customerSite', function (Builder $siteQuery) use ($term, $operator): void {
                     $siteQuery
-                        ->where('site_code', 'like', "%{$term}%")
-                        ->orWhere('site_name', 'like', "%{$term}%");
+                        ->where('site_code', $operator, "%{$term}%")
+                        ->orWhere('site_name', $operator, "%{$term}%");
                 })
-                ->orWhereHas('project', function (Builder $projectQuery) use ($term): void {
+                ->orWhereHas('project', function (Builder $projectQuery) use ($term, $operator): void {
                     $projectQuery
-                        ->where('project_no', 'like', "%{$term}%")
-                        ->orWhere('title', 'like', "%{$term}%");
+                        ->where('project_no', $operator, "%{$term}%")
+                        ->orWhere('title', $operator, "%{$term}%");
                 })
-                ->orWhereHas('quotation', function (Builder $quotationQuery) use ($term): void {
+                ->orWhereHas('quotation', function (Builder $quotationQuery) use ($term, $operator): void {
                     $quotationQuery
-                        ->where('quotation_no', 'like', "%{$term}%")
-                        ->orWhere('subject', 'like', "%{$term}%");
+                        ->where('quotation_no', $operator, "%{$term}%")
+                        ->orWhere('subject', $operator, "%{$term}%");
                 });
         });
     }

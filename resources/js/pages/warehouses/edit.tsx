@@ -1,6 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { index as warehousesIndex, show as warehousesShow } from '@/routes/warehouses';
+import {
+    index as warehousesIndex,
+    show as warehousesShow,
+} from '@/routes/warehouses';
 import { WarehouseForm } from '@/components/inventory/warehouse-form';
 import type { WarehouseFormData } from '@/types';
 
@@ -13,7 +16,7 @@ export default function WarehousesEdit({ warehouse }: Props) {
         <>
             <Head title={`Edit ${warehouse.warehouse_code}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <WarehouseForm
                     warehouse={warehouse}
                     title={`Edit ${warehouse.warehouse_code}`}

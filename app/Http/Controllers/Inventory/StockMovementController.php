@@ -18,6 +18,8 @@ class StockMovementController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -29,6 +31,7 @@ class StockMovementController extends Controller
         $warehouseId = $request->integer('warehouse') ?: null;
         $inventoryItemId = $request->integer('item') ?: null;
         $movementType = $request->string('type')->toString();
+        $perPage = $this->resolvePerPage($request);
 
         $movements = StockMovement::query()
             ->with([
@@ -44,7 +47,7 @@ class StockMovementController extends Controller
             ->type($movementType)
             ->orderByDesc('movement_date')
             ->orderByDesc('id')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (StockMovement $stockMovement) => $this->movementListItem($stockMovement));
 
@@ -55,6 +58,7 @@ class StockMovementController extends Controller
                 'warehouse' => $warehouseId,
                 'item' => $inventoryItemId,
                 'type' => $movementType,
+                'per_page' => $perPage,
             ],
             'warehouseOptions' => $this->warehouseOptions(),
             'itemOptions' => $this->itemOptions(),
@@ -208,5 +212,17 @@ class StockMovementController extends Controller
     private function inventoryItemExists(?int $inventoryItemId): bool
     {
         return filled($inventoryItemId) && InventoryItem::query()->whereKey($inventoryItemId)->exists();
+    }
+
+    /**
+     * Resolve a supported page size for paginated listings.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

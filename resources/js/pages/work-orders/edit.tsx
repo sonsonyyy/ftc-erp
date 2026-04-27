@@ -1,6 +1,9 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { index as workOrdersIndex, show as workOrdersShow } from '@/routes/work-orders';
+import {
+    index as workOrdersIndex,
+    show as workOrdersShow,
+} from '@/routes/work-orders';
 import { WorkOrderForm } from '@/components/work-orders/work-order-form';
 import type {
     SelectOption,
@@ -33,7 +36,7 @@ export default function WorkOrdersEdit({
         <>
             <Head title={`Edit ${workOrder.work_order_no}`} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <WorkOrderForm
                     workOrder={workOrder}
                     customerOptions={customerOptions}

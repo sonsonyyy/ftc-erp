@@ -20,6 +20,8 @@ class StockIssuanceController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -31,6 +33,7 @@ class StockIssuanceController extends Controller
         $warehouseId = $request->integer('warehouse') ?: null;
         $projectId = $request->integer('project') ?: null;
         $workOrderId = $request->integer('work_order') ?: null;
+        $perPage = $this->resolvePerPage($request);
 
         $stockIssuances = StockIssuance::query()
             ->with([
@@ -47,7 +50,7 @@ class StockIssuanceController extends Controller
             ->forWorkOrder($workOrderId)
             ->orderByDesc('issued_date')
             ->orderByDesc('id')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (StockIssuance $stockIssuance) => [
                 'id' => $stockIssuance->getKey(),
@@ -84,6 +87,7 @@ class StockIssuanceController extends Controller
                 'warehouse' => $warehouseId,
                 'project' => $projectId,
                 'work_order' => $workOrderId,
+                'per_page' => $perPage,
             ],
             'warehouseOptions' => $this->warehouseOptions(),
             'projectOptions' => $this->projectOptions(),
@@ -258,5 +262,17 @@ class StockIssuanceController extends Controller
                 'value' => $inventoryItem->getKey(),
                 'label' => "{$inventoryItem->item_code} - {$inventoryItem->item_name} ({$inventoryItem->unit})",
             ])->all();
+    }
+
+    /**
+     * Resolve a supported page size for paginated listings.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 }

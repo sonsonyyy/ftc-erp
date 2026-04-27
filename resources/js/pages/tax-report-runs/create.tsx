@@ -1,9 +1,18 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import TaxReportRunController from '@/actions/App/Http/Controllers/Tax/TaxReportRunController';
 import { dashboard } from '@/routes';
-import { create as taxReportRunsCreate, index as taxReportRunsIndex } from '@/routes/tax-report-runs';
+import {
+    create as taxReportRunsCreate,
+    index as taxReportRunsIndex,
+} from '@/routes/tax-report-runs';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +24,10 @@ type Props = {
     defaults: TaxReportRunFormDefaults;
 };
 
-export default function TaxReportRunsCreate({ reportTypeOptions, defaults }: Props) {
+export default function TaxReportRunsCreate({
+    reportTypeOptions,
+    defaults,
+}: Props) {
     const form = useForm({
         report_type: defaults.report_type,
         period_from: defaults.period_from,
@@ -42,20 +54,28 @@ export default function TaxReportRunsCreate({ reportTypeOptions, defaults }: Pro
         <>
             <Head title="New Tax Report Run" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="space-y-1">
-                    <h1 className="text-2xl font-semibold tracking-tight">New tax report run</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        New tax report run
+                    </h1>
                     <p className="text-sm text-muted-foreground">
-                        Generate a reviewable statutory snapshot from the currently synced source records.
+                        Generate a reviewable statutory snapshot from the
+                        currently synced source records.
                     </p>
                 </div>
 
-                <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+                <form
+                    onSubmit={submit}
+                    className="grid gap-6 lg:grid-cols-[2fr_1fr]"
+                >
                     <Card>
                         <CardHeader>
                             <CardTitle>Run details</CardTitle>
                             <CardDescription>
-                                Choose the report type and covered period. The system will derive items from the current payroll and billing sources.
+                                Choose the report type and covered period. The
+                                system will derive items from the current
+                                payroll and billing sources.
                             </CardDescription>
                         </CardHeader>
 
@@ -65,11 +85,19 @@ export default function TaxReportRunsCreate({ reportTypeOptions, defaults }: Pro
                                 <select
                                     id="report_type"
                                     value={form.data.report_type}
-                                    onChange={(event) => form.setData('report_type', event.currentTarget.value)}
-                                    className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'report_type',
+                                            event.currentTarget.value,
+                                        )
+                                    }
+                                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     {reportTypeOptions.map((option) => (
-                                        <option key={option.value} value={option.value}>
+                                        <option
+                                            key={option.value}
+                                            value={option.value}
+                                        >
                                             {option.label}
                                         </option>
                                     ))}
@@ -83,7 +111,12 @@ export default function TaxReportRunsCreate({ reportTypeOptions, defaults }: Pro
                                     id="period_from"
                                     type="date"
                                     value={form.data.period_from}
-                                    onChange={(event) => form.setData('period_from', event.currentTarget.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'period_from',
+                                            event.currentTarget.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={form.errors.period_from} />
                             </div>
@@ -94,7 +127,12 @@ export default function TaxReportRunsCreate({ reportTypeOptions, defaults }: Pro
                                     id="period_to"
                                     type="date"
                                     value={form.data.period_to}
-                                    onChange={(event) => form.setData('period_to', event.currentTarget.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'period_to',
+                                            event.currentTarget.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={form.errors.period_to} />
                             </div>
@@ -105,7 +143,12 @@ export default function TaxReportRunsCreate({ reportTypeOptions, defaults }: Pro
                                     id="remarks"
                                     rows={4}
                                     value={form.data.remarks}
-                                    onChange={(event) => form.setData('remarks', event.currentTarget.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'remarks',
+                                            event.currentTarget.value,
+                                        )
+                                    }
                                     placeholder="Optional notes on why this run was generated."
                                 />
                                 <InputError message={form.errors.remarks} />
@@ -117,16 +160,27 @@ export default function TaxReportRunsCreate({ reportTypeOptions, defaults }: Pro
                         <CardHeader>
                             <CardTitle>Actions</CardTitle>
                             <CardDescription>
-                                The generated run is a saved snapshot, so you can review it later even if source transactions change.
+                                The generated run is a saved snapshot, so you
+                                can review it later even if source transactions
+                                change.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-3">
-                            <Button type="submit" className="w-full" disabled={form.processing}>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={form.processing}
+                            >
                                 Generate report run
                             </Button>
 
-                            <Button type="button" variant="outline" className="w-full" asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
                                 <Link href={taxReportRunsIndex()}>Cancel</Link>
                             </Button>
                         </CardContent>

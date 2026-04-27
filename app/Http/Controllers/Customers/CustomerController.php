@@ -21,6 +21,8 @@ class CustomerController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
@@ -30,10 +32,14 @@ class CustomerController extends Controller
     ): Response|StreamedResponse {
         $this->authorize('viewAny', Customer::class);
 
+        $search = $request->string('search')->toString();
+        $status = $request->string('status')->toString();
+        $perPage = $this->resolvePerPage($request);
+
         $query = Customer::query()
             ->withCount(['customerSites', 'attachments'])
-            ->search($request->string('search')->toString())
-            ->status($request->string('status')->toString())
+            ->search($search)
+            ->status($status)
             ->orderBy('company_name')
             ->orderBy('id');
 
@@ -42,15 +48,17 @@ class CustomerController extends Controller
         }
 
         $customers = (clone $query)
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Customer $customer) => $this->customerListItem($request, $customer));
 
         return Inertia::render('customers/index', [
             'customers' => $customers,
+            'summary' => $this->customerSummary(),
             'filters' => [
-                'search' => $request->string('search')->toString(),
-                'status' => $request->string('status')->toString(),
+                'search' => $search,
+                'status' => $status,
+                'per_page' => $perPage,
             ],
             'statusOptions' => $this->statusOptions(),
             'can' => [
@@ -221,6 +229,25 @@ class CustomerController extends Controller
     }
 
     /**
+     * Build the top-line customer summary cards.
+     *
+     * @return array<string, int>
+     */
+    private function customerSummary(): array
+    {
+        return [
+            'total_customers' => Customer::query()->count(),
+            'active_customers' => Customer::query()
+                ->where('status', CustomerStatus::Active->value)
+                ->count(),
+            'inactive_customers' => Customer::query()
+                ->where('status', CustomerStatus::Inactive->value)
+                ->count(),
+            'total_sites' => CustomerSite::query()->count(),
+        ];
+    }
+
+    /**
      * Transform a customer into a detailed Inertia payload.
      *
      * @return array<string, mixed>
@@ -290,6 +317,18 @@ class CustomerController extends Controller
                 'value' => $status->value,
                 'label' => $status->label(),
             ])->all();
+    }
+
+    /**
+     * Resolve the validated page size for the customer table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 
     /**

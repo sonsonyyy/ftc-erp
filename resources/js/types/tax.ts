@@ -108,6 +108,7 @@ export type TaxSourceFilters = {
     type: string;
     from: string | null;
     to: string | null;
+    per_page: number;
 };
 
 export type TaxReportRunFilters = {
@@ -115,6 +116,7 @@ export type TaxReportRunFilters = {
     type: string;
     from: string | null;
     to: string | null;
+    per_page: number;
 };
 
 export type TaxReportTypeOption = SelectOption;

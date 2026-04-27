@@ -85,20 +85,22 @@ class Payment extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $likeOperator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+        return $query->where(function (Builder $builder) use ($likeOperator, $term): void {
             $builder
-                ->where('payment_no', 'like', "%{$term}%")
-                ->orWhere('payment_method', 'like', "%{$term}%")
-                ->orWhere('reference_no', 'like', "%{$term}%")
-                ->orWhere('remarks', 'like', "%{$term}%")
-                ->orWhereHas('customer', function (Builder $customerQuery) use ($term): void {
+                ->where('payment_no', $likeOperator, "%{$term}%")
+                ->orWhere('payment_method', $likeOperator, "%{$term}%")
+                ->orWhere('reference_no', $likeOperator, "%{$term}%")
+                ->orWhere('remarks', $likeOperator, "%{$term}%")
+                ->orWhereHas('customer', function (Builder $customerQuery) use ($likeOperator, $term): void {
                     $customerQuery
-                        ->where('customer_code', 'like', "%{$term}%")
-                        ->orWhere('company_name', 'like', "%{$term}%")
-                        ->orWhere('trade_name', 'like', "%{$term}%");
+                        ->where('customer_code', $likeOperator, "%{$term}%")
+                        ->orWhere('company_name', $likeOperator, "%{$term}%")
+                        ->orWhere('trade_name', $likeOperator, "%{$term}%");
                 })
-                ->orWhereHas('allocations.invoice', function (Builder $invoiceQuery) use ($term): void {
-                    $invoiceQuery->where('invoice_no', 'like', "%{$term}%");
+                ->orWhereHas('allocations.invoice', function (Builder $invoiceQuery) use ($likeOperator, $term): void {
+                    $invoiceQuery->where('invoice_no', $likeOperator, "%{$term}%");
                 });
         });
     }

@@ -2,7 +2,11 @@ import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import { index as stockReturnsIndex } from '@/routes/stock-returns';
 import { StockReturnForm } from '@/components/inventory/stock-return-form';
-import type { SelectOption, StockReturnDefaults, StockWorkOrderOption } from '@/types';
+import type {
+    SelectOption,
+    StockReturnDefaults,
+    StockWorkOrderOption,
+} from '@/types';
 
 type Props = {
     warehouseOptions: SelectOption[];
@@ -23,7 +27,7 @@ export default function StockReturnsCreate({
         <>
             <Head title="New Stock Return" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="app-page flex flex-1 flex-col gap-6">
                 <StockReturnForm
                     warehouseOptions={warehouseOptions}
                     projectOptions={projectOptions}

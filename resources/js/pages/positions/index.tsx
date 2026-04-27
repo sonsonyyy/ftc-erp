@@ -1,16 +1,38 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    Archive,
+    ChevronDown,
+    Pencil,
+    Plus,
+    Search,
+    SlidersHorizontal,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CompactDataTable } from '@/components/compact-data-table';
+import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
+import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     create as positionsCreate,
+    destroy as positionsDestroy,
     edit as positionsEdit,
     index as positionsIndex,
 } from '@/routes/positions';
-import { DataTableCard } from '@/components/data-table-card';
-import { FilterSelect } from '@/components/filter-select';
-import { IndexFiltersCard } from '@/components/index-filters-card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import type { PaginatedData, PositionListItem, SelectOption } from '@/types';
 
 type Props = {
@@ -19,6 +41,7 @@ type Props = {
         search: string;
         department: number | null;
         active: string;
+        per_page: number;
     };
     departmentOptions: SelectOption[];
     activityOptions: SelectOption[];
@@ -26,6 +49,8 @@ type Props = {
         create: boolean;
     };
 };
+
+const perPageOptions = ['5', '10', '15', '25'];
 
 function activityBadgeClass(isActive: boolean): string {
     return isActive
@@ -40,86 +65,245 @@ export default function PositionsIndex({
     activityOptions,
     can,
 }: Props) {
+    const [searchInput, setSearchInput] = useState(filters.search);
+    const [tableFilters, setTableFilters] = useState({
+        department:
+            filters.department === null ? '' : String(filters.department),
+        active: filters.active,
+        per_page: String(filters.per_page),
+    });
+
+    useEffect(() => {
+        setTableFilters((currentFilters) => {
+            const nextFilters = {
+                department:
+                    filters.department === null
+                        ? ''
+                        : String(filters.department),
+                active: filters.active,
+                per_page: String(filters.per_page),
+            };
+
+            if (
+                currentFilters.department === nextFilters.department &&
+                currentFilters.active === nextFilters.active &&
+                currentFilters.per_page === nextFilters.per_page
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [filters.active, filters.department, filters.per_page]);
+
+    useEffect(() => {
+        const normalizedSearch = searchInput.trim();
+        const currentDepartment =
+            filters.department === null ? '' : String(filters.department);
+        const currentPerPage = String(filters.per_page);
+
+        if (
+            normalizedSearch === filters.search &&
+            tableFilters.department === currentDepartment &&
+            tableFilters.active === filters.active &&
+            tableFilters.per_page === currentPerPage
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(positionsIndex()),
+                cleanQueryParams({
+                    search: normalizedSearch,
+                    department:
+                        tableFilters.department === ''
+                            ? undefined
+                            : Number(tableFilters.department),
+                    active: tableFilters.active,
+                    per_page: Number(tableFilters.per_page),
+                    page: 1,
+                }),
+                {
+                    only: ['positions', 'filters'],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.active,
+        filters.department,
+        filters.per_page,
+        filters.search,
+        searchInput,
+        tableFilters,
+    ]);
+
+    const activeFilterCount =
+        (tableFilters.department === '' ? 0 : 1) +
+        (tableFilters.active === '' ? 0 : 1);
+
     return (
         <>
             <Head title="Positions" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
+            <div className="app-page flex flex-1 flex-col gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Positions
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Maintain the job titles used by employee assignment
-                            records and payroll review screens.
+                            Job titles and department assignments for employee
+                            records.
                         </p>
                     </div>
 
                     {can.create && (
                         <Button asChild>
-                            <Link href={positionsCreate()}>New position</Link>
+                            <Link href={positionsCreate()}>
+                                <Plus />
+                                New position
+                            </Link>
                         </Button>
                     )}
                 </div>
 
-                <IndexFiltersCard
-                    action={positionsIndex()}
-                    resetHref={positionsIndex()}
-                    filters={filters}
-                    description="Search position titles and narrow the list by department or status."
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:max-w-sm">
+                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={searchInput}
+                                onChange={(event) =>
+                                    setSearchInput(event.currentTarget.value)
+                                }
+                                placeholder="Search positions"
+                                className="h-9 pl-9"
+                            />
+                        </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 bg-background"
+                                >
+                                    <SlidersHorizontal />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                    <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="start" className="w-56">
+                                <DropdownMenuRadioGroup
+                                    value={
+                                        tableFilters.active === ''
+                                            ? 'all'
+                                            : tableFilters.active
+                                    }
+                                    onValueChange={(value) => {
+                                        router.cancelAll();
+                                        setTableFilters((currentFilters) => ({
+                                            ...currentFilters,
+                                            active:
+                                                value === 'all' ? '' : value,
+                                        }));
+                                    }}
+                                >
+                                    <DropdownMenuRadioItem value="all">
+                                        All statuses
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuSeparator />
+                                    {activityOptions.map((option) => (
+                                        <DropdownMenuRadioItem
+                                            key={option.value}
+                                            value={String(option.value)}
+                                        >
+                                            {option.label}
+                                        </DropdownMenuRadioItem>
+                                    ))}
+                                </DropdownMenuRadioGroup>
+
+                                <DropdownMenuSeparator />
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        Department
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
+                                        <DropdownMenuRadioGroup
+                                            value={
+                                                tableFilters.department === ''
+                                                    ? 'all'
+                                                    : tableFilters.department
+                                            }
+                                            onValueChange={(value) => {
+                                                router.cancelAll();
+                                                setTableFilters(
+                                                    (currentFilters) => ({
+                                                        ...currentFilters,
+                                                        department:
+                                                            value === 'all'
+                                                                ? ''
+                                                                : value,
+                                                    }),
+                                                );
+                                            }}
+                                        >
+                                            <DropdownMenuRadioItem value="all">
+                                                All departments
+                                            </DropdownMenuRadioItem>
+                                            {departmentOptions.map((option) => (
+                                                <DropdownMenuRadioItem
+                                                    key={option.value}
+                                                    value={String(option.value)}
+                                                >
+                                                    {option.label}
+                                                </DropdownMenuRadioItem>
+                                            ))}
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+
+                <CompactDataTable
+                    footer={
+                        <DataTablePaginationFooter
+                            pagination={positions}
+                            perPage={tableFilters.per_page}
+                            perPageOptions={perPageOptions}
+                            onPerPageChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    per_page: value,
+                                }));
+                            }}
+                        />
+                    }
                 >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search positions"
-                    />
-
-                    <FilterSelect
-                        name="department"
-                        defaultValue={filters.department ?? ''}
-                    >
-                        <option value="">All departments</option>
-                        {departmentOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-
-                    <FilterSelect name="active" defaultValue={filters.active}>
-                        <option value="">All statuses</option>
-                        {activityOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </FilterSelect>
-                </IndexFiltersCard>
-
-                <DataTableCard
-                    title="Position list"
-                    description={`${positions.total} position records`}
-                    pagination={positions}
-                >
-                    <table className="min-w-full text-sm">
+                    <table>
                         <thead>
-                            <tr className="border-b text-left text-muted-foreground">
-                                <th className="px-6 py-3 font-medium">
-                                    Position
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Department
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Employees
-                                </th>
-                                <th className="px-6 py-3 font-medium">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 text-right font-medium">
-                                    Actions
-                                </th>
+                            <tr>
+                                <th>Position</th>
+                                <th>Department</th>
+                                <th className="text-right">Employees</th>
+                                <th>Status</th>
+                                <th className="text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -127,7 +311,7 @@ export default function PositionsIndex({
                                 <tr>
                                     <td
                                         colSpan={5}
-                                        className="px-6 py-10 text-center text-muted-foreground"
+                                        className="py-10 text-center text-muted-foreground"
                                     >
                                         No positions matched the current
                                         filters.
@@ -136,29 +320,29 @@ export default function PositionsIndex({
                             )}
 
                             {positions.data.map((position) => (
-                                <tr
-                                    key={position.id}
-                                    className="border-b align-top last:border-0"
-                                >
-                                    <td className="px-6 py-4">
+                                <tr key={position.id}>
+                                    <td>
                                         <div className="space-y-1">
-                                            <p className="font-medium">
+                                            <p className="truncate font-medium text-foreground">
                                                 {position.title}
                                             </p>
-                                            <p className="text-muted-foreground">
+                                            <p className="truncate text-[13px] text-muted-foreground">
                                                 {position.description ??
                                                     'No description'}
                                             </p>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-muted-foreground">
+
+                                    <td className="text-[13px] text-muted-foreground">
                                         {position.department.name ??
                                             'No department'}
                                     </td>
-                                    <td className="px-6 py-4 text-muted-foreground">
+
+                                    <td className="text-right font-medium text-foreground tabular-nums">
                                         {position.employee_count}
                                     </td>
-                                    <td className="px-6 py-4">
+
+                                    <td>
                                         <Badge
                                             variant="outline"
                                             className={activityBadgeClass(
@@ -170,26 +354,55 @@ export default function PositionsIndex({
                                                 : 'Inactive'}
                                         </Badge>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-2">
-                                            {position.can.update && (
-                                                <Button size="sm" asChild>
-                                                    <Link
-                                                        href={positionsEdit(
-                                                            position.id,
-                                                        )}
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                </Button>
-                                            )}
+
+                                    <td className="text-right">
+                                        <div className="flex justify-end">
+                                            <DataTableRowActions
+                                                items={[
+                                                    ...(position.can.update
+                                                        ? [
+                                                              {
+                                                                  key: 'edit',
+                                                                  label: 'Edit',
+                                                                  icon: Pencil,
+                                                                  href: positionsEdit(
+                                                                      position.id,
+                                                                  ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                    ...(position.can.delete
+                                                        ? [
+                                                              {
+                                                                  key: 'archive',
+                                                                  label: 'Archive',
+                                                                  icon: Archive,
+                                                                  destructive: true,
+                                                                  onSelect:
+                                                                      () =>
+                                                                          router.delete(
+                                                                              toUrl(
+                                                                                  positionsDestroy(
+                                                                                      position.id,
+                                                                                  ),
+                                                                              ),
+                                                                              {
+                                                                                  preserveScroll: true,
+                                                                              },
+                                                                          ),
+                                                              },
+                                                          ]
+                                                        : []),
+                                                ]}
+                                                label={`Open actions for ${position.title}`}
+                                            />
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </DataTableCard>
+                </CompactDataTable>
             </div>
         </>
     );

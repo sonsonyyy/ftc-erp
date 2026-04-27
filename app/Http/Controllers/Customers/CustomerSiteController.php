@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customers;
 
+use App\Actions\Exports\StreamCsvExportAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customers\StoreCustomerSiteRequest;
 use App\Http\Requests\Customers\UpdateCustomerSiteRequest;
@@ -10,37 +11,57 @@ use App\Models\Customer;
 use App\Models\CustomerSite;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\LazyCollection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerSiteController extends Controller
 {
     private const PER_PAGE = 15;
 
+    private const PER_PAGE_OPTIONS = [5, 10, 15, 25];
+
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): Response|StreamedResponse {
         $this->authorize('viewAny', CustomerSite::class);
 
-        $sites = CustomerSite::query()
+        $search = $request->string('search')->toString();
+        $customerId = $request->integer('customer') ?: null;
+        $active = $request->string('active')->toString();
+        $perPage = $this->resolvePerPage($request);
+
+        $query = CustomerSite::query()
             ->with(['customer:id,customer_code,company_name'])
             ->withCount('attachments')
-            ->search($request->string('search')->toString())
-            ->forCustomer($request->integer('customer') ?: null)
-            ->active($request->string('active')->toString())
+            ->search($search)
+            ->forCustomer($customerId)
+            ->active($active)
             ->orderBy('site_name')
-            ->paginate(self::PER_PAGE)
+            ->orderBy('id');
+
+        if ($request->string('export')->toString() === 'csv') {
+            return $this->exportIndex($request, $query->lazy(), $streamCsvExportAction);
+        }
+
+        $sites = (clone $query)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (CustomerSite $site) => $this->siteListItem($request, $site));
 
         return Inertia::render('sites/index', [
             'sites' => $sites,
+            'summary' => $this->siteSummary(),
             'filters' => [
-                'search' => $request->string('search')->toString(),
-                'customer' => $request->integer('customer') ?: null,
-                'active' => $request->string('active')->toString(),
+                'search' => $search,
+                'customer' => $customerId,
+                'active' => $active,
+                'per_page' => $perPage,
             ],
             'customerOptions' => $this->customerOptions(),
             'activityOptions' => $this->activityOptions(),
@@ -152,6 +173,49 @@ class CustomerSiteController extends Controller
     }
 
     /**
+     * Stream the filtered site registry as CSV.
+     */
+    private function exportIndex(
+        Request $request,
+        LazyCollection $sites,
+        StreamCsvExportAction $streamCsvExportAction,
+    ): StreamedResponse {
+        return $streamCsvExportAction->handle(
+            'sites-'.now()->format('Ymd-His').'.csv',
+            [
+                'Site Code',
+                'Site Name',
+                'Customer Code',
+                'Customer',
+                'Contact Person',
+                'Contact Number',
+                'Email',
+                'City',
+                'Province',
+                'Status',
+                'Attachments',
+            ],
+            $sites->map(function (CustomerSite $site) use ($request): array {
+                $row = $this->siteListItem($request, $site);
+
+                return [
+                    $row['site_code'],
+                    $row['site_name'],
+                    $row['customer']['customer_code'],
+                    $row['customer']['company_name'],
+                    $row['contact_person'],
+                    $row['contact_no'],
+                    $row['email'],
+                    $row['city'],
+                    $row['province'],
+                    $row['is_active'] ? 'Active' : 'Inactive',
+                    $row['attachment_count'],
+                ];
+            }),
+        );
+    }
+
+    /**
      * Transform a site into an index table row.
      *
      * @return array<string, mixed>
@@ -164,6 +228,7 @@ class CustomerSiteController extends Controller
             'site_name' => $site->site_name,
             'contact_person' => $site->contact_person,
             'contact_no' => $site->contact_no,
+            'email' => $site->email,
             'city' => $site->city,
             'province' => $site->province,
             'is_active' => $site->is_active,
@@ -178,6 +243,28 @@ class CustomerSiteController extends Controller
                 'update' => $request->user()?->can('update', $site) ?? false,
                 'delete' => $request->user()?->can('delete', $site) ?? false,
             ],
+        ];
+    }
+
+    /**
+     * Build the top-line site summary cards.
+     *
+     * @return array<string, int>
+     */
+    private function siteSummary(): array
+    {
+        return [
+            'total_sites' => CustomerSite::query()->count(),
+            'active_sites' => CustomerSite::query()
+                ->where('is_active', true)
+                ->count(),
+            'inactive_sites' => CustomerSite::query()
+                ->where('is_active', false)
+                ->count(),
+            'linked_customers' => CustomerSite::query()
+                ->whereNotNull('customer_id')
+                ->distinct()
+                ->count('customer_id'),
         ];
     }
 
@@ -256,6 +343,18 @@ class CustomerSiteController extends Controller
             ['value' => 'active', 'label' => 'Active only'],
             ['value' => 'inactive', 'label' => 'Inactive only'],
         ];
+    }
+
+    /**
+     * Resolve the validated page size for the site table.
+     */
+    private function resolvePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : self::PER_PAGE;
     }
 
     /**

@@ -88,24 +88,26 @@ class StockReturn extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $likeOperator = $query->getConnection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+
+        return $query->where(function (Builder $builder) use ($likeOperator, $term): void {
             $builder
-                ->where('return_no', 'like', "%{$term}%")
-                ->orWhere('remarks', 'like', "%{$term}%")
-                ->orWhereHas('warehouse', function (Builder $warehouseQuery) use ($term): void {
+                ->where('return_no', $likeOperator, "%{$term}%")
+                ->orWhere('remarks', $likeOperator, "%{$term}%")
+                ->orWhereHas('warehouse', function (Builder $warehouseQuery) use ($likeOperator, $term): void {
                     $warehouseQuery
-                        ->where('warehouse_code', 'like', "%{$term}%")
-                        ->orWhere('warehouse_name', 'like', "%{$term}%");
+                        ->where('warehouse_code', $likeOperator, "%{$term}%")
+                        ->orWhere('warehouse_name', $likeOperator, "%{$term}%");
                 })
-                ->orWhereHas('project', function (Builder $projectQuery) use ($term): void {
+                ->orWhereHas('project', function (Builder $projectQuery) use ($likeOperator, $term): void {
                     $projectQuery
-                        ->where('project_no', 'like', "%{$term}%")
-                        ->orWhere('title', 'like', "%{$term}%");
+                        ->where('project_no', $likeOperator, "%{$term}%")
+                        ->orWhere('title', $likeOperator, "%{$term}%");
                 })
-                ->orWhereHas('workOrder', function (Builder $workOrderQuery) use ($term): void {
+                ->orWhereHas('workOrder', function (Builder $workOrderQuery) use ($likeOperator, $term): void {
                     $workOrderQuery
-                        ->where('work_order_no', 'like', "%{$term}%")
-                        ->orWhere('summary', 'like', "%{$term}%");
+                        ->where('work_order_no', $likeOperator, "%{$term}%")
+                        ->orWhere('summary', $likeOperator, "%{$term}%");
                 });
         });
     }

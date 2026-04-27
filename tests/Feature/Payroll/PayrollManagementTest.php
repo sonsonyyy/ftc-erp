@@ -58,24 +58,29 @@ test('hr users can browse paginated and filtered departments', function () {
         'is_active' => false,
     ]);
 
-    $this->get(route('departments.index'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('departments/index')
-            ->where('departments.current_page', 1)
-            ->has('departments.data', 15)
-            ->where('can.create', true),
-        );
-
     $this->get(route('departments.index', [
-        'search' => 'Administration',
-        'active' => 'active',
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('departments/index')
-            ->where('filters.search', 'Administration')
+            ->where('departments.current_page', 1)
+            ->has('departments.data', 5)
+            ->where('filters.per_page', 5)
+            ->where('can.create', true),
+        );
+
+    $this->get(route('departments.index', [
+        'search' => 'administration',
+        'active' => 'active',
+        'per_page' => 5,
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('departments/index')
+            ->where('filters.search', 'administration')
             ->where('filters.active', 'active')
+            ->where('filters.per_page', 5)
             ->where('departments.total', 1)
             ->where('departments.data.0.name', 'Administration'),
         );
@@ -144,16 +149,19 @@ test('hr users can create filter update and archive positions', function () {
     ]);
 
     $this->get(route('positions.index', [
-        'search' => 'Payroll',
+        'search' => 'payroll',
         'department' => $administration->getKey(),
         'active' => 'active',
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('positions/index')
             ->where('positions.total', 1)
+            ->where('filters.search', 'payroll')
             ->where('positions.data.0.title', 'Payroll Officer')
-            ->where('filters.department', $administration->getKey()),
+            ->where('filters.department', $administration->getKey())
+            ->where('filters.per_page', 5),
         );
 
     $this->put(route('positions.update', $position), [
@@ -275,19 +283,26 @@ test('hr users can filter create update and archive employees', function () {
     ]);
 
     $this->get(route('employees.index', [
-        'search' => 'Alicia',
+        'search' => 'alicia',
         'department' => $operations->getKey(),
         'position' => $technician->getKey(),
         'employment_status' => EmploymentStatus::Regular->value,
         'active' => 'active',
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('employees/index')
             ->where('employees.total', 1)
             ->where('employees.data.0.employee_no', 'EMP-10010')
+            ->where('filters.search', 'alicia')
             ->where('filters.department', $operations->getKey())
-            ->where('filters.position', $technician->getKey()),
+            ->where('filters.position', $technician->getKey())
+            ->where('filters.per_page', 5)
+            ->where('summary.total_employees', 3)
+            ->where('summary.active_employees', 2)
+            ->where('summary.inactive_employees', 1)
+            ->where('summary.assigned_departments', 2),
         );
 
     $response = $this->post(route('employees.store'), [
@@ -426,14 +441,17 @@ test('hr users can create filter update and archive payroll runs', function () {
     expect(PayrollDeduction::query()->count())->toBe(1);
 
     $this->get(route('payroll-runs.index', [
-        'search' => 'PR-2026-0009',
+        'search' => 'pr-2026-0009',
         'status' => PayrollRunStatus::Draft->value,
         'from' => '2026-04-01',
         'to' => '2026-04-30',
+        'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('payroll-runs/index')
+            ->where('filters.search', 'pr-2026-0009')
+            ->where('filters.per_page', 5)
             ->where('payrollRuns.total', 1)
             ->where('payrollRuns.data.0.payroll_run_no', 'PR-2026-0009')
             ->where('payrollRuns.data.0.entry_count', 2),

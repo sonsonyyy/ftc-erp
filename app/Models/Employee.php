@@ -90,18 +90,22 @@ class Employee extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $builder) use ($term): void {
+        $operator = $query->getConnection()->getDriverName() === 'pgsql'
+            ? 'ilike'
+            : 'like';
+
+        return $query->where(function (Builder $builder) use ($term, $operator): void {
             $builder
-                ->where('employee_no', 'like', "%{$term}%")
-                ->orWhere('first_name', 'like', "%{$term}%")
-                ->orWhere('last_name', 'like', "%{$term}%")
-                ->orWhere('middle_name', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%")
-                ->orWhere('phone', 'like', "%{$term}%")
-                ->orWhere('tin', 'like', "%{$term}%")
-                ->orWhere('sss_no', 'like', "%{$term}%")
-                ->orWhere('pagibig_no', 'like', "%{$term}%")
-                ->orWhere('philhealth_no', 'like', "%{$term}%");
+                ->where('employee_no', $operator, "%{$term}%")
+                ->orWhere('first_name', $operator, "%{$term}%")
+                ->orWhere('last_name', $operator, "%{$term}%")
+                ->orWhere('middle_name', $operator, "%{$term}%")
+                ->orWhere('email', $operator, "%{$term}%")
+                ->orWhere('phone', $operator, "%{$term}%")
+                ->orWhere('tin', $operator, "%{$term}%")
+                ->orWhere('sss_no', $operator, "%{$term}%")
+                ->orWhere('pagibig_no', $operator, "%{$term}%")
+                ->orWhere('philhealth_no', $operator, "%{$term}%");
         });
     }
 
