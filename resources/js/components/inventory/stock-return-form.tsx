@@ -4,11 +4,23 @@ import StockReturnController from '@/actions/App/Http/Controllers/Inventory/Stoc
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { SelectOption, StockLineItemInput, StockReturnDefaults, StockWorkOrderOption } from '@/types';
+import type {
+    SelectOption,
+    StockLineItemInput,
+    StockReturnDefaults,
+    StockWorkOrderOption,
+} from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     warehouseOptions: SelectOption[];
@@ -35,13 +47,21 @@ export function StockReturnForm({
         return_no: defaults.return_no,
         warehouse_id: '',
         project_id: defaults.project_id ? String(defaults.project_id) : '',
-        work_order_id: defaults.work_order_id ? String(defaults.work_order_id) : '',
+        work_order_id: defaults.work_order_id
+            ? String(defaults.work_order_id)
+            : '',
         returned_date: defaults.returned_date,
         remarks: '',
-        items: [{ inventory_item_id: '', quantity: '', remarks: '' }] as StockLineItemInput[],
+        items: [
+            { inventory_item_id: '', quantity: '', remarks: '' },
+        ] as StockLineItemInput[],
     });
 
-    function updateItem(index: number, key: keyof StockLineItemInput, value: string) {
+    function updateItem(
+        index: number,
+        key: keyof StockLineItemInput,
+        value: string,
+    ) {
         form.setData(
             'items',
             form.data.items.map((item, itemIndex) =>
@@ -51,17 +71,25 @@ export function StockReturnForm({
     }
 
     function addItem() {
-        form.setData('items', [...form.data.items, { inventory_item_id: '', quantity: '', remarks: '' }]);
+        form.setData('items', [
+            ...form.data.items,
+            { inventory_item_id: '', quantity: '', remarks: '' },
+        ]);
     }
 
     function removeItem(index: number) {
-        form.setData('items', form.data.items.filter((_, itemIndex) => itemIndex !== index));
+        form.setData(
+            'items',
+            form.data.items.filter((_, itemIndex) => itemIndex !== index),
+        );
     }
 
     function handleWorkOrderChange(value: string) {
         form.setData('work_order_id', value);
 
-        const workOrder = workOrderOptions.find((option) => String(option.value) === value);
+        const workOrder = workOrderOptions.find(
+            (option) => String(option.value) === value,
+        );
 
         if (workOrder?.project_id) {
             form.setData('project_id', String(workOrder.project_id));
@@ -75,7 +103,8 @@ export function StockReturnForm({
             return_no: data.return_no,
             warehouse_id: Number(data.warehouse_id),
             project_id: data.project_id === '' ? null : Number(data.project_id),
-            work_order_id: data.work_order_id === '' ? null : Number(data.work_order_id),
+            work_order_id:
+                data.work_order_id === '' ? null : Number(data.work_order_id),
             returned_date: data.returned_date,
             remarks: data.remarks || null,
             items: data.items.map((item) => ({
@@ -99,7 +128,8 @@ export function StockReturnForm({
                     <CardHeader>
                         <CardTitle>Return header</CardTitle>
                         <CardDescription>
-                            Record which stock came back to the warehouse from a project or work order.
+                            Record which stock came back to the warehouse from a
+                            project or work order.
                         </CardDescription>
                     </CardHeader>
 
@@ -109,26 +139,39 @@ export function StockReturnForm({
                             <Input
                                 id="return_no"
                                 value={form.data.return_no}
-                                onChange={(event) => form.setData('return_no', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'return_no',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.return_no} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="warehouse_id">Warehouse</Label>
-                            <select
+                            <SelectInput
                                 id="warehouse_id"
                                 value={form.data.warehouse_id}
-                                onChange={(event) => form.setData('warehouse_id', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'warehouse_id',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Select warehouse</option>
                                 {warehouseOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.warehouse_id} />
                         </div>
 
@@ -138,44 +181,64 @@ export function StockReturnForm({
                                 id="returned_date"
                                 type="date"
                                 value={form.data.returned_date}
-                                onChange={(event) => form.setData('returned_date', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'returned_date',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.returned_date} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="project_id">Project</Label>
-                            <select
+                            <SelectInput
                                 id="project_id"
                                 value={form.data.project_id}
-                                onChange={(event) => form.setData('project_id', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'project_id',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No project selected</option>
                                 {projectOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.project_id} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="work_order_id">Work order</Label>
-                            <select
+                            <SelectInput
                                 id="work_order_id"
                                 value={form.data.work_order_id}
-                                onChange={(event) => handleWorkOrderChange(event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    handleWorkOrderChange(
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No work order selected</option>
                                 {workOrderOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.work_order_id} />
                         </div>
 
@@ -184,7 +247,12 @@ export function StockReturnForm({
                             <Textarea
                                 id="remarks"
                                 value={form.data.remarks}
-                                onChange={(event) => form.setData('remarks', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'remarks',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 rows={3}
                                 placeholder="Optional return notes or supporting details."
                             />
@@ -198,58 +266,114 @@ export function StockReturnForm({
                         <div>
                             <CardTitle>Returned items</CardTitle>
                             <CardDescription>
-                                Add each inventory line coming back to the warehouse. Returned quantities increase the warehouse balance immediately.
+                                Add each inventory line coming back to the
+                                warehouse. Returned quantities increase the
+                                warehouse balance immediately.
                             </CardDescription>
                         </div>
 
-                        <Button type="button" variant="outline" onClick={addItem}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={addItem}
+                        >
                             Add line
                         </Button>
                     </CardHeader>
 
                     <CardContent className="space-y-4">
                         {form.data.items.map((item, index) => (
-                            <div key={index} className="grid gap-4 rounded-lg border p-4 md:grid-cols-[2fr_0.8fr_1.2fr_auto]">
+                            <div
+                                key={index}
+                                className="grid gap-4 rounded-lg border p-4 md:grid-cols-[2fr_0.8fr_1.2fr_auto]"
+                            >
                                 <div className="grid gap-2">
-                                    <Label htmlFor={`items.${index}.inventory_item_id`}>Inventory item</Label>
-                                    <select
+                                    <Label
+                                        htmlFor={`items.${index}.inventory_item_id`}
+                                    >
+                                        Inventory item
+                                    </Label>
+                                    <SelectInput
                                         id={`items.${index}.inventory_item_id`}
                                         value={item.inventory_item_id}
-                                        onChange={(event) => updateItem(index, 'inventory_item_id', event.currentTarget.value)}
-                                        className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                        onChange={(event) =>
+                                            updateItem(
+                                                index,
+                                                'inventory_item_id',
+                                                event.currentTarget.value,
+                                            )
+                                        }
+                                        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                     >
                                         <option value="">Select item</option>
                                         {itemOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
+                                            <option
+                                                key={option.value}
+                                                value={option.value}
+                                            >
                                                 {option.label}
                                             </option>
                                         ))}
-                                    </select>
-                                    <InputError message={form.errors[`items.${index}.inventory_item_id`]} />
+                                    </SelectInput>
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `items.${index}.inventory_item_id`
+                                            ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor={`items.${index}.quantity`}>Quantity</Label>
+                                    <Label htmlFor={`items.${index}.quantity`}>
+                                        Quantity
+                                    </Label>
                                     <Input
                                         id={`items.${index}.quantity`}
                                         type="number"
                                         min="0.01"
                                         step="0.01"
                                         value={item.quantity}
-                                        onChange={(event) => updateItem(index, 'quantity', event.currentTarget.value)}
+                                        onChange={(event) =>
+                                            updateItem(
+                                                index,
+                                                'quantity',
+                                                event.currentTarget.value,
+                                            )
+                                        }
                                     />
-                                    <InputError message={form.errors[`items.${index}.quantity`]} />
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `items.${index}.quantity`
+                                            ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor={`items.${index}.remarks`}>Line remarks</Label>
+                                    <Label htmlFor={`items.${index}.remarks`}>
+                                        Line remarks
+                                    </Label>
                                     <Input
                                         id={`items.${index}.remarks`}
                                         value={item.remarks}
-                                        onChange={(event) => updateItem(index, 'remarks', event.currentTarget.value)}
+                                        onChange={(event) =>
+                                            updateItem(
+                                                index,
+                                                'remarks',
+                                                event.currentTarget.value,
+                                            )
+                                        }
                                         placeholder="Optional"
                                     />
-                                    <InputError message={form.errors[`items.${index}.remarks`]} />
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `items.${index}.remarks`
+                                            ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="flex items-end">
@@ -274,7 +398,9 @@ export function StockReturnForm({
                     </Button>
 
                     <Button disabled={form.processing}>
-                        {form.processing ? 'Recording return...' : 'Record return'}
+                        {form.processing
+                            ? 'Recording return...'
+                            : 'Record return'}
                     </Button>
                 </div>
             </form>

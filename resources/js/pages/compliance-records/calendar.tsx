@@ -24,6 +24,7 @@ import type {
     ComplianceSummary,
     SelectOption,
 } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     filters: ComplianceCalendarFilters;
@@ -158,7 +159,7 @@ export default function ComplianceCalendar({
                             options={{ preserveState: true, replace: true }}
                             className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr_1fr_auto_auto]"
                         >
-                            <select
+                            <SelectInput
                                 name="agency"
                                 defaultValue={filters.agency}
                                 className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
@@ -172,9 +173,9 @@ export default function ComplianceCalendar({
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
 
-                            <select
+                            <SelectInput
                                 name="status"
                                 defaultValue={filters.status}
                                 className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
@@ -188,7 +189,7 @@ export default function ComplianceCalendar({
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
 
                             <Input
                                 name="from"

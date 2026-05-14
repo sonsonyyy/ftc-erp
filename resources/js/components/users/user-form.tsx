@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { SelectOption, UserDetail } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     managedUser?: UserDetail;
@@ -54,9 +55,10 @@ export function UserForm({
     });
 
     function toggleRole(roleId: string, checked: CheckedState) {
-        const nextRoleIds = checked === true
-            ? [...form.data.role_ids, roleId]
-            : form.data.role_ids.filter((value) => value !== roleId);
+        const nextRoleIds =
+            checked === true
+                ? [...form.data.role_ids, roleId]
+                : form.data.role_ids.filter((value) => value !== roleId);
 
         form.setData('role_ids', Array.from(new Set(nextRoleIds)));
     }
@@ -89,13 +91,17 @@ export function UserForm({
         <div className="space-y-6">
             <Heading title={title} description={description} />
 
-            <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+            <form
+                onSubmit={submit}
+                className="grid gap-6 lg:grid-cols-[2fr_1fr]"
+            >
                 <div className="space-y-6">
                     <Card>
                         <CardHeader>
                             <CardTitle>Account details</CardTitle>
                             <CardDescription>
-                                Create and maintain internal user accounts for ERP access.
+                                Create and maintain internal user accounts for
+                                ERP access.
                             </CardDescription>
                         </CardHeader>
 
@@ -106,7 +112,10 @@ export function UserForm({
                                     id="name"
                                     value={form.data.name}
                                     onChange={(event) =>
-                                        form.setData('name', event.currentTarget.value)
+                                        form.setData(
+                                            'name',
+                                            event.currentTarget.value,
+                                        )
                                     }
                                     placeholder="Juan Dela Cruz"
                                 />
@@ -120,7 +129,10 @@ export function UserForm({
                                     type="email"
                                     value={form.data.email}
                                     onChange={(event) =>
-                                        form.setData('email', event.currentTarget.value)
+                                        form.setData(
+                                            'email',
+                                            event.currentTarget.value,
+                                        )
                                     }
                                     placeholder="user@company.com"
                                 />
@@ -135,7 +147,10 @@ export function UserForm({
                                     id="password"
                                     value={form.data.password}
                                     onChange={(event) =>
-                                        form.setData('password', event.currentTarget.value)
+                                        form.setData(
+                                            'password',
+                                            event.currentTarget.value,
+                                        )
                                     }
                                     placeholder={
                                         managedUser
@@ -170,7 +185,8 @@ export function UserForm({
                             <CardHeader>
                                 <CardTitle>Effective permissions</CardTitle>
                                 <CardDescription>
-                                    Permissions inherited from the selected roles.
+                                    Permissions inherited from the selected
+                                    roles.
                                 </CardDescription>
                             </CardHeader>
 
@@ -190,24 +206,30 @@ export function UserForm({
                         <CardHeader>
                             <CardTitle>Access control</CardTitle>
                             <CardDescription>
-                                Assign at least one role and control whether the account can sign in.
+                                Assign at least one role and control whether the
+                                account can sign in.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="is_active">Account status</Label>
-                                <select
+                                <Label htmlFor="is_active">
+                                    Account status
+                                </Label>
+                                <SelectInput
                                     id="is_active"
                                     value={form.data.is_active}
                                     onChange={(event) =>
-                                        form.setData('is_active', event.currentTarget.value)
+                                        form.setData(
+                                            'is_active',
+                                            event.currentTarget.value,
+                                        )
                                     }
-                                    className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     <option value="1">Active</option>
                                     <option value="0">Inactive</option>
-                                </select>
+                                </SelectInput>
                                 <InputError message={form.errors.is_active} />
                             </div>
 
@@ -215,7 +237,8 @@ export function UserForm({
                                 <div className="space-y-1">
                                     <Label>Roles</Label>
                                     <p className="text-sm text-muted-foreground">
-                                        The selected roles determine the user’s ERP access.
+                                        The selected roles determine the user’s
+                                        ERP access.
                                     </p>
                                 </div>
 
@@ -229,12 +252,19 @@ export function UserForm({
                                                 className="flex items-start gap-3 rounded-md"
                                             >
                                                 <Checkbox
-                                                    checked={form.data.role_ids.includes(roleId)}
-                                                    onCheckedChange={(checked) =>
-                                                        toggleRole(roleId, checked)
+                                                    checked={form.data.role_ids.includes(
+                                                        roleId,
+                                                    )}
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
+                                                        toggleRole(
+                                                            roleId,
+                                                            checked,
+                                                        )
                                                     }
                                                 />
-                                                <span className="text-sm font-medium leading-5">
+                                                <span className="text-sm leading-5 font-medium">
                                                     {option.label}
                                                 </span>
                                             </label>
@@ -250,7 +280,8 @@ export function UserForm({
                         <CardHeader>
                             <CardTitle>Actions</CardTitle>
                             <CardDescription>
-                                Save the account now and fine-tune access as the ERP grows.
+                                Save the account now and fine-tune access as the
+                                ERP grows.
                             </CardDescription>
                         </CardHeader>
 

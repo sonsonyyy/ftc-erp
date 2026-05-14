@@ -691,7 +691,10 @@ class WorkOrderController extends Controller
                 $query->whereNull('converted_work_order_id');
 
                 if (filled($selectedQuotationId)) {
-                    $query->orWhereKey($selectedQuotationId);
+                    $query->orWhere(
+                        $query->getModel()->qualifyColumn($query->getModel()->getKeyName()),
+                        $selectedQuotationId,
+                    );
                 }
             })
             ->orderByDesc('quotation_date')

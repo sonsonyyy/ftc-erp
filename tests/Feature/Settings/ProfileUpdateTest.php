@@ -14,12 +14,13 @@ test('profile page is displayed', function () {
 
 test('profile information can be updated', function () {
     $user = User::factory()->create();
+    $updatedEmail = 'updated-profile@example.test';
 
     $response = $this
         ->actingAs($user)
         ->patch(route('profile.update'), [
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => $updatedEmail,
         ]);
 
     $response
@@ -29,7 +30,7 @@ test('profile information can be updated', function () {
     $user->refresh();
 
     expect($user->name)->toBe('Test User');
-    expect($user->email)->toBe('test@example.com');
+    expect($user->email)->toBe($updatedEmail);
     expect($user->email_verified_at)->toBeNull();
 });
 
@@ -64,7 +65,7 @@ test('user can delete their account', function () {
         ->assertRedirect(route('home'));
 
     $this->assertGuest();
-    expect($user->fresh())->toBeNull();
+    $this->assertSoftDeleted($user);
 });
 
 test('correct password must be provided to delete account', function () {

@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { SelectOption, TaxReportRunFormDefaults } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     reportTypeOptions: SelectOption[];
@@ -82,7 +83,7 @@ export default function TaxReportRunsCreate({
                         <CardContent className="grid gap-5 md:grid-cols-2">
                             <div className="grid gap-2 md:col-span-2">
                                 <Label htmlFor="report_type">Report type</Label>
-                                <select
+                                <SelectInput
                                     id="report_type"
                                     value={form.data.report_type}
                                     onChange={(event) =>
@@ -101,7 +102,7 @@ export default function TaxReportRunsCreate({
                                             {option.label}
                                         </option>
                                     ))}
-                                </select>
+                                </SelectInput>
                                 <InputError message={form.errors.report_type} />
                             </div>
 

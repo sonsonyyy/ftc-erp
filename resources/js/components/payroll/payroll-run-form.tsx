@@ -4,11 +4,23 @@ import PayrollRunController from '@/actions/App/Http/Controllers/Payroll/Payroll
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { PayrollEmployeeOption, PayrollRunDetail, PayrollRunFormDefaults, SelectOption } from '@/types';
+import type {
+    PayrollEmployeeOption,
+    PayrollRunDetail,
+    PayrollRunFormDefaults,
+    SelectOption,
+} from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type DeductionInput = {
     deduction_name: string;
@@ -76,7 +88,8 @@ export function PayrollRunForm({
     cancelHref,
 }: Props) {
     const form = useForm({
-        payroll_run_no: payrollRun?.payroll_run_no ?? defaults?.payroll_run_no ?? '',
+        payroll_run_no:
+            payrollRun?.payroll_run_no ?? defaults?.payroll_run_no ?? '',
         period_from: payrollRun?.period_from ?? defaults?.period_from ?? '',
         period_to: payrollRun?.period_to ?? defaults?.period_to ?? '',
         payroll_date: payrollRun?.payroll_date ?? defaults?.payroll_date ?? '',
@@ -99,28 +112,44 @@ export function PayrollRunForm({
     });
 
     function fieldError(path: string): string | undefined {
-        return form.errors[path as keyof typeof form.errors] as string | undefined;
+        return form.errors[path as keyof typeof form.errors] as
+            | string
+            | undefined;
     }
 
     function entryAdditionalDeductions(entry: EntryInput): number {
-        return entry.deductions.reduce((sum, deduction) => sum + Number(deduction.amount || 0), 0);
+        return entry.deductions.reduce(
+            (sum, deduction) => sum + Number(deduction.amount || 0),
+            0,
+        );
     }
 
     function entryTotalDeductions(entry: EntryInput): number {
-        return Number(entry.tax_amount || 0)
-            + Number(entry.sss_amount || 0)
-            + Number(entry.pagibig_amount || 0)
-            + Number(entry.philhealth_amount || 0)
-            + entryAdditionalDeductions(entry);
+        return (
+            Number(entry.tax_amount || 0) +
+            Number(entry.sss_amount || 0) +
+            Number(entry.pagibig_amount || 0) +
+            Number(entry.philhealth_amount || 0) +
+            entryAdditionalDeductions(entry)
+        );
     }
 
     function entryNetPay(entry: EntryInput): number {
         return Number(entry.gross_pay || 0) - entryTotalDeductions(entry);
     }
 
-    const grossTotal = form.data.entries.reduce((sum, entry) => sum + Number(entry.gross_pay || 0), 0);
-    const deductionsTotal = form.data.entries.reduce((sum, entry) => sum + entryTotalDeductions(entry), 0);
-    const netTotal = form.data.entries.reduce((sum, entry) => sum + entryNetPay(entry), 0);
+    const grossTotal = form.data.entries.reduce(
+        (sum, entry) => sum + Number(entry.gross_pay || 0),
+        0,
+    );
+    const deductionsTotal = form.data.entries.reduce(
+        (sum, entry) => sum + entryTotalDeductions(entry),
+        0,
+    );
+    const netTotal = form.data.entries.reduce(
+        (sum, entry) => sum + entryNetPay(entry),
+        0,
+    );
 
     function updateEntry(index: number, key: keyof EntryInput, value: string) {
         form.setData(
@@ -146,14 +175,19 @@ export function PayrollRunForm({
                     return entry;
                 }
 
-                const selectedEmployee = employeeOptions.find((option) => String(option.value) === value);
+                const selectedEmployee = employeeOptions.find(
+                    (option) => String(option.value) === value,
+                );
 
                 return {
                     ...entry,
                     employee_id: value,
-                    gross_pay: entry.gross_pay === '' && selectedEmployee?.basic_salary !== null && selectedEmployee?.basic_salary !== undefined
-                        ? String(selectedEmployee.basic_salary)
-                        : entry.gross_pay,
+                    gross_pay:
+                        entry.gross_pay === '' &&
+                        selectedEmployee?.basic_salary !== null &&
+                        selectedEmployee?.basic_salary !== undefined
+                            ? String(selectedEmployee.basic_salary)
+                            : entry.gross_pay,
                 };
             }),
         );
@@ -170,7 +204,12 @@ export function PayrollRunForm({
         );
     }
 
-    function updateDeduction(entryIndex: number, deductionIndex: number, key: keyof DeductionInput, value: string) {
+    function updateDeduction(
+        entryIndex: number,
+        deductionIndex: number,
+        key: keyof DeductionInput,
+        value: string,
+    ) {
         form.setData(
             'entries',
             form.data.entries.map((entry, currentEntryIndex) => {
@@ -180,16 +219,18 @@ export function PayrollRunForm({
 
                 return {
                     ...entry,
-                    deductions: entry.deductions.map((deduction, currentDeductionIndex) => {
-                        if (currentDeductionIndex !== deductionIndex) {
-                            return deduction;
-                        }
+                    deductions: entry.deductions.map(
+                        (deduction, currentDeductionIndex) => {
+                            if (currentDeductionIndex !== deductionIndex) {
+                                return deduction;
+                            }
 
-                        return {
-                            ...deduction,
-                            [key]: value,
-                        };
-                    }),
+                            return {
+                                ...deduction,
+                                [key]: value,
+                            };
+                        },
+                    ),
                 };
             }),
         );
@@ -221,7 +262,10 @@ export function PayrollRunForm({
 
                 return {
                     ...entry,
-                    deductions: entry.deductions.filter((_, currentDeductionIndex) => currentDeductionIndex !== deductionIndex),
+                    deductions: entry.deductions.filter(
+                        (_, currentDeductionIndex) =>
+                            currentDeductionIndex !== deductionIndex,
+                    ),
                 };
             }),
         );
@@ -296,35 +340,51 @@ export function PayrollRunForm({
                     <CardHeader>
                         <CardTitle>Run header</CardTitle>
                         <CardDescription>
-                            Define the covered period, payout date, and current payroll run status before encoding employee lines.
+                            Define the covered period, payout date, and current
+                            payroll run status before encoding employee lines.
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                         <div className="grid gap-2">
-                            <Label htmlFor="payroll_run_no">Payroll run no.</Label>
+                            <Label htmlFor="payroll_run_no">
+                                Payroll run no.
+                            </Label>
                             <Input
                                 id="payroll_run_no"
                                 value={form.data.payroll_run_no}
-                                onChange={(event) => form.setData('payroll_run_no', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'payroll_run_no',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.payroll_run_no} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="status">Status</Label>
-                            <select
+                            <SelectInput
                                 id="status"
                                 value={form.data.status}
-                                onChange={(event) => form.setData('status', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'status',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {statusOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.status} />
                         </div>
 
@@ -334,7 +394,12 @@ export function PayrollRunForm({
                                 id="period_from"
                                 type="date"
                                 value={form.data.period_from}
-                                onChange={(event) => form.setData('period_from', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'period_from',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.period_from} />
                         </div>
@@ -345,7 +410,12 @@ export function PayrollRunForm({
                                 id="period_to"
                                 type="date"
                                 value={form.data.period_to}
-                                onChange={(event) => form.setData('period_to', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'period_to',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.period_to} />
                         </div>
@@ -356,7 +426,12 @@ export function PayrollRunForm({
                                 id="payroll_date"
                                 type="date"
                                 value={form.data.payroll_date}
-                                onChange={(event) => form.setData('payroll_date', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'payroll_date',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.payroll_date} />
                         </div>
@@ -367,7 +442,12 @@ export function PayrollRunForm({
                                 id="remarks"
                                 rows={3}
                                 value={form.data.remarks}
-                                onChange={(event) => form.setData('remarks', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'remarks',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Optional context for payroll review, release, or follow-up."
                             />
                             <InputError message={form.errors.remarks} />
@@ -380,11 +460,16 @@ export function PayrollRunForm({
                         <div>
                             <CardTitle>Payroll entries</CardTitle>
                             <CardDescription>
-                                Encode employee pay lines, statutory deductions, and any additional payroll adjustments.
+                                Encode employee pay lines, statutory deductions,
+                                and any additional payroll adjustments.
                             </CardDescription>
                         </div>
 
-                        <Button type="button" variant="outline" onClick={addEntry}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={addEntry}
+                        >
                             Add employee
                         </Button>
                     </CardHeader>
@@ -392,14 +477,20 @@ export function PayrollRunForm({
                     <CardContent className="space-y-6">
                         {form.data.entries.map((entry, entryIndex) => {
                             const selectedEmployee = employeeOptions.find(
-                                (option) => String(option.value) === entry.employee_id,
+                                (option) =>
+                                    String(option.value) === entry.employee_id,
                             );
 
                             return (
-                                <div key={`${entryIndex}-${entry.employee_id || 'new'}`} className="rounded-lg border p-4">
+                                <div
+                                    key={`${entryIndex}-${entry.employee_id || 'new'}`}
+                                    className="rounded-lg border p-4"
+                                >
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                         <div className="space-y-1">
-                                            <h3 className="font-medium">Employee line #{entryIndex + 1}</h3>
+                                            <h3 className="font-medium">
+                                                Employee line #{entryIndex + 1}
+                                            </h3>
                                             <p className="text-sm text-muted-foreground">
                                                 {selectedEmployee
                                                     ? `${selectedEmployee.department_name ?? 'No department'} • ${selectedEmployee.position_title ?? 'No position'}`
@@ -408,7 +499,13 @@ export function PayrollRunForm({
                                         </div>
 
                                         {form.data.entries.length > 1 && (
-                                            <Button type="button" variant="ghost" onClick={() => removeEntry(entryIndex)}>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                onClick={() =>
+                                                    removeEntry(entryIndex)
+                                                }
+                                            >
                                                 Remove line
                                             </Button>
                                         )}
@@ -416,21 +513,42 @@ export function PayrollRunForm({
 
                                     <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                                         <div className="grid gap-2 md:col-span-2 xl:col-span-3">
-                                            <Label htmlFor={`employee-${entryIndex}`}>Employee</Label>
-                                            <select
+                                            <Label
+                                                htmlFor={`employee-${entryIndex}`}
+                                            >
+                                                Employee
+                                            </Label>
+                                            <SelectInput
                                                 id={`employee-${entryIndex}`}
                                                 value={entry.employee_id}
-                                                onChange={(event) => handleEmployeeChange(entryIndex, event.currentTarget.value)}
-                                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                                onChange={(event) =>
+                                                    handleEmployeeChange(
+                                                        entryIndex,
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
+                                                }
+                                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                             >
-                                                <option value="">Select employee</option>
-                                                {employeeOptions.map((option) => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <InputError message={fieldError(`entries.${entryIndex}.employee_id`)} />
+                                                <option value="">
+                                                    Select employee
+                                                </option>
+                                                {employeeOptions.map(
+                                                    (option) => (
+                                                        <option
+                                                            key={option.value}
+                                                            value={option.value}
+                                                        >
+                                                            {option.label}
+                                                        </option>
+                                                    ),
+                                                )}
+                                            </SelectInput>
+                                            <InputError
+                                                message={fieldError(
+                                                    `entries.${entryIndex}.employee_id`,
+                                                )}
+                                            />
                                         </div>
 
                                         <div className="grid gap-2">
@@ -440,9 +558,20 @@ export function PayrollRunForm({
                                                 min="0.01"
                                                 step="0.01"
                                                 value={entry.gross_pay}
-                                                onChange={(event) => updateEntry(entryIndex, 'gross_pay', event.currentTarget.value)}
+                                                onChange={(event) =>
+                                                    updateEntry(
+                                                        entryIndex,
+                                                        'gross_pay',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
+                                                }
                                             />
-                                            <InputError message={fieldError(`entries.${entryIndex}.gross_pay`)} />
+                                            <InputError
+                                                message={fieldError(
+                                                    `entries.${entryIndex}.gross_pay`,
+                                                )}
+                                            />
                                         </div>
 
                                         <div className="grid gap-2">
@@ -452,9 +581,20 @@ export function PayrollRunForm({
                                                 min="0"
                                                 step="0.01"
                                                 value={entry.tax_amount}
-                                                onChange={(event) => updateEntry(entryIndex, 'tax_amount', event.currentTarget.value)}
+                                                onChange={(event) =>
+                                                    updateEntry(
+                                                        entryIndex,
+                                                        'tax_amount',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
+                                                }
                                             />
-                                            <InputError message={fieldError(`entries.${entryIndex}.tax_amount`)} />
+                                            <InputError
+                                                message={fieldError(
+                                                    `entries.${entryIndex}.tax_amount`,
+                                                )}
+                                            />
                                         </div>
 
                                         <div className="grid gap-2">
@@ -464,9 +604,20 @@ export function PayrollRunForm({
                                                 min="0"
                                                 step="0.01"
                                                 value={entry.sss_amount}
-                                                onChange={(event) => updateEntry(entryIndex, 'sss_amount', event.currentTarget.value)}
+                                                onChange={(event) =>
+                                                    updateEntry(
+                                                        entryIndex,
+                                                        'sss_amount',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
+                                                }
                                             />
-                                            <InputError message={fieldError(`entries.${entryIndex}.sss_amount`)} />
+                                            <InputError
+                                                message={fieldError(
+                                                    `entries.${entryIndex}.sss_amount`,
+                                                )}
+                                            />
                                         </div>
 
                                         <div className="grid gap-2">
@@ -476,9 +627,20 @@ export function PayrollRunForm({
                                                 min="0"
                                                 step="0.01"
                                                 value={entry.pagibig_amount}
-                                                onChange={(event) => updateEntry(entryIndex, 'pagibig_amount', event.currentTarget.value)}
+                                                onChange={(event) =>
+                                                    updateEntry(
+                                                        entryIndex,
+                                                        'pagibig_amount',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
+                                                }
                                             />
-                                            <InputError message={fieldError(`entries.${entryIndex}.pagibig_amount`)} />
+                                            <InputError
+                                                message={fieldError(
+                                                    `entries.${entryIndex}.pagibig_amount`,
+                                                )}
+                                            />
                                         </div>
 
                                         <div className="grid gap-2">
@@ -488,9 +650,20 @@ export function PayrollRunForm({
                                                 min="0"
                                                 step="0.01"
                                                 value={entry.philhealth_amount}
-                                                onChange={(event) => updateEntry(entryIndex, 'philhealth_amount', event.currentTarget.value)}
+                                                onChange={(event) =>
+                                                    updateEntry(
+                                                        entryIndex,
+                                                        'philhealth_amount',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
+                                                }
                                             />
-                                            <InputError message={fieldError(`entries.${entryIndex}.philhealth_amount`)} />
+                                            <InputError
+                                                message={fieldError(
+                                                    `entries.${entryIndex}.philhealth_amount`,
+                                                )}
+                                            />
                                         </div>
 
                                         <div className="grid gap-2 md:col-span-2 xl:col-span-3">
@@ -498,89 +671,191 @@ export function PayrollRunForm({
                                             <Textarea
                                                 rows={2}
                                                 value={entry.remarks}
-                                                onChange={(event) => updateEntry(entryIndex, 'remarks', event.currentTarget.value)}
+                                                onChange={(event) =>
+                                                    updateEntry(
+                                                        entryIndex,
+                                                        'remarks',
+                                                        event.currentTarget
+                                                            .value,
+                                                    )
+                                                }
                                                 placeholder="Optional notes for this employee line."
                                             />
-                                            <InputError message={fieldError(`entries.${entryIndex}.remarks`)} />
+                                            <InputError
+                                                message={fieldError(
+                                                    `entries.${entryIndex}.remarks`,
+                                                )}
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="mt-4 grid gap-3 md:grid-cols-3">
                                         <div className="rounded-lg border bg-muted/30 px-4 py-3">
-                                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Additional deductions</p>
-                                            <p className="mt-1 font-medium">{formatCurrency(entryAdditionalDeductions(entry))}</p>
+                                            <p className="text-xs tracking-wide text-muted-foreground uppercase">
+                                                Additional deductions
+                                            </p>
+                                            <p className="mt-1 font-medium">
+                                                {formatCurrency(
+                                                    entryAdditionalDeductions(
+                                                        entry,
+                                                    ),
+                                                )}
+                                            </p>
                                         </div>
                                         <div className="rounded-lg border bg-muted/30 px-4 py-3">
-                                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Total deductions</p>
-                                            <p className="mt-1 font-medium">{formatCurrency(entryTotalDeductions(entry))}</p>
+                                            <p className="text-xs tracking-wide text-muted-foreground uppercase">
+                                                Total deductions
+                                            </p>
+                                            <p className="mt-1 font-medium">
+                                                {formatCurrency(
+                                                    entryTotalDeductions(entry),
+                                                )}
+                                            </p>
                                         </div>
                                         <div className="rounded-lg border bg-muted/30 px-4 py-3">
-                                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Net pay</p>
-                                            <p className="mt-1 font-medium">{formatCurrency(entryNetPay(entry))}</p>
+                                            <p className="text-xs tracking-wide text-muted-foreground uppercase">
+                                                Net pay
+                                            </p>
+                                            <p className="mt-1 font-medium">
+                                                {formatCurrency(
+                                                    entryNetPay(entry),
+                                                )}
+                                            </p>
                                         </div>
                                     </div>
 
                                     <div className="mt-5 space-y-4 rounded-lg border border-dashed p-4">
                                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                             <div>
-                                                <p className="font-medium">Additional deductions</p>
+                                                <p className="font-medium">
+                                                    Additional deductions
+                                                </p>
                                                 <p className="text-sm text-muted-foreground">
-                                                    Optional deductions beyond the standard tax and government contributions.
+                                                    Optional deductions beyond
+                                                    the standard tax and
+                                                    government contributions.
                                                 </p>
                                             </div>
 
-                                            <Button type="button" variant="outline" size="sm" onClick={() => addDeduction(entryIndex)}>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    addDeduction(entryIndex)
+                                                }
+                                            >
                                                 Add deduction
                                             </Button>
                                         </div>
 
                                         {entry.deductions.length === 0 && (
                                             <div className="rounded-md border border-dashed px-4 py-5 text-sm text-muted-foreground">
-                                                No additional deductions for this employee line.
+                                                No additional deductions for
+                                                this employee line.
                                             </div>
                                         )}
 
-                                        {entry.deductions.map((deduction, deductionIndex) => (
-                                            <div key={`${entryIndex}-${deductionIndex}`} className="grid gap-4 rounded-md border p-4 md:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_1.4fr_auto]">
-                                                <div className="grid gap-2">
-                                                    <Label>Deduction</Label>
-                                                    <Input
-                                                        value={deduction.deduction_name}
-                                                        onChange={(event) => updateDeduction(entryIndex, deductionIndex, 'deduction_name', event.currentTarget.value)}
-                                                        placeholder="Loan amortization"
-                                                    />
-                                                    <InputError message={fieldError(`entries.${entryIndex}.deductions.${deductionIndex}.deduction_name`)} />
-                                                </div>
+                                        {entry.deductions.map(
+                                            (deduction, deductionIndex) => (
+                                                <div
+                                                    key={`${entryIndex}-${deductionIndex}`}
+                                                    className="grid gap-4 rounded-md border p-4 md:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_1.4fr_auto]"
+                                                >
+                                                    <div className="grid gap-2">
+                                                        <Label>Deduction</Label>
+                                                        <Input
+                                                            value={
+                                                                deduction.deduction_name
+                                                            }
+                                                            onChange={(event) =>
+                                                                updateDeduction(
+                                                                    entryIndex,
+                                                                    deductionIndex,
+                                                                    'deduction_name',
+                                                                    event
+                                                                        .currentTarget
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            placeholder="Loan amortization"
+                                                        />
+                                                        <InputError
+                                                            message={fieldError(
+                                                                `entries.${entryIndex}.deductions.${deductionIndex}.deduction_name`,
+                                                            )}
+                                                        />
+                                                    </div>
 
-                                                <div className="grid gap-2">
-                                                    <Label>Amount</Label>
-                                                    <Input
-                                                        type="number"
-                                                        min="0.01"
-                                                        step="0.01"
-                                                        value={deduction.amount}
-                                                        onChange={(event) => updateDeduction(entryIndex, deductionIndex, 'amount', event.currentTarget.value)}
-                                                    />
-                                                    <InputError message={fieldError(`entries.${entryIndex}.deductions.${deductionIndex}.amount`)} />
-                                                </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Amount</Label>
+                                                        <Input
+                                                            type="number"
+                                                            min="0.01"
+                                                            step="0.01"
+                                                            value={
+                                                                deduction.amount
+                                                            }
+                                                            onChange={(event) =>
+                                                                updateDeduction(
+                                                                    entryIndex,
+                                                                    deductionIndex,
+                                                                    'amount',
+                                                                    event
+                                                                        .currentTarget
+                                                                        .value,
+                                                                )
+                                                            }
+                                                        />
+                                                        <InputError
+                                                            message={fieldError(
+                                                                `entries.${entryIndex}.deductions.${deductionIndex}.amount`,
+                                                            )}
+                                                        />
+                                                    </div>
 
-                                                <div className="grid gap-2">
-                                                    <Label>Remarks</Label>
-                                                    <Input
-                                                        value={deduction.remarks}
-                                                        onChange={(event) => updateDeduction(entryIndex, deductionIndex, 'remarks', event.currentTarget.value)}
-                                                        placeholder="Optional note"
-                                                    />
-                                                    <InputError message={fieldError(`entries.${entryIndex}.deductions.${deductionIndex}.remarks`)} />
-                                                </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Remarks</Label>
+                                                        <Input
+                                                            value={
+                                                                deduction.remarks
+                                                            }
+                                                            onChange={(event) =>
+                                                                updateDeduction(
+                                                                    entryIndex,
+                                                                    deductionIndex,
+                                                                    'remarks',
+                                                                    event
+                                                                        .currentTarget
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            placeholder="Optional note"
+                                                        />
+                                                        <InputError
+                                                            message={fieldError(
+                                                                `entries.${entryIndex}.deductions.${deductionIndex}.remarks`,
+                                                            )}
+                                                        />
+                                                    </div>
 
-                                                <div className="flex items-end">
-                                                    <Button type="button" variant="ghost" onClick={() => removeDeduction(entryIndex, deductionIndex)}>
-                                                        Remove
-                                                    </Button>
+                                                    <div className="flex items-end">
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            onClick={() =>
+                                                                removeDeduction(
+                                                                    entryIndex,
+                                                                    deductionIndex,
+                                                                )
+                                                            }
+                                                        >
+                                                            Remove
+                                                        </Button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ),
+                                        )}
                                     </div>
                                 </div>
                             );
@@ -592,16 +867,28 @@ export function PayrollRunForm({
                     <CardHeader>
                         <CardTitle>Actions</CardTitle>
                         <CardDescription>
-                            Save the payroll run now, then review it from the detail page before downstream reporting work starts.
+                            Save the payroll run now, then review it from the
+                            detail page before downstream reporting work starts.
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent className="space-y-3">
-                        <Button type="submit" className="w-full" disabled={form.processing}>
-                            {payrollRun ? 'Save payroll run' : 'Create payroll run'}
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={form.processing}
+                        >
+                            {payrollRun
+                                ? 'Save payroll run'
+                                : 'Create payroll run'}
                         </Button>
 
-                        <Button type="button" variant="outline" className="w-full" asChild>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full"
+                            asChild
+                        >
                             <Link href={cancelHref}>Cancel</Link>
                         </Button>
                     </CardContent>

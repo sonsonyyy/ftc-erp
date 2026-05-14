@@ -4,7 +4,13 @@ import PaymentController from '@/actions/App/Http/Controllers/Billing/PaymentCon
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,6 +21,7 @@ import type {
     PaymentMethodOption,
     SelectOption,
 } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     customerOptions: SelectOption[];
@@ -55,7 +62,9 @@ export function PaymentForm({
         customer_id: defaults?.customer_id ? String(defaults.customer_id) : '',
         payment_date: defaults?.payment_date ?? '',
         amount: String(defaults?.amount ?? 0),
-        payment_method: defaults?.payment_method ?? String(paymentMethodOptions[0]?.value ?? 'Cash'),
+        payment_method:
+            defaults?.payment_method ??
+            String(paymentMethodOptions[0]?.value ?? 'Cash'),
         reference_no: defaults?.reference_no ?? '',
         remarks: defaults?.remarks ?? '',
         allocations: defaults?.allocations.length
@@ -66,9 +75,13 @@ export function PaymentForm({
             : [blankAllocation()],
     });
 
-    const filteredInvoiceOptions = form.data.customer_id === ''
-        ? invoiceOptions
-        : invoiceOptions.filter((option) => String(option.customer_id) === form.data.customer_id);
+    const filteredInvoiceOptions =
+        form.data.customer_id === ''
+            ? invoiceOptions
+            : invoiceOptions.filter(
+                  (option) =>
+                      String(option.customer_id) === form.data.customer_id,
+              );
 
     const allocatedTotal = form.data.allocations.reduce(
         (sum, allocation) => sum + Number(allocation.allocated_amount || 0),
@@ -76,7 +89,11 @@ export function PaymentForm({
     );
     const remainingAmount = Number(form.data.amount || 0) - allocatedTotal;
 
-    function updateAllocation(index: number, key: keyof PaymentAllocationInput, value: string) {
+    function updateAllocation(
+        index: number,
+        key: keyof PaymentAllocationInput,
+        value: string,
+    ) {
         form.setData(
             'allocations',
             form.data.allocations.map((allocation, allocationIndex) => {
@@ -90,14 +107,21 @@ export function PaymentForm({
                 };
 
                 if (key === 'invoice_id') {
-                    const invoice = invoiceOptions.find((option) => String(option.value) === value);
+                    const invoice = invoiceOptions.find(
+                        (option) => String(option.value) === value,
+                    );
 
                     if (invoice?.customer_id) {
-                        form.setData('customer_id', String(invoice.customer_id));
+                        form.setData(
+                            'customer_id',
+                            String(invoice.customer_id),
+                        );
                     }
 
                     if (invoice && nextAllocation.allocated_amount === '') {
-                        nextAllocation.allocated_amount = String(invoice.remaining_balance);
+                        nextAllocation.allocated_amount = String(
+                            invoice.remaining_balance,
+                        );
                     }
                 }
 
@@ -112,13 +136,18 @@ export function PaymentForm({
     }
 
     function addAllocation() {
-        form.setData('allocations', [...form.data.allocations, blankAllocation()]);
+        form.setData('allocations', [
+            ...form.data.allocations,
+            blankAllocation(),
+        ]);
     }
 
     function removeAllocation(index: number) {
         form.setData(
             'allocations',
-            form.data.allocations.filter((_, allocationIndex) => allocationIndex !== index),
+            form.data.allocations.filter(
+                (_, allocationIndex) => allocationIndex !== index,
+            ),
         );
     }
 
@@ -153,7 +182,8 @@ export function PaymentForm({
                     <CardHeader>
                         <CardTitle>Payment header</CardTitle>
                         <CardDescription>
-                            Record the receipt details first, then allocate the amount across the customer’s open invoices.
+                            Record the receipt details first, then allocate the
+                            amount across the customer’s open invoices.
                         </CardDescription>
                     </CardHeader>
 
@@ -163,26 +193,38 @@ export function PaymentForm({
                             <Input
                                 id="payment_no"
                                 value={form.data.payment_no}
-                                onChange={(event) => form.setData('payment_no', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'payment_no',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.payment_no} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="customer_id">Customer</Label>
-                            <select
+                            <SelectInput
                                 id="customer_id"
                                 value={form.data.customer_id}
-                                onChange={(event) => handleCustomerChange(event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    handleCustomerChange(
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Select customer</option>
                                 {customerOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.customer_id} />
                         </div>
 
@@ -192,7 +234,12 @@ export function PaymentForm({
                                 id="payment_date"
                                 type="date"
                                 value={form.data.payment_date}
-                                onChange={(event) => form.setData('payment_date', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'payment_date',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.payment_date} />
                         </div>
@@ -205,25 +252,40 @@ export function PaymentForm({
                                 min="0.01"
                                 step="0.01"
                                 value={form.data.amount}
-                                onChange={(event) => form.setData('amount', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'amount',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.amount} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="payment_method">Payment method</Label>
-                            <select
+                            <Label htmlFor="payment_method">
+                                Payment method
+                            </Label>
+                            <SelectInput
                                 id="payment_method"
                                 value={form.data.payment_method}
-                                onChange={(event) => form.setData('payment_method', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'payment_method',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {paymentMethodOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.payment_method} />
                         </div>
 
@@ -232,7 +294,12 @@ export function PaymentForm({
                             <Input
                                 id="reference_no"
                                 value={form.data.reference_no}
-                                onChange={(event) => form.setData('reference_no', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'reference_no',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Check number, transfer reference, etc."
                             />
                             <InputError message={form.errors.reference_no} />
@@ -244,7 +311,12 @@ export function PaymentForm({
                                 id="remarks"
                                 rows={3}
                                 value={form.data.remarks}
-                                onChange={(event) => form.setData('remarks', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'remarks',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Optional collection notes or bank reference context."
                             />
                             <InputError message={form.errors.remarks} />
@@ -257,47 +329,95 @@ export function PaymentForm({
                         <div>
                             <CardTitle>Allocations</CardTitle>
                             <CardDescription>
-                                Allocate the received amount across one or more open invoices for the selected customer.
+                                Allocate the received amount across one or more
+                                open invoices for the selected customer.
                             </CardDescription>
                         </div>
 
-                        <Button type="button" variant="outline" onClick={addAllocation}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={addAllocation}
+                        >
                             Add allocation
                         </Button>
                     </CardHeader>
 
                     <CardContent className="space-y-4">
                         {form.data.allocations.map((allocation, index) => (
-                            <div key={index} className="grid gap-4 rounded-lg border p-4 xl:grid-cols-[2fr_1fr_auto]">
+                            <div
+                                key={index}
+                                className="grid gap-4 rounded-lg border p-4 xl:grid-cols-[2fr_1fr_auto]"
+                            >
                                 <div className="grid gap-2">
-                                    <Label htmlFor={`allocations.${index}.invoice_id`}>Invoice</Label>
-                                    <select
+                                    <Label
+                                        htmlFor={`allocations.${index}.invoice_id`}
+                                    >
+                                        Invoice
+                                    </Label>
+                                    <SelectInput
                                         id={`allocations.${index}.invoice_id`}
                                         value={allocation.invoice_id}
-                                        onChange={(event) => updateAllocation(index, 'invoice_id', event.currentTarget.value)}
-                                        className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                        onChange={(event) =>
+                                            updateAllocation(
+                                                index,
+                                                'invoice_id',
+                                                event.currentTarget.value,
+                                            )
+                                        }
+                                        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                     >
                                         <option value="">Select invoice</option>
-                                        {filteredInvoiceOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label} • Bal {formatCurrency(option.remaining_balance)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <InputError message={form.errors[`allocations.${index}.invoice_id`]} />
+                                        {filteredInvoiceOptions.map(
+                                            (option) => (
+                                                <option
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    {option.label} • Bal{' '}
+                                                    {formatCurrency(
+                                                        option.remaining_balance,
+                                                    )}
+                                                </option>
+                                            ),
+                                        )}
+                                    </SelectInput>
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `allocations.${index}.invoice_id`
+                                            ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor={`allocations.${index}.allocated_amount`}>Allocated amount</Label>
+                                    <Label
+                                        htmlFor={`allocations.${index}.allocated_amount`}
+                                    >
+                                        Allocated amount
+                                    </Label>
                                     <Input
                                         id={`allocations.${index}.allocated_amount`}
                                         type="number"
                                         min="0.01"
                                         step="0.01"
                                         value={allocation.allocated_amount}
-                                        onChange={(event) => updateAllocation(index, 'allocated_amount', event.currentTarget.value)}
+                                        onChange={(event) =>
+                                            updateAllocation(
+                                                index,
+                                                'allocated_amount',
+                                                event.currentTarget.value,
+                                            )
+                                        }
                                     />
-                                    <InputError message={form.errors[`allocations.${index}.allocated_amount`]} />
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `allocations.${index}.allocated_amount`
+                                            ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="flex items-end">
@@ -305,7 +425,9 @@ export function PaymentForm({
                                         type="button"
                                         variant="outline"
                                         className="w-full"
-                                        disabled={form.data.allocations.length === 1}
+                                        disabled={
+                                            form.data.allocations.length === 1
+                                        }
                                         onClick={() => removeAllocation(index)}
                                     >
                                         Remove
@@ -321,7 +443,9 @@ export function PaymentForm({
                         <CardHeader>
                             <CardTitle>Actions</CardTitle>
                             <CardDescription>
-                                Save the payment now. Invoice balances and statuses will update automatically after allocation.
+                                Save the payment now. Invoice balances and
+                                statuses will update automatically after
+                                allocation.
                             </CardDescription>
                         </CardHeader>
 
@@ -331,7 +455,9 @@ export function PaymentForm({
                             </Button>
 
                             <Button disabled={form.processing}>
-                                {form.processing ? 'Saving...' : 'Record payment'}
+                                {form.processing
+                                    ? 'Saving...'
+                                    : 'Record payment'}
                             </Button>
                         </CardContent>
                     </Card>
@@ -340,26 +466,37 @@ export function PaymentForm({
                         <CardHeader>
                             <CardTitle>Allocation summary</CardTitle>
                             <CardDescription>
-                                Keep the receipt amount and allocations balanced before saving.
+                                Keep the receipt amount and allocations balanced
+                                before saving.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-3 text-sm">
                             <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Payment amount</span>
+                                <span className="text-muted-foreground">
+                                    Payment amount
+                                </span>
                                 <span className="font-medium">
-                                    {formatCurrency(Number(form.data.amount || 0))}
+                                    {formatCurrency(
+                                        Number(form.data.amount || 0),
+                                    )}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Allocated total</span>
+                                <span className="text-muted-foreground">
+                                    Allocated total
+                                </span>
                                 <span className="font-medium">
                                     {formatCurrency(allocatedTotal)}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between border-t pt-3">
-                                <span className="font-medium">Remaining to allocate</span>
-                                <span className={`font-semibold ${remainingAmount === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                <span className="font-medium">
+                                    Remaining to allocate
+                                </span>
+                                <span
+                                    className={`font-semibold ${remainingAmount === 0 ? 'text-emerald-600' : 'text-amber-600'}`}
+                                >
                                     {formatCurrency(remainingAmount)}
                                 </span>
                             </div>

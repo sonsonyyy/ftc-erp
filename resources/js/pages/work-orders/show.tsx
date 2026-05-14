@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { SelectOption, WorkOrderDetail } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     workOrder: WorkOrderDetail;
@@ -633,7 +634,7 @@ export default function WorkOrdersShow({
                                             <Label htmlFor="status">
                                                 Next status
                                             </Label>
-                                            <select
+                                            <SelectInput
                                                 id="status"
                                                 value={statusForm.data.status}
                                                 onChange={(event) =>
@@ -653,7 +654,7 @@ export default function WorkOrdersShow({
                                                         {option.label}
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </SelectInput>
                                             <InputError
                                                 message={
                                                     statusForm.errors.status
@@ -743,7 +744,7 @@ export default function WorkOrdersShow({
                                             <Label htmlFor="user_id">
                                                 Assigned user
                                             </Label>
-                                            <select
+                                            <SelectInput
                                                 id="user_id"
                                                 value={
                                                     assignmentForm.data.user_id
@@ -768,7 +769,7 @@ export default function WorkOrdersShow({
                                                         {option.label}
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </SelectInput>
                                             <InputError
                                                 message={
                                                     assignmentForm.errors

@@ -3,6 +3,7 @@
 use App\Enums\ComplianceAlertType;
 use App\Enums\ComplianceRecordStatus;
 use App\Enums\InventoryItemStatus;
+use App\Enums\InvoiceStatus;
 use App\Enums\ProjectStatus;
 use App\Enums\QuotationStatus;
 use App\Enums\StockMovementType;
@@ -10,6 +11,7 @@ use App\Enums\WorkOrderStatus;
 use App\Models\ComplianceAlert;
 use App\Models\ComplianceRecord;
 use App\Models\InventoryItem;
+use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Quotation;
 use App\Models\Role;
@@ -73,6 +75,9 @@ test('dashboard shows operational snapshots for roles with module visibility', f
     Carbon::setTestNow('2026-04-20 09:00:00');
 
     $user = actingAsDashboardRole('Warehouse / Inventory Officer');
+    $salesRepresentative = User::factory()->create([
+        'name' => 'Maria Santos',
+    ]);
 
     $warehouse = Warehouse::factory()->create([
         'warehouse_code' => 'WH-MAIN',
@@ -142,16 +147,21 @@ test('dashboard shows operational snapshots for roles with module visibility', f
     Quotation::factory()->create([
         'quotation_no' => 'QTN-DASH-001',
         'status' => QuotationStatus::Draft,
+        'quotation_date' => '2026-04-18',
+        'valid_until' => '2026-04-23',
+        'assigned_sales_user_id' => $salesRepresentative->getKey(),
     ]);
 
     Quotation::factory()->create([
         'quotation_no' => 'QTN-DASH-002',
         'status' => QuotationStatus::Awarded,
+        'quotation_date' => '2026-04-16',
     ]);
 
     Quotation::factory()->create([
         'quotation_no' => 'QTN-DASH-003',
         'status' => QuotationStatus::Lost,
+        'quotation_date' => '2026-04-15',
     ]);
 
     Project::factory()->create([
@@ -172,46 +182,57 @@ test('dashboard shows operational snapshots for roles with module visibility', f
     WorkOrder::factory()->create([
         'work_order_no' => 'WO-DASH-001',
         'status' => WorkOrderStatus::Scheduled,
+        'scheduled_date' => '2026-04-21',
+        'summary' => 'Fire Alarm Inspection',
     ]);
 
     WorkOrder::factory()->create([
         'work_order_no' => 'WO-DASH-002',
         'status' => WorkOrderStatus::ForReview,
+        'scheduled_date' => '2026-04-22',
+        'summary' => 'Sprinkler Rectification',
     ]);
 
     WorkOrder::factory()->create([
         'work_order_no' => 'WO-DASH-003',
         'status' => WorkOrderStatus::Closed,
+        'scheduled_date' => '2026-04-18',
+        'summary' => 'Pump Room Close-out',
     ]);
 
     $this->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard')
-            ->where('can.view_low_stock', true)
-            ->where('can.view_stock_movements', true)
-            ->where('can.view_quotations', true)
-            ->where('can.view_projects', true)
-            ->where('can.view_work_orders', true)
-            ->where('can.view_compliance', false)
-            ->where('can.view_compliance_alerts', false)
-            ->where('lowStockSnapshot.count', 1)
-            ->where('lowStockSnapshot.items.0.item_code', 'ITM-LOW-001')
-            ->where('lowStockSnapshot.items.0.shortage', 7)
-            ->where('movementSnapshot.last_7_days_count', 1)
-            ->where('movementSnapshot.items.0.reference_number', 'ADJ-2026-0001')
-            ->where('movementSnapshot.items.0.inventory_item.item_code', 'ITM-LOW-001')
-            ->where('quotationSnapshot.count', 2)
-            ->where('quotationSnapshot.secondary_count', 1)
-            ->where('projectSnapshot.count', 2)
-            ->where('projectSnapshot.secondary_count', 1)
-            ->where('workOrderSnapshot.count', 2)
-            ->where('workOrderSnapshot.secondary_count', 1)
-            ->where('complianceSnapshot.due_soon_count', null)
-            ->where('complianceSnapshot.for_renewal_count', null)
-            ->where('complianceSnapshot.overdue_count', null)
-            ->where('complianceSnapshot.expired_count', null)
-            ->where('complianceSnapshot.open_alert_count', null),
+            ->where('dashboard.can.view_low_stock', true)
+            ->where('dashboard.can.view_stock_movements', true)
+            ->where('dashboard.can.view_quotations', true)
+            ->where('dashboard.can.view_projects', true)
+            ->where('dashboard.can.view_work_orders', true)
+            ->where('dashboard.can.view_billing', true)
+            ->where('dashboard.can.view_compliance', false)
+            ->where('dashboard.can.view_compliance_alerts', false)
+            ->where('dashboard.inventory.low_stock_count', 1)
+            ->where('dashboard.low_stock.0.item_code', 'ITM-LOW-001')
+            ->where('dashboard.low_stock.0.shortage', 7)
+            ->where('dashboard.low_stock.0.location', 'WH-MAIN')
+            ->where('dashboard.inventory.movement_count_7_days', 1)
+            ->where('dashboard.recent_movements.0.reference', 'ADJ-2026-0001')
+            ->where('dashboard.recent_movements.0.type', 'ISS')
+            ->where('dashboard.quotations.total_quotations', 3)
+            ->where('dashboard.quotations.conversion_rate', 33)
+            ->where('dashboard.quotations.pending_follow_up_total', 1)
+            ->where('dashboard.projects.active_projects', 2)
+            ->where('dashboard.projects.statuses.0.count', 1)
+            ->where('dashboard.projects.statuses.2.count', 1)
+            ->where('dashboard.work_orders.active_work_orders', 2)
+            ->where('dashboard.work_orders.for_review_count', 1)
+            ->where('dashboard.work_orders.upcoming_job_total', 2)
+            ->where('dashboard.compliance.due_soon_count', null)
+            ->where('dashboard.compliance.for_renewal_count', null)
+            ->where('dashboard.compliance.overdue_count', null)
+            ->where('dashboard.compliance.expired_count', null)
+            ->where('dashboard.compliance.open_alert_count', null),
         );
 });
 
@@ -263,13 +284,51 @@ test('dashboard shows compliance deadline snapshots for compliance roles', funct
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard')
-            ->where('can.view_compliance', true)
-            ->where('can.view_compliance_alerts', true)
-            ->where('complianceSnapshot.due_soon_count', 1)
-            ->where('complianceSnapshot.for_renewal_count', 1)
-            ->where('complianceSnapshot.overdue_count', 1)
-            ->where('complianceSnapshot.expired_count', 1)
-            ->where('complianceSnapshot.open_alert_count', 1),
+            ->where('dashboard.can.view_compliance', true)
+            ->where('dashboard.can.view_compliance_alerts', true)
+            ->where('dashboard.compliance.due_soon_count', 1)
+            ->where('dashboard.compliance.for_renewal_count', 1)
+            ->where('dashboard.compliance.overdue_count', 1)
+            ->where('dashboard.compliance.expired_count', 1)
+            ->where('dashboard.compliance.open_alert_count', 1)
+            ->has('dashboard.compliance.due_items_trend', 7),
+        );
+});
+
+test('dashboard shows billing and receivable summaries for billing roles', function () {
+    Carbon::setTestNow('2026-04-20 09:00:00');
+
+    actingAsDashboardRole('Billing / Accounting Staff');
+
+    Invoice::factory()->create([
+        'invoice_no' => 'INV-DASH-001',
+        'invoice_date' => '2026-04-05',
+        'due_date' => '2026-04-28',
+        'total_amount' => '1000.00',
+        'balance_amount' => '1000.00',
+        'status' => InvoiceStatus::Issued,
+    ]);
+
+    Invoice::factory()->create([
+        'invoice_no' => 'INV-DASH-002',
+        'invoice_date' => '2026-03-10',
+        'due_date' => '2026-03-25',
+        'total_amount' => '500.00',
+        'balance_amount' => '500.00',
+        'status' => InvoiceStatus::Issued,
+    ]);
+
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('dashboard.can.view_billing', true)
+            ->has('dashboard.monthly_billing.items', 6)
+            ->where('dashboard.monthly_billing.items.4.amount', 500)
+            ->where('dashboard.monthly_billing.items.5.amount', 1000)
+            ->where('dashboard.ar_aging.total_ar', 1500)
+            ->where('dashboard.ar_aging.items.0.amount', 1000)
+            ->where('dashboard.ar_aging.items.1.amount', 500),
         );
 });
 
@@ -284,28 +343,25 @@ test('dashboard hides restricted module snapshots for roles without view permiss
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard')
-            ->where('can.view_low_stock', false)
-            ->where('can.view_stock_movements', false)
-            ->where('can.view_quotations', false)
-            ->where('can.view_projects', false)
-            ->where('can.view_work_orders', false)
-            ->where('can.view_compliance', false)
-            ->where('can.view_compliance_alerts', false)
-            ->where('lowStockSnapshot.count', null)
-            ->where('lowStockSnapshot.items', [])
-            ->where('movementSnapshot.last_7_days_count', null)
-            ->where('movementSnapshot.items', [])
-            ->where('quotationSnapshot.count', null)
-            ->where('quotationSnapshot.secondary_count', null)
-            ->where('projectSnapshot.count', null)
-            ->where('projectSnapshot.secondary_count', null)
-            ->where('workOrderSnapshot.count', null)
-            ->where('workOrderSnapshot.secondary_count', null)
-            ->where('complianceSnapshot.due_soon_count', null)
-            ->where('complianceSnapshot.for_renewal_count', null)
-            ->where('complianceSnapshot.overdue_count', null)
-            ->where('complianceSnapshot.expired_count', null)
-            ->where('complianceSnapshot.open_alert_count', null),
+            ->where('dashboard.can.view_low_stock', false)
+            ->where('dashboard.can.view_stock_movements', false)
+            ->where('dashboard.can.view_quotations', false)
+            ->where('dashboard.can.view_projects', false)
+            ->where('dashboard.can.view_work_orders', false)
+            ->where('dashboard.can.view_compliance', false)
+            ->where('dashboard.can.view_compliance_alerts', false)
+            ->where('dashboard.can.view_billing', false)
+            ->where('dashboard.inventory.low_stock_count', null)
+            ->where('dashboard.low_stock', [])
+            ->where('dashboard.inventory.movement_count_7_days', null)
+            ->where('dashboard.recent_movements', [])
+            ->where('dashboard.quotations.total_quotations', null)
+            ->where('dashboard.quotations.breakdown', [])
+            ->where('dashboard.projects.active_projects', null)
+            ->where('dashboard.work_orders.active_work_orders', null)
+            ->where('dashboard.compliance.due_soon_count', null)
+            ->where('dashboard.monthly_billing.items', [])
+            ->where('dashboard.ar_aging.total_ar', null),
         );
 });
 
@@ -324,12 +380,13 @@ test('dashboard remains accessible when compliance tables are not migrated yet',
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard')
-            ->where('can.view_compliance', false)
-            ->where('can.view_compliance_alerts', false)
-            ->where('complianceSnapshot.due_soon_count', null)
-            ->where('complianceSnapshot.for_renewal_count', null)
-            ->where('complianceSnapshot.overdue_count', null)
-            ->where('complianceSnapshot.expired_count', null)
-            ->where('complianceSnapshot.open_alert_count', null),
+            ->where('dashboard.can.view_compliance', false)
+            ->where('dashboard.can.view_compliance_alerts', false)
+            ->where('dashboard.compliance.due_soon_count', null)
+            ->where('dashboard.compliance.for_renewal_count', null)
+            ->where('dashboard.compliance.overdue_count', null)
+            ->where('dashboard.compliance.expired_count', null)
+            ->where('dashboard.compliance.open_alert_count', null)
+            ->where('dashboard.compliance.due_items_trend', []),
         );
 });

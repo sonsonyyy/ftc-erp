@@ -202,6 +202,57 @@ test('billing users can browse and filter paginated invoices', function () {
         );
 });
 
+test('billing users can open prefilled invoice and payment create pages', function () {
+    actingAsBillingRole();
+
+    $context = billingContext();
+    $invoice = createInvoiceRecord([
+        'customer' => $context['customer'],
+        'customer_id' => $context['customer']->getKey(),
+        'quotation_id' => $context['quotation']->getKey(),
+        'project_id' => $context['project']->getKey(),
+        'work_order_id' => $context['workOrder']->getKey(),
+        'tax_amount' => '0.00',
+    ], [
+        [
+            'description' => 'Progress billing',
+            'unit' => 'lot',
+            'quantity' => '1.00',
+            'unit_price' => '1250.00',
+            'remarks' => null,
+        ],
+    ]);
+
+    $this->get(route('invoices.create', [
+        'quotation' => $context['quotation']->getKey(),
+        'project' => $context['project']->getKey(),
+        'work_order' => $context['workOrder']->getKey(),
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('invoices/create')
+            ->where('defaults.quotation_id', $context['quotation']->getKey())
+            ->where('defaults.project_id', $context['project']->getKey())
+            ->where('defaults.work_order_id', $context['workOrder']->getKey())
+            ->where('defaults.customer_id', $context['customer']->getKey()),
+        );
+
+    $this->get(route('payments.create', [
+        'invoice' => $invoice->getKey(),
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('payments/create')
+            ->where('defaults.customer_id', $context['customer']->getKey())
+            ->where('defaults.amount', fn ($value) => (float) $value === (float) $invoice->balance_amount)
+            ->where('defaults.allocations.0.invoice_id', $invoice->getKey())
+            ->where(
+                'defaults.allocations.0.allocated_amount',
+                fn ($value) => (float) $value === (float) $invoice->balance_amount,
+            ),
+        );
+});
+
 test('invoice export respects the active filters', function () {
     actingAsBillingRole();
 

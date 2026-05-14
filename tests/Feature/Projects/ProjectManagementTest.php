@@ -253,6 +253,31 @@ test('project validation errors are returned', function () {
         ]);
 });
 
+test('authorized users can open the prefilled create project page', function () {
+    actingAsProjectRole('Operations Admin');
+
+    $customer = Customer::factory()->create();
+    $site = CustomerSite::factory()->create([
+        'customer_id' => $customer->getKey(),
+    ]);
+    $quotation = Quotation::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+        'status' => QuotationStatus::Awarded,
+    ]);
+
+    $this->get(route('projects.create', [
+        'quotation' => $quotation->getKey(),
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('projects/create')
+            ->where('defaults.quotation_id', $quotation->getKey())
+            ->where('defaults.customer_id', $customer->getKey())
+            ->where('defaults.customer_site_id', $site->getKey()),
+        );
+});
+
 test('users without permissions cannot create projects', function () {
     $user = User::factory()->create();
     $customer = Customer::factory()->create();

@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { SelectOption, SiteDetail } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     site?: SiteDetail;
@@ -37,9 +38,7 @@ export function SiteForm({
     cancelHref,
 }: Props) {
     const form = useForm({
-        customer_id: String(
-            site?.customer.id ?? defaults?.customer_id ?? '',
-        ),
+        customer_id: String(site?.customer.id ?? defaults?.customer_id ?? ''),
         site_code: site?.site_code ?? '',
         site_name: site?.site_name ?? '',
         contact_person: site?.contact_person ?? '',
@@ -91,33 +90,43 @@ export function SiteForm({
         <div className="space-y-6">
             <Heading title={title} description={description} />
 
-            <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+            <form
+                onSubmit={submit}
+                className="grid gap-6 lg:grid-cols-[2fr_1fr]"
+            >
                 <Card>
                     <CardHeader>
                         <CardTitle>Site details</CardTitle>
                         <CardDescription>
-                            Keep each project or service location tied to the correct customer record.
+                            Keep each project or service location tied to the
+                            correct customer record.
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent className="grid gap-5 md:grid-cols-2">
                         <div className="grid gap-2 md:col-span-2">
                             <Label htmlFor="customer_id">Customer</Label>
-                            <select
+                            <SelectInput
                                 id="customer_id"
                                 value={form.data.customer_id}
                                 onChange={(event) =>
-                                    form.setData('customer_id', event.currentTarget.value)
+                                    form.setData(
+                                        'customer_id',
+                                        event.currentTarget.value,
+                                    )
                                 }
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Select a customer</option>
                                 {customerOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.customer_id} />
                         </div>
 
@@ -127,7 +136,10 @@ export function SiteForm({
                                 id="site_code"
                                 value={form.data.site_code}
                                 onChange={(event) =>
-                                    form.setData('site_code', event.currentTarget.value)
+                                    form.setData(
+                                        'site_code',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="SITE-00001"
                             />
@@ -136,17 +148,20 @@ export function SiteForm({
 
                         <div className="grid gap-2">
                             <Label htmlFor="is_active">Site status</Label>
-                            <select
+                            <SelectInput
                                 id="is_active"
                                 value={form.data.is_active}
                                 onChange={(event) =>
-                                    form.setData('is_active', event.currentTarget.value)
+                                    form.setData(
+                                        'is_active',
+                                        event.currentTarget.value,
+                                    )
                                 }
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.is_active} />
                         </div>
 
@@ -156,7 +171,10 @@ export function SiteForm({
                                 id="site_name"
                                 value={form.data.site_name}
                                 onChange={(event) =>
-                                    form.setData('site_name', event.currentTarget.value)
+                                    form.setData(
+                                        'site_name',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="Main office, warehouse, branch site, etc."
                             />
@@ -164,12 +182,17 @@ export function SiteForm({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="contact_person">Contact person</Label>
+                            <Label htmlFor="contact_person">
+                                Contact person
+                            </Label>
                             <Input
                                 id="contact_person"
                                 value={form.data.contact_person}
                                 onChange={(event) =>
-                                    form.setData('contact_person', event.currentTarget.value)
+                                    form.setData(
+                                        'contact_person',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="On-site coordinator"
                             />
@@ -182,7 +205,10 @@ export function SiteForm({
                                 id="contact_no"
                                 value={form.data.contact_no}
                                 onChange={(event) =>
-                                    form.setData('contact_no', event.currentTarget.value)
+                                    form.setData(
+                                        'contact_no',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="0917 000 0000"
                             />
@@ -196,7 +222,10 @@ export function SiteForm({
                                 type="email"
                                 value={form.data.email}
                                 onChange={(event) =>
-                                    form.setData('email', event.currentTarget.value)
+                                    form.setData(
+                                        'email',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="site.contact@example.com"
                             />
@@ -209,7 +238,10 @@ export function SiteForm({
                                 id="address"
                                 value={form.data.address}
                                 onChange={(event) =>
-                                    form.setData('address', event.currentTarget.value)
+                                    form.setData(
+                                        'address',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="Full service or project site address"
                             />
@@ -222,7 +254,10 @@ export function SiteForm({
                                 id="city"
                                 value={form.data.city}
                                 onChange={(event) =>
-                                    form.setData('city', event.currentTarget.value)
+                                    form.setData(
+                                        'city',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="Quezon City"
                             />
@@ -235,7 +270,10 @@ export function SiteForm({
                                 id="province"
                                 value={form.data.province}
                                 onChange={(event) =>
-                                    form.setData('province', event.currentTarget.value)
+                                    form.setData(
+                                        'province',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="Metro Manila"
                             />
@@ -248,7 +286,10 @@ export function SiteForm({
                                 id="notes"
                                 value={form.data.notes}
                                 onChange={(event) =>
-                                    form.setData('notes', event.currentTarget.value)
+                                    form.setData(
+                                        'notes',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="Access instructions, billing notes, schedule reminders, etc."
                             />
@@ -261,7 +302,8 @@ export function SiteForm({
                     <CardHeader>
                         <CardTitle>Actions</CardTitle>
                         <CardDescription>
-                            Save the site record now and manage attachments from the detail page.
+                            Save the site record now and manage attachments from
+                            the detail page.
                         </CardDescription>
                     </CardHeader>
 

@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { QuotationDetail, SelectOption } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     quotation: QuotationDetail;
@@ -564,7 +565,7 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                             <Label htmlFor="status">
                                                 New status
                                             </Label>
-                                            <select
+                                            <SelectInput
                                                 id="status"
                                                 value={statusForm.data.status}
                                                 onChange={(event) =>
@@ -584,7 +585,7 @@ export default function QuotationsShow({ quotation, statusOptions }: Props) {
                                                         {option.label}
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </SelectInput>
                                             <InputError
                                                 message={
                                                     statusForm.errors.status

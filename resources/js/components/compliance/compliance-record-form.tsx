@@ -22,6 +22,7 @@ import type {
     ComplianceTemplateOption,
     SelectOption,
 } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     complianceRecord?: ComplianceRecordDetail;
@@ -61,11 +62,17 @@ export function ComplianceRecordForm({
         title: complianceRecord?.title ?? defaults?.title ?? '',
         agency: complianceRecord?.agency ?? defaults?.agency ?? '',
         category: complianceRecord?.category ?? defaults?.category ?? '',
-        description: complianceRecord?.description ?? defaults?.description ?? '',
+        description:
+            complianceRecord?.description ?? defaults?.description ?? '',
         due_date: complianceRecord?.due_date ?? defaults?.due_date ?? '',
-        expiry_date: complianceRecord?.expiry_date ?? defaults?.expiry_date ?? '',
-        recurrence_unit: complianceRecord?.recurrence_unit ?? defaults?.recurrence_unit ?? 'none',
-        reminder_days: complianceRecord?.reminder_days ?? defaults?.reminder_days ?? [90, 60, 30, 15, 7],
+        expiry_date:
+            complianceRecord?.expiry_date ?? defaults?.expiry_date ?? '',
+        recurrence_unit:
+            complianceRecord?.recurrence_unit ??
+            defaults?.recurrence_unit ??
+            'none',
+        reminder_days: complianceRecord?.reminder_days ??
+            defaults?.reminder_days ?? [90, 60, 30, 15, 7],
         assigned_user_id: complianceRecord?.assigned_user?.id
             ? String(complianceRecord.assigned_user.id)
             : defaults?.assigned_user_id
@@ -89,7 +96,9 @@ export function ComplianceRecordForm({
             return;
         }
 
-        const template = templateOptions.find((option) => String(option.value) === templateId);
+        const template = templateOptions.find(
+            (option) => String(option.value) === templateId,
+        );
 
         if (!template) {
             return;
@@ -100,20 +109,26 @@ export function ComplianceRecordForm({
             title: data.title === '' ? template.name : data.title,
             agency: template.agency,
             category: template.category ?? '',
-            description: data.description === '' ? template.description ?? '' : data.description,
+            description:
+                data.description === ''
+                    ? (template.description ?? '')
+                    : data.description,
             recurrence_unit: template.default_recurrence_unit,
             reminder_days: template.default_reminder_days,
         }));
     }
 
     function toggleReminderDay(day: number, checked: CheckedState) {
-        const nextReminderDays = checked === true
-            ? [...form.data.reminder_days, day]
-            : form.data.reminder_days.filter((value) => value !== day);
+        const nextReminderDays =
+            checked === true
+                ? [...form.data.reminder_days, day]
+                : form.data.reminder_days.filter((value) => value !== day);
 
         form.setData(
             'reminder_days',
-            Array.from(new Set(nextReminderDays)).sort((left, right) => right - left),
+            Array.from(new Set(nextReminderDays)).sort(
+                (left, right) => right - left,
+            ),
         );
     }
 
@@ -123,7 +138,9 @@ export function ComplianceRecordForm({
         form.transform((data) => ({
             record_no: data.record_no,
             compliance_template_id:
-                data.compliance_template_id === '' ? null : Number(data.compliance_template_id),
+                data.compliance_template_id === ''
+                    ? null
+                    : Number(data.compliance_template_id),
             title: data.title,
             agency: data.agency,
             category: data.category || null,
@@ -132,15 +149,21 @@ export function ComplianceRecordForm({
             expiry_date: data.expiry_date || null,
             recurrence_unit: data.recurrence_unit,
             reminder_days: data.reminder_days,
-            assigned_user_id: data.assigned_user_id === '' ? null : Number(data.assigned_user_id),
+            assigned_user_id:
+                data.assigned_user_id === ''
+                    ? null
+                    : Number(data.assigned_user_id),
             status: data.status,
             notes: data.notes || null,
         }));
 
         if (complianceRecord) {
-            form.submit(ComplianceRecordController.update(complianceRecord.id), {
-                preserveScroll: true,
-            });
+            form.submit(
+                ComplianceRecordController.update(complianceRecord.id),
+                {
+                    preserveScroll: true,
+                },
+            );
 
             return;
         }
@@ -154,12 +177,16 @@ export function ComplianceRecordForm({
         <div className="space-y-6">
             <Heading title={title} description={description} />
 
-            <form onSubmit={submit} className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+            <form
+                onSubmit={submit}
+                className="grid gap-6 xl:grid-cols-[2fr_1fr]"
+            >
                 <Card>
                     <CardHeader>
                         <CardTitle>Compliance details</CardTitle>
                         <CardDescription>
-                            Track the filing, renewal, or permit record that the compliance team needs to monitor.
+                            Track the filing, renewal, or permit record that the
+                            compliance team needs to monitor.
                         </CardDescription>
                     </CardHeader>
 
@@ -169,28 +196,44 @@ export function ComplianceRecordForm({
                             <Input
                                 id="record_no"
                                 value={form.data.record_no}
-                                onChange={(event) => form.setData('record_no', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'record_no',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="CMP-2026-0001"
                             />
                             <InputError message={form.errors.record_no} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="compliance_template_id">Template</Label>
-                            <select
+                            <Label htmlFor="compliance_template_id">
+                                Template
+                            </Label>
+                            <SelectInput
                                 id="compliance_template_id"
                                 value={form.data.compliance_template_id}
-                                onChange={(event) => handleTemplateChange(event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    handleTemplateChange(
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Custom record</option>
                                 {templateOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
-                            <InputError message={form.errors.compliance_template_id} />
+                            </SelectInput>
+                            <InputError
+                                message={form.errors.compliance_template_id}
+                            />
                         </div>
 
                         <div className="grid gap-2 md:col-span-2">
@@ -198,7 +241,12 @@ export function ComplianceRecordForm({
                             <Input
                                 id="title"
                                 value={form.data.title}
-                                onChange={(event) => form.setData('title', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'title',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="2026 GIS Filing"
                             />
                             <InputError message={form.errors.title} />
@@ -209,7 +257,12 @@ export function ComplianceRecordForm({
                             <Input
                                 id="agency"
                                 value={form.data.agency}
-                                onChange={(event) => form.setData('agency', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'agency',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="SEC"
                             />
                             <InputError message={form.errors.agency} />
@@ -220,7 +273,12 @@ export function ComplianceRecordForm({
                             <Input
                                 id="category"
                                 value={form.data.category}
-                                onChange={(event) => form.setData('category', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'category',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Corporate Filing"
                             />
                             <InputError message={form.errors.category} />
@@ -231,7 +289,12 @@ export function ComplianceRecordForm({
                             <Textarea
                                 id="description"
                                 value={form.data.description}
-                                onChange={(event) => form.setData('description', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'description',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Describe the filing or permit requirement."
                             />
                             <InputError message={form.errors.description} />
@@ -243,7 +306,12 @@ export function ComplianceRecordForm({
                                 id="due_date"
                                 type="date"
                                 value={form.data.due_date ?? ''}
-                                onChange={(event) => form.setData('due_date', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'due_date',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.due_date} />
                         </div>
@@ -254,60 +322,93 @@ export function ComplianceRecordForm({
                                 id="expiry_date"
                                 type="date"
                                 value={form.data.expiry_date ?? ''}
-                                onChange={(event) => form.setData('expiry_date', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'expiry_date',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.expiry_date} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="recurrence_unit">Recurrence</Label>
-                            <select
+                            <SelectInput
                                 id="recurrence_unit"
                                 value={form.data.recurrence_unit}
-                                onChange={(event) => form.setData('recurrence_unit', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'recurrence_unit',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {recurrenceOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.recurrence_unit} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="assigned_user_id">Responsible user</Label>
-                            <select
+                            <Label htmlFor="assigned_user_id">
+                                Responsible user
+                            </Label>
+                            <SelectInput
                                 id="assigned_user_id"
                                 value={form.data.assigned_user_id}
-                                onChange={(event) => form.setData('assigned_user_id', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'assigned_user_id',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Unassigned</option>
                                 {assignedUserOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
-                            <InputError message={form.errors.assigned_user_id} />
+                            </SelectInput>
+                            <InputError
+                                message={form.errors.assigned_user_id}
+                            />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="status">Status</Label>
-                            <select
+                            <SelectInput
                                 id="status"
                                 value={form.data.status}
-                                onChange={(event) => form.setData('status', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'status',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {statusOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.status} />
                         </div>
 
@@ -315,7 +416,8 @@ export function ComplianceRecordForm({
                             <div className="space-y-1">
                                 <Label>Reminder schedule</Label>
                                 <p className="text-sm text-muted-foreground">
-                                    Upcoming reminders generate alerts before the due or expiry date.
+                                    Upcoming reminders generate alerts before
+                                    the due or expiry date.
                                 </p>
                             </div>
 
@@ -326,12 +428,19 @@ export function ComplianceRecordForm({
                                         className="flex items-center gap-3 rounded-lg border px-3 py-2"
                                     >
                                         <Checkbox
-                                            checked={form.data.reminder_days.includes(option.value)}
+                                            checked={form.data.reminder_days.includes(
+                                                option.value,
+                                            )}
                                             onCheckedChange={(checked) =>
-                                                toggleReminderDay(option.value, checked)
+                                                toggleReminderDay(
+                                                    option.value,
+                                                    checked,
+                                                )
                                             }
                                         />
-                                        <span className="text-sm">{option.label}</span>
+                                        <span className="text-sm">
+                                            {option.label}
+                                        </span>
                                     </label>
                                 ))}
                             </div>
@@ -344,7 +453,12 @@ export function ComplianceRecordForm({
                             <Textarea
                                 id="notes"
                                 value={form.data.notes}
-                                onChange={(event) => form.setData('notes', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'notes',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Internal notes, missing requirements, or filing context."
                             />
                             <InputError message={form.errors.notes} />
@@ -357,44 +471,57 @@ export function ComplianceRecordForm({
                         <CardHeader>
                             <CardTitle>Quick context</CardTitle>
                             <CardDescription>
-                                A practical summary so office users can confirm the record before saving.
+                                A practical summary so office users can confirm
+                                the record before saving.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-4">
                             <div>
-                                <p className="text-sm text-muted-foreground">Template</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Template
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {selectedTemplate?.label ?? 'Custom record'}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Responsible user</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Responsible user
+                                </p>
                                 <p className="mt-1 font-medium">
-                                    {selectedAssignedUser?.label ?? 'Unassigned'}
+                                    {selectedAssignedUser?.label ??
+                                        'Unassigned'}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Next due date</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Next due date
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {form.data.due_date || 'Not set'}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Next expiry date</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Next expiry date
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {form.data.expiry_date || 'Not set'}
                                 </p>
                             </div>
 
                             <div>
-                                <p className="text-sm text-muted-foreground">Reminders</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Reminders
+                                </p>
                                 <p className="mt-1 font-medium">
                                     {form.data.reminder_days.length > 0
-                                        ? form.data.reminder_days.join(', ') + ' days'
+                                        ? form.data.reminder_days.join(', ') +
+                                          ' days'
                                         : 'No reminders selected'}
                                 </p>
                             </div>
@@ -403,7 +530,9 @@ export function ComplianceRecordForm({
 
                     <div className="flex gap-3">
                         <Button type="submit" disabled={form.processing}>
-                            {complianceRecord ? 'Save changes' : 'Create record'}
+                            {complianceRecord
+                                ? 'Save changes'
+                                : 'Create record'}
                         </Button>
 
                         <Button variant="outline" asChild>

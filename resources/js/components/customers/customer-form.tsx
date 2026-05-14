@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { CustomerDetail, SelectOption } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     customer?: CustomerDetail;
@@ -73,12 +74,16 @@ export function CustomerForm({
         <div className="space-y-6">
             <Heading title={title} description={description} />
 
-            <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+            <form
+                onSubmit={submit}
+                className="grid gap-6 lg:grid-cols-[2fr_1fr]"
+            >
                 <Card>
                     <CardHeader>
                         <CardTitle>Customer details</CardTitle>
                         <CardDescription>
-                            Maintain the customer masterfile used by future quotations, projects, and service work.
+                            Maintain the customer masterfile used by future
+                            quotations, projects, and service work.
                         </CardDescription>
                     </CardHeader>
 
@@ -89,7 +94,10 @@ export function CustomerForm({
                                 id="customer_code"
                                 value={form.data.customer_code}
                                 onChange={(event) =>
-                                    form.setData('customer_code', event.currentTarget.value)
+                                    form.setData(
+                                        'customer_code',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="CUST-00001"
                             />
@@ -98,20 +106,26 @@ export function CustomerForm({
 
                         <div className="grid gap-2">
                             <Label htmlFor="status">Status</Label>
-                            <select
+                            <SelectInput
                                 id="status"
                                 value={form.data.status}
                                 onChange={(event) =>
-                                    form.setData('status', event.currentTarget.value)
+                                    form.setData(
+                                        'status',
+                                        event.currentTarget.value,
+                                    )
                                 }
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {statusOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.status} />
                         </div>
 
@@ -121,7 +135,10 @@ export function CustomerForm({
                                 id="company_name"
                                 value={form.data.company_name}
                                 onChange={(event) =>
-                                    form.setData('company_name', event.currentTarget.value)
+                                    form.setData(
+                                        'company_name',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="ABC Fire Protection Services, Inc."
                             />
@@ -134,7 +151,10 @@ export function CustomerForm({
                                 id="trade_name"
                                 value={form.data.trade_name}
                                 onChange={(event) =>
-                                    form.setData('trade_name', event.currentTarget.value)
+                                    form.setData(
+                                        'trade_name',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="ABC Fire"
                             />
@@ -147,7 +167,10 @@ export function CustomerForm({
                                 id="tin"
                                 value={form.data.tin}
                                 onChange={(event) =>
-                                    form.setData('tin', event.currentTarget.value)
+                                    form.setData(
+                                        'tin',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="000-000-000-000"
                             />
@@ -160,7 +183,10 @@ export function CustomerForm({
                                 id="phone"
                                 value={form.data.phone}
                                 onChange={(event) =>
-                                    form.setData('phone', event.currentTarget.value)
+                                    form.setData(
+                                        'phone',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="(02) 8123 4567"
                             />
@@ -174,7 +200,10 @@ export function CustomerForm({
                                 type="email"
                                 value={form.data.email}
                                 onChange={(event) =>
-                                    form.setData('email', event.currentTarget.value)
+                                    form.setData(
+                                        'email',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="billing@example.com"
                             />
@@ -182,12 +211,17 @@ export function CustomerForm({
                         </div>
 
                         <div className="grid gap-2 md:col-span-2">
-                            <Label htmlFor="billing_address">Billing address</Label>
+                            <Label htmlFor="billing_address">
+                                Billing address
+                            </Label>
                             <Textarea
                                 id="billing_address"
                                 value={form.data.billing_address}
                                 onChange={(event) =>
-                                    form.setData('billing_address', event.currentTarget.value)
+                                    form.setData(
+                                        'billing_address',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="Enter billing address"
                             />
@@ -200,7 +234,10 @@ export function CustomerForm({
                                 id="notes"
                                 value={form.data.notes}
                                 onChange={(event) =>
-                                    form.setData('notes', event.currentTarget.value)
+                                    form.setData(
+                                        'notes',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="Internal notes about this customer"
                             />
@@ -213,7 +250,8 @@ export function CustomerForm({
                     <CardHeader>
                         <CardTitle>Actions</CardTitle>
                         <CardDescription>
-                            Save the customer record now and manage sites and attachments from the detail page.
+                            Save the customer record now and manage sites and
+                            attachments from the detail page.
                         </CardDescription>
                     </CardHeader>
 

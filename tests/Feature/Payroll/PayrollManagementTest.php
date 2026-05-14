@@ -21,16 +21,18 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-function actingAsSuperAdmin(): User
-{
-    $user = User::factory()->create();
-    $role = Role::query()->where('name', Role::SUPER_ADMIN)->firstOrFail();
+if (! function_exists('actingAsSuperAdmin')) {
+    function actingAsSuperAdmin(): User
+    {
+        $user = User::factory()->create();
+        $role = Role::query()->where('name', Role::SUPER_ADMIN)->firstOrFail();
 
-    $user->roles()->sync([$role->getKey()]);
+        $user->roles()->sync([$role->getKey()]);
 
-    test()->actingAs($user);
+        test()->actingAs($user);
 
-    return $user;
+        return $user;
+    }
 }
 
 function actingAsHrOfficer(): User

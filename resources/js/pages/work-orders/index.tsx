@@ -1,10 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    Activity,
     Archive,
     ChevronDown,
-    ClipboardList,
-    Clock3,
     Download,
     Ellipsis,
     Eye,
@@ -12,7 +9,6 @@ import {
     Plus,
     Search,
     SlidersHorizontal,
-    TriangleAlert,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -20,12 +16,6 @@ import { DataTablePaginationFooter } from '@/components/data-table-pagination-fo
 import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardTitle,
-} from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -52,13 +42,11 @@ import type {
     PaginatedData,
     SelectOption,
     WorkOrderFilters,
-    WorkOrderIndexSummary,
     WorkOrderListItem,
 } from '@/types';
 
 type Props = {
     workOrders: PaginatedData<WorkOrderListItem>;
-    summary: WorkOrderIndexSummary;
     filters: WorkOrderFilters;
     customerOptions: SelectOption[];
     projectOptions: SelectOption[];
@@ -122,7 +110,6 @@ function statusBadgeClass(status: string): string {
 
 export default function WorkOrdersIndex({
     workOrders,
-    summary,
     filters,
     customerOptions,
     projectOptions,
@@ -217,7 +204,7 @@ export default function WorkOrdersIndex({
                     page: 1,
                 }),
                 {
-                    only: ['workOrders', 'filters', 'summary'],
+                    only: ['workOrders', 'filters'],
                     replace: true,
                     preserveState: true,
                     preserveScroll: true,
@@ -261,32 +248,6 @@ export default function WorkOrdersIndex({
             export: 'csv',
         }),
     });
-    const summaryCards = [
-        {
-            title: 'Total work orders',
-            value: summary.total_work_orders,
-            icon: ClipboardList,
-            iconClassName: 'bg-sky-50 text-sky-700',
-        },
-        {
-            title: 'Scheduled',
-            value: summary.scheduled_work_orders,
-            icon: Clock3,
-            iconClassName: 'bg-indigo-50 text-indigo-700',
-        },
-        {
-            title: 'In progress',
-            value: summary.in_progress_work_orders,
-            icon: Activity,
-            iconClassName: 'bg-amber-50 text-amber-700',
-        },
-        {
-            title: 'Urgent jobs',
-            value: summary.urgent_work_orders,
-            icon: TriangleAlert,
-            iconClassName: 'bg-rose-50 text-rose-700',
-        },
-    ];
 
     return (
         <>
@@ -311,36 +272,6 @@ export default function WorkOrdersIndex({
                             </Link>
                         </Button>
                     )}
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    {summaryCards.map((card) => {
-                        const Icon = card.icon;
-
-                        return (
-                            <Card
-                                key={card.title}
-                                className="border-border/70 py-4 shadow-sm"
-                            >
-                                <CardContent className="flex items-center gap-3">
-                                    <div
-                                        className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${card.iconClassName}`}
-                                    >
-                                        <Icon className="size-5" />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <CardDescription>
-                                            {card.title}
-                                        </CardDescription>
-                                        <CardTitle className="text-2xl tracking-tight">
-                                            {card.value}
-                                        </CardTitle>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
                 </div>
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

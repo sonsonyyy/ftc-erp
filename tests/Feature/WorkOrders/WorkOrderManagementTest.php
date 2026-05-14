@@ -309,6 +309,39 @@ test('work order validation errors are returned', function () {
         ]);
 });
 
+test('authorized users can open the prefilled create work order page', function () {
+    actingAsWorkOrderRole('Operations Admin');
+
+    $customer = Customer::factory()->create();
+    $site = CustomerSite::factory()->create([
+        'customer_id' => $customer->getKey(),
+    ]);
+    $quotation = Quotation::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+        'status' => QuotationStatus::Awarded,
+    ]);
+    $project = Project::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'customer_site_id' => $site->getKey(),
+        'quotation_id' => $quotation->getKey(),
+        'status' => ProjectStatus::Open,
+    ]);
+
+    $this->get(route('work-orders.create', [
+        'quotation' => $quotation->getKey(),
+        'project' => $project->getKey(),
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('work-orders/create')
+            ->where('defaults.quotation_id', $quotation->getKey())
+            ->where('defaults.project_id', $project->getKey())
+            ->where('defaults.customer_id', $customer->getKey())
+            ->where('defaults.customer_site_id', $site->getKey()),
+        );
+});
+
 test('users without permissions cannot create work orders', function () {
     $user = User::factory()->create();
     $customer = Customer::factory()->create();

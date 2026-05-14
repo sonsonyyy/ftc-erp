@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { ComplianceRecordDetail, SelectOption } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     complianceRecord: ComplianceRecordDetail;
@@ -746,7 +747,7 @@ export default function ComplianceRecordsShow({
                                             <Label htmlFor="task_assigned_user_id">
                                                 Assigned user
                                             </Label>
-                                            <select
+                                            <SelectInput
                                                 id="task_assigned_user_id"
                                                 value={
                                                     taskForm.data
@@ -774,7 +775,7 @@ export default function ComplianceRecordsShow({
                                                         </option>
                                                     ),
                                                 )}
-                                            </select>
+                                            </SelectInput>
                                             <InputError
                                                 message={
                                                     taskForm.errors
@@ -788,7 +789,7 @@ export default function ComplianceRecordsShow({
                                         <Label htmlFor="task_status">
                                             Initial status
                                         </Label>
-                                        <select
+                                        <SelectInput
                                             id="task_status"
                                             value={taskForm.data.status}
                                             onChange={(event) =>
@@ -807,7 +808,7 @@ export default function ComplianceRecordsShow({
                                                     {option.label}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </SelectInput>
                                         <InputError
                                             message={taskForm.errors.status}
                                         />

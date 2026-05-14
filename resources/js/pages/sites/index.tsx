@@ -1,14 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Archive,
-    BadgeCheck,
-    Ban,
-    Building2,
     ChevronDown,
     Download,
     Ellipsis,
     Eye,
-    MapPinned,
     Pencil,
     Plus,
     Search,
@@ -20,12 +16,6 @@ import { DataTablePaginationFooter } from '@/components/data-table-pagination-fo
 import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardTitle,
-} from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -54,12 +44,6 @@ import type { PaginatedData, SelectOption, SiteListItem } from '@/types';
 
 type Props = {
     sites: PaginatedData<SiteListItem>;
-    summary: {
-        total_sites: number;
-        active_sites: number;
-        inactive_sites: number;
-        linked_customers: number;
-    };
     filters: {
         search: string;
         customer: number | null;
@@ -94,7 +78,6 @@ function statusBadgeClass(isActive: boolean): string {
 
 export default function SitesIndex({
     sites,
-    summary,
     filters,
     customerOptions,
     activityOptions,
@@ -158,7 +141,7 @@ export default function SitesIndex({
                     page: 1,
                 }),
                 {
-                    only: ['sites', 'filters', 'summary'],
+                    only: ['sites', 'filters'],
                     replace: true,
                     preserveState: true,
                     preserveScroll: true,
@@ -190,32 +173,6 @@ export default function SitesIndex({
             export: 'csv',
         }),
     });
-    const summaryCards = [
-        {
-            title: 'Total sites',
-            value: summary.total_sites,
-            icon: MapPinned,
-            iconClassName: 'bg-sky-50 text-sky-700',
-        },
-        {
-            title: 'Active sites',
-            value: summary.active_sites,
-            icon: BadgeCheck,
-            iconClassName: 'bg-emerald-50 text-emerald-700',
-        },
-        {
-            title: 'Inactive sites',
-            value: summary.inactive_sites,
-            icon: Ban,
-            iconClassName: 'bg-slate-100 text-slate-600',
-        },
-        {
-            title: 'Linked customers',
-            value: summary.linked_customers,
-            icon: Building2,
-            iconClassName: 'bg-indigo-50 text-indigo-700',
-        },
-    ];
 
     return (
         <>
@@ -240,36 +197,6 @@ export default function SitesIndex({
                             </Link>
                         </Button>
                     )}
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    {summaryCards.map((card) => {
-                        const Icon = card.icon;
-
-                        return (
-                            <Card
-                                key={card.title}
-                                className="border-border/70 py-4 shadow-sm"
-                            >
-                                <CardContent className="flex items-center gap-3">
-                                    <div
-                                        className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${card.iconClassName}`}
-                                    >
-                                        <Icon className="size-5" />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <CardDescription>
-                                            {card.title}
-                                        </CardDescription>
-                                        <CardTitle className="text-2xl tracking-tight">
-                                            {card.value}
-                                        </CardTitle>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
                 </div>
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

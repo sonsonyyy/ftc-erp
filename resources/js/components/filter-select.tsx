@@ -1,20 +1,21 @@
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import {
+    SelectInput,
+    type SelectInputProps,
+} from '@/components/ui/select-input';
+
+type FilterSelectProps = Omit<SelectInputProps, 'children'> & {
+    children: React.ReactNode;
+};
 
 export function FilterSelect({
     className,
     children,
     ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+}: FilterSelectProps) {
     return (
-        <select
-            className={cn(
-                'h-9 rounded-lg border border-input bg-background px-3 text-sm transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
-                className,
-            )}
-            {...props}
-        >
+        <SelectInput className={className} {...props}>
             {children}
-        </select>
+        </SelectInput>
     );
 }

@@ -688,7 +688,12 @@ class InvoiceController extends Controller
     private function quotationOptions(?int $includeId = null): array
     {
         return Quotation::query()
-            ->when($includeId !== null, fn ($query) => $query->orWhereKey($includeId))
+            ->when($includeId !== null, function ($query) use ($includeId): void {
+                $query->orWhere(
+                    $query->getModel()->qualifyColumn($query->getModel()->getKeyName()),
+                    $includeId,
+                );
+            })
             ->orderByDesc('quotation_date')
             ->orderByDesc('id')
             ->get(['id', 'quotation_no', 'subject', 'customer_id'])
@@ -708,7 +713,12 @@ class InvoiceController extends Controller
     private function projectOptions(?int $includeId = null): array
     {
         return Project::query()
-            ->when($includeId !== null, fn ($query) => $query->orWhereKey($includeId))
+            ->when($includeId !== null, function ($query) use ($includeId): void {
+                $query->orWhere(
+                    $query->getModel()->qualifyColumn($query->getModel()->getKeyName()),
+                    $includeId,
+                );
+            })
             ->orderByDesc('start_date')
             ->orderByDesc('id')
             ->get(['id', 'project_no', 'title', 'customer_id', 'quotation_id'])
@@ -729,7 +739,12 @@ class InvoiceController extends Controller
     private function workOrderOptions(?int $includeId = null): array
     {
         return WorkOrder::query()
-            ->when($includeId !== null, fn ($query) => $query->orWhereKey($includeId))
+            ->when($includeId !== null, function ($query) use ($includeId): void {
+                $query->orWhere(
+                    $query->getModel()->qualifyColumn($query->getModel()->getKeyName()),
+                    $includeId,
+                );
+            })
             ->orderByDesc('scheduled_date')
             ->orderByDesc('id')
             ->get(['id', 'work_order_no', 'summary', 'customer_id', 'project_id', 'quotation_id'])

@@ -4,7 +4,13 @@ import PurchaseRequestController from '@/actions/App/Http/Controllers/Purchasing
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,6 +22,7 @@ import type {
     PurchasingWorkOrderOption,
     SelectOption,
 } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     purchaseRequest?: PurchaseRequestDetail;
@@ -44,23 +51,55 @@ export function PurchaseRequestForm({
 }: Props) {
     const form = useForm({
         request_no: purchaseRequest?.request_no ?? defaults?.request_no ?? '',
-        supplier_id: purchaseRequest?.supplier_id ? String(purchaseRequest.supplier_id) : defaults?.supplier_id ? String(defaults.supplier_id) : '',
-        project_id: purchaseRequest?.project_id ? String(purchaseRequest.project_id) : defaults?.project_id ? String(defaults.project_id) : '',
-        work_order_id: purchaseRequest?.work_order_id ? String(purchaseRequest.work_order_id) : defaults?.work_order_id ? String(defaults.work_order_id) : '',
-        request_date: purchaseRequest?.request_date ?? defaults?.request_date ?? '',
+        supplier_id: purchaseRequest?.supplier_id
+            ? String(purchaseRequest.supplier_id)
+            : defaults?.supplier_id
+              ? String(defaults.supplier_id)
+              : '',
+        project_id: purchaseRequest?.project_id
+            ? String(purchaseRequest.project_id)
+            : defaults?.project_id
+              ? String(defaults.project_id)
+              : '',
+        work_order_id: purchaseRequest?.work_order_id
+            ? String(purchaseRequest.work_order_id)
+            : defaults?.work_order_id
+              ? String(defaults.work_order_id)
+              : '',
+        request_date:
+            purchaseRequest?.request_date ?? defaults?.request_date ?? '',
         needed_by: purchaseRequest?.needed_by ?? '',
-        status: purchaseRequest?.status ?? defaults?.status ?? String(statusOptions[0]?.value ?? 'draft'),
+        status:
+            purchaseRequest?.status ??
+            defaults?.status ??
+            String(statusOptions[0]?.value ?? 'draft'),
         purpose: purchaseRequest?.purpose ?? '',
         remarks: purchaseRequest?.remarks ?? '',
-        items: purchaseRequest?.items?.map((item) => ({
-            inventory_item_id: String(item.inventory_item_id),
-            requested_quantity: String(item.requested_quantity),
-            estimated_unit_cost: item.estimated_unit_cost === null ? '' : String(item.estimated_unit_cost),
-            remarks: item.remarks ?? '',
-        })) ?? ([{ inventory_item_id: '', requested_quantity: '', estimated_unit_cost: '', remarks: '' }] as PurchaseRequestLineInput[]),
+        items:
+            purchaseRequest?.items?.map((item) => ({
+                inventory_item_id: String(item.inventory_item_id),
+                requested_quantity: String(item.requested_quantity),
+                estimated_unit_cost:
+                    item.estimated_unit_cost === null
+                        ? ''
+                        : String(item.estimated_unit_cost),
+                remarks: item.remarks ?? '',
+            })) ??
+            ([
+                {
+                    inventory_item_id: '',
+                    requested_quantity: '',
+                    estimated_unit_cost: '',
+                    remarks: '',
+                },
+            ] as PurchaseRequestLineInput[]),
     });
 
-    function updateItem(index: number, key: keyof PurchaseRequestLineInput, value: string) {
+    function updateItem(
+        index: number,
+        key: keyof PurchaseRequestLineInput,
+        value: string,
+    ) {
         form.setData(
             'items',
             form.data.items.map((item, itemIndex) => {
@@ -74,10 +113,18 @@ export function PurchaseRequestForm({
                 };
 
                 if (key === 'inventory_item_id') {
-                    const selectedItem = itemOptions.find((option) => String(option.value) === value);
+                    const selectedItem = itemOptions.find(
+                        (option) => String(option.value) === value,
+                    );
 
-                    if (selectedItem && nextItem.estimated_unit_cost === '' && selectedItem.standard_cost !== null) {
-                        nextItem.estimated_unit_cost = String(selectedItem.standard_cost);
+                    if (
+                        selectedItem &&
+                        nextItem.estimated_unit_cost === '' &&
+                        selectedItem.standard_cost !== null
+                    ) {
+                        nextItem.estimated_unit_cost = String(
+                            selectedItem.standard_cost,
+                        );
                     }
                 }
 
@@ -89,7 +136,12 @@ export function PurchaseRequestForm({
     function addItem() {
         form.setData('items', [
             ...form.data.items,
-            { inventory_item_id: '', requested_quantity: '', estimated_unit_cost: '', remarks: '' },
+            {
+                inventory_item_id: '',
+                requested_quantity: '',
+                estimated_unit_cost: '',
+                remarks: '',
+            },
         ]);
     }
 
@@ -103,7 +155,9 @@ export function PurchaseRequestForm({
     function handleWorkOrderChange(value: string) {
         form.setData('work_order_id', value);
 
-        const workOrder = workOrderOptions.find((option) => String(option.value) === value);
+        const workOrder = workOrderOptions.find(
+            (option) => String(option.value) === value,
+        );
 
         if (workOrder?.project_id) {
             form.setData('project_id', String(workOrder.project_id));
@@ -115,9 +169,11 @@ export function PurchaseRequestForm({
 
         form.transform((data) => ({
             request_no: data.request_no,
-            supplier_id: data.supplier_id === '' ? null : Number(data.supplier_id),
+            supplier_id:
+                data.supplier_id === '' ? null : Number(data.supplier_id),
             project_id: data.project_id === '' ? null : Number(data.project_id),
-            work_order_id: data.work_order_id === '' ? null : Number(data.work_order_id),
+            work_order_id:
+                data.work_order_id === '' ? null : Number(data.work_order_id),
             request_date: data.request_date,
             needed_by: data.needed_by || null,
             status: data.status,
@@ -126,7 +182,10 @@ export function PurchaseRequestForm({
             items: data.items.map((item) => ({
                 inventory_item_id: Number(item.inventory_item_id),
                 requested_quantity: Number(item.requested_quantity),
-                estimated_unit_cost: item.estimated_unit_cost === '' ? null : Number(item.estimated_unit_cost),
+                estimated_unit_cost:
+                    item.estimated_unit_cost === ''
+                        ? null
+                        : Number(item.estimated_unit_cost),
                 remarks: item.remarks || null,
             })),
         }));
@@ -153,7 +212,9 @@ export function PurchaseRequestForm({
                     <CardHeader>
                         <CardTitle>Request header</CardTitle>
                         <CardDescription>
-                            Capture the sourcing context and link the request back to the supplier, project, or work order when available.
+                            Capture the sourcing context and link the request
+                            back to the supplier, project, or work order when
+                            available.
                         </CardDescription>
                     </CardHeader>
 
@@ -163,25 +224,38 @@ export function PurchaseRequestForm({
                             <Input
                                 id="request_no"
                                 value={form.data.request_no}
-                                onChange={(event) => form.setData('request_no', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'request_no',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.request_no} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="status">Status</Label>
-                            <select
+                            <SelectInput
                                 id="status"
                                 value={form.data.status}
-                                onChange={(event) => form.setData('status', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'status',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {statusOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.status} />
                         </div>
 
@@ -191,62 +265,92 @@ export function PurchaseRequestForm({
                                 id="request_date"
                                 type="date"
                                 value={form.data.request_date}
-                                onChange={(event) => form.setData('request_date', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'request_date',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.request_date} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="supplier_id">Preferred supplier</Label>
-                            <select
+                            <Label htmlFor="supplier_id">
+                                Preferred supplier
+                            </Label>
+                            <SelectInput
                                 id="supplier_id"
                                 value={form.data.supplier_id}
-                                onChange={(event) => form.setData('supplier_id', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'supplier_id',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No supplier selected</option>
                                 {supplierOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.supplier_id} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="project_id">Project</Label>
-                            <select
+                            <SelectInput
                                 id="project_id"
                                 value={form.data.project_id}
-                                onChange={(event) => form.setData('project_id', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'project_id',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No project selected</option>
                                 {projectOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.project_id} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="work_order_id">Work order</Label>
-                            <select
+                            <SelectInput
                                 id="work_order_id"
                                 value={form.data.work_order_id}
-                                onChange={(event) => handleWorkOrderChange(event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    handleWorkOrderChange(
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No work order selected</option>
                                 {workOrderOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.work_order_id} />
                         </div>
 
@@ -256,7 +360,12 @@ export function PurchaseRequestForm({
                                 id="needed_by"
                                 type="date"
                                 value={form.data.needed_by}
-                                onChange={(event) => form.setData('needed_by', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'needed_by',
+                                        event.currentTarget.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.needed_by} />
                         </div>
@@ -266,7 +375,12 @@ export function PurchaseRequestForm({
                             <Input
                                 id="purpose"
                                 value={form.data.purpose}
-                                onChange={(event) => form.setData('purpose', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'purpose',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Reason for procurement"
                             />
                             <InputError message={form.errors.purpose} />
@@ -277,7 +391,12 @@ export function PurchaseRequestForm({
                             <Textarea
                                 id="remarks"
                                 value={form.data.remarks}
-                                onChange={(event) => form.setData('remarks', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'remarks',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 rows={3}
                                 placeholder="Optional remarks, approval notes, or supplier guidance."
                             />
@@ -291,72 +410,146 @@ export function PurchaseRequestForm({
                         <div>
                             <CardTitle>Requested items</CardTitle>
                             <CardDescription>
-                                Add each item needed for procurement. Use estimated unit cost when there is a current buying guide or last price reference.
+                                Add each item needed for procurement. Use
+                                estimated unit cost when there is a current
+                                buying guide or last price reference.
                             </CardDescription>
                         </div>
 
-                        <Button type="button" variant="outline" onClick={addItem}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={addItem}
+                        >
                             Add line
                         </Button>
                     </CardHeader>
 
                     <CardContent className="space-y-4">
                         {form.data.items.map((item, index) => (
-                            <div key={index} className="grid gap-4 rounded-lg border p-4 xl:grid-cols-[2fr_0.9fr_1fr_1.2fr_auto]">
+                            <div
+                                key={index}
+                                className="grid gap-4 rounded-lg border p-4 xl:grid-cols-[2fr_0.9fr_1fr_1.2fr_auto]"
+                            >
                                 <div className="grid gap-2">
-                                    <Label htmlFor={`items.${index}.inventory_item_id`}>Inventory item</Label>
-                                    <select
+                                    <Label
+                                        htmlFor={`items.${index}.inventory_item_id`}
+                                    >
+                                        Inventory item
+                                    </Label>
+                                    <SelectInput
                                         id={`items.${index}.inventory_item_id`}
                                         value={item.inventory_item_id}
-                                        onChange={(event) => updateItem(index, 'inventory_item_id', event.currentTarget.value)}
-                                        className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                        onChange={(event) =>
+                                            updateItem(
+                                                index,
+                                                'inventory_item_id',
+                                                event.currentTarget.value,
+                                            )
+                                        }
+                                        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                     >
                                         <option value="">Select item</option>
                                         {itemOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
+                                            <option
+                                                key={option.value}
+                                                value={option.value}
+                                            >
                                                 {option.label}
                                             </option>
                                         ))}
-                                    </select>
-                                    <InputError message={form.errors[`items.${index}.inventory_item_id`]} />
+                                    </SelectInput>
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `items.${index}.inventory_item_id`
+                                            ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor={`items.${index}.requested_quantity`}>Quantity</Label>
+                                    <Label
+                                        htmlFor={`items.${index}.requested_quantity`}
+                                    >
+                                        Quantity
+                                    </Label>
                                     <Input
                                         id={`items.${index}.requested_quantity`}
                                         type="number"
                                         min="0.01"
                                         step="0.01"
                                         value={item.requested_quantity}
-                                        onChange={(event) => updateItem(index, 'requested_quantity', event.currentTarget.value)}
+                                        onChange={(event) =>
+                                            updateItem(
+                                                index,
+                                                'requested_quantity',
+                                                event.currentTarget.value,
+                                            )
+                                        }
                                     />
-                                    <InputError message={form.errors[`items.${index}.requested_quantity`]} />
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `items.${index}.requested_quantity`
+                                            ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor={`items.${index}.estimated_unit_cost`}>Est. unit cost</Label>
+                                    <Label
+                                        htmlFor={`items.${index}.estimated_unit_cost`}
+                                    >
+                                        Est. unit cost
+                                    </Label>
                                     <Input
                                         id={`items.${index}.estimated_unit_cost`}
                                         type="number"
                                         min="0"
                                         step="0.01"
                                         value={item.estimated_unit_cost}
-                                        onChange={(event) => updateItem(index, 'estimated_unit_cost', event.currentTarget.value)}
+                                        onChange={(event) =>
+                                            updateItem(
+                                                index,
+                                                'estimated_unit_cost',
+                                                event.currentTarget.value,
+                                            )
+                                        }
                                         placeholder="Optional"
                                     />
-                                    <InputError message={form.errors[`items.${index}.estimated_unit_cost`]} />
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `items.${index}.estimated_unit_cost`
+                                            ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor={`items.${index}.remarks`}>Line remarks</Label>
+                                    <Label htmlFor={`items.${index}.remarks`}>
+                                        Line remarks
+                                    </Label>
                                     <Input
                                         id={`items.${index}.remarks`}
                                         value={item.remarks}
-                                        onChange={(event) => updateItem(index, 'remarks', event.currentTarget.value)}
+                                        onChange={(event) =>
+                                            updateItem(
+                                                index,
+                                                'remarks',
+                                                event.currentTarget.value,
+                                            )
+                                        }
                                         placeholder="Optional"
                                     />
-                                    <InputError message={form.errors[`items.${index}.remarks`]} />
+                                    <InputError
+                                        message={
+                                            form.errors[
+                                                `items.${index}.remarks`
+                                            ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="flex items-end">
@@ -379,7 +572,8 @@ export function PurchaseRequestForm({
                     <CardHeader>
                         <CardTitle>Actions</CardTitle>
                         <CardDescription>
-                            Save the request now. Supplier files and generated purchase orders can be managed from the detail page.
+                            Save the request now. Supplier files and generated
+                            purchase orders can be managed from the detail page.
                         </CardDescription>
                     </CardHeader>
 

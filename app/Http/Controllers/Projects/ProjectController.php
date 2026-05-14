@@ -591,7 +591,10 @@ class ProjectController extends Controller
                 $query->whereNull('converted_project_id');
 
                 if (filled($selectedQuotationId)) {
-                    $query->orWhereKey($selectedQuotationId);
+                    $query->orWhere(
+                        $query->getModel()->qualifyColumn($query->getModel()->getKeyName()),
+                        $selectedQuotationId,
+                    );
                 }
             })
             ->orderByDesc('quotation_date')

@@ -20,6 +20,7 @@ import type {
     QuotationSiteOption,
     SelectOption,
 } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     quotation?: QuotationDetail;
@@ -57,7 +58,8 @@ export function QuotationForm({
               ? String(defaults.customer_site_id)
               : '',
         subject: quotation?.subject ?? '',
-        quotation_date: quotation?.quotation_date ?? defaults?.quotation_date ?? '',
+        quotation_date:
+            quotation?.quotation_date ?? defaults?.quotation_date ?? '',
         valid_until: quotation?.valid_until ?? '',
         quotation_amount: quotation ? String(quotation.quotation_amount) : '',
         status: quotation?.status ?? defaults?.status ?? 'draft',
@@ -76,7 +78,8 @@ export function QuotationForm({
         form.data.customer_id === ''
             ? []
             : siteOptions.filter(
-                  (option) => option.customer_id === Number(form.data.customer_id),
+                  (option) =>
+                      option.customer_id === Number(form.data.customer_id),
               );
 
     const isCreate = quotation === undefined;
@@ -161,23 +164,33 @@ export function QuotationForm({
         <div className="space-y-6">
             <Heading title={title} description={description} />
 
-            <form onSubmit={submit} className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+            <form
+                onSubmit={submit}
+                className="grid gap-6 xl:grid-cols-[2fr_1fr]"
+            >
                 <Card>
                     <CardHeader>
                         <CardTitle>Quotation details</CardTitle>
                         <CardDescription>
-                            Track externally prepared quotations and keep the customer, amount, and ownership data clean for reporting.
+                            Track externally prepared quotations and keep the
+                            customer, amount, and ownership data clean for
+                            reporting.
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent className="grid gap-5 md:grid-cols-2">
                         <div className="grid gap-2">
-                            <Label htmlFor="quotation_no">Quotation number</Label>
+                            <Label htmlFor="quotation_no">
+                                Quotation number
+                            </Label>
                             <Input
                                 id="quotation_no"
                                 value={form.data.quotation_no}
                                 onChange={(event) =>
-                                    form.setData('quotation_no', event.currentTarget.value)
+                                    form.setData(
+                                        'quotation_no',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="QTN-00001"
                             />
@@ -187,47 +200,58 @@ export function QuotationForm({
                         {isCreate && (
                             <div className="grid gap-2">
                                 <Label htmlFor="status">Initial status</Label>
-                                <select
+                                <SelectInput
                                     id="status"
                                     value={form.data.status}
                                     onChange={(event) =>
-                                        form.setData('status', event.currentTarget.value)
+                                        form.setData(
+                                            'status',
+                                            event.currentTarget.value,
+                                        )
                                     }
-                                    className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     {statusOptions.map((option) => (
-                                        <option key={option.value} value={option.value}>
+                                        <option
+                                            key={option.value}
+                                            value={option.value}
+                                        >
                                             {option.label}
                                         </option>
                                     ))}
-                                </select>
+                                </SelectInput>
                                 <InputError message={form.errors.status} />
                             </div>
                         )}
 
                         <div className="grid gap-2">
                             <Label htmlFor="customer_id">Customer</Label>
-                            <select
+                            <SelectInput
                                 id="customer_id"
                                 value={form.data.customer_id}
                                 onChange={(event) =>
-                                    handleCustomerChange(event.currentTarget.value)
+                                    handleCustomerChange(
+                                        event.currentTarget.value,
+                                    )
                                 }
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Select customer</option>
                                 {customerOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.customer_id} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="customer_site_id">Site</Label>
-                            <select
+                            <SelectInput
                                 id="customer_site_id"
                                 value={form.data.customer_site_id}
                                 onChange={(event) =>
@@ -237,7 +261,7 @@ export function QuotationForm({
                                     )
                                 }
                                 disabled={form.data.customer_id === ''}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-60"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <option value="">
                                     {form.data.customer_id === ''
@@ -245,12 +269,17 @@ export function QuotationForm({
                                         : 'Optional site'}
                                 </option>
                                 {availableSiteOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
-                            <InputError message={form.errors.customer_site_id} />
+                            </SelectInput>
+                            <InputError
+                                message={form.errors.customer_site_id}
+                            />
                         </div>
 
                         <div className="grid gap-2 md:col-span-2">
@@ -259,7 +288,10 @@ export function QuotationForm({
                                 id="subject"
                                 value={form.data.subject}
                                 onChange={(event) =>
-                                    form.setData('subject', event.currentTarget.value)
+                                    form.setData(
+                                        'subject',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="Annual fire detection system upgrade"
                             />
@@ -267,7 +299,9 @@ export function QuotationForm({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="quotation_date">Quotation date</Label>
+                            <Label htmlFor="quotation_date">
+                                Quotation date
+                            </Label>
                             <Input
                                 id="quotation_date"
                                 type="date"
@@ -289,14 +323,19 @@ export function QuotationForm({
                                 type="date"
                                 value={form.data.valid_until}
                                 onChange={(event) =>
-                                    form.setData('valid_until', event.currentTarget.value)
+                                    form.setData(
+                                        'valid_until',
+                                        event.currentTarget.value,
+                                    )
                                 }
                             />
                             <InputError message={form.errors.valid_until} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="quotation_amount">Quotation amount</Label>
+                            <Label htmlFor="quotation_amount">
+                                Quotation amount
+                            </Label>
                             <Input
                                 id="quotation_amount"
                                 type="number"
@@ -311,14 +350,16 @@ export function QuotationForm({
                                 }
                                 placeholder="0.00"
                             />
-                            <InputError message={form.errors.quotation_amount} />
+                            <InputError
+                                message={form.errors.quotation_amount}
+                            />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="assigned_sales_user_id">
                                 Assigned sales owner
                             </Label>
-                            <select
+                            <SelectInput
                                 id="assigned_sales_user_id"
                                 value={form.data.assigned_sales_user_id}
                                 onChange={(event) =>
@@ -327,23 +368,28 @@ export function QuotationForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Unassigned</option>
                                 {userOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
                             <InputError
                                 message={form.errors.assigned_sales_user_id}
                             />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="prepared_by_user_id">Prepared by</Label>
-                            <select
+                            <Label htmlFor="prepared_by_user_id">
+                                Prepared by
+                            </Label>
+                            <SelectInput
                                 id="prepared_by_user_id"
                                 value={form.data.prepared_by_user_id}
                                 onChange={(event) =>
@@ -352,16 +398,21 @@ export function QuotationForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Not specified</option>
                                 {userOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
-                            <InputError message={form.errors.prepared_by_user_id} />
+                            </SelectInput>
+                            <InputError
+                                message={form.errors.prepared_by_user_id}
+                            />
                         </div>
 
                         {showMaterializedAt && (
@@ -380,7 +431,9 @@ export function QuotationForm({
                                         )
                                     }
                                 />
-                                <InputError message={form.errors.materialized_at} />
+                                <InputError
+                                    message={form.errors.materialized_at}
+                                />
                             </div>
                         )}
 
@@ -391,7 +444,10 @@ export function QuotationForm({
                                     id="lost_reason"
                                     value={form.data.lost_reason}
                                     onChange={(event) =>
-                                        form.setData('lost_reason', event.currentTarget.value)
+                                        form.setData(
+                                            'lost_reason',
+                                            event.currentTarget.value,
+                                        )
                                     }
                                     placeholder="Explain why the quotation was lost"
                                 />
@@ -405,7 +461,10 @@ export function QuotationForm({
                                 id="remarks"
                                 value={form.data.remarks}
                                 onChange={(event) =>
-                                    form.setData('remarks', event.currentTarget.value)
+                                    form.setData(
+                                        'remarks',
+                                        event.currentTarget.value,
+                                    )
                                 }
                                 placeholder="Internal notes for follow-ups, assumptions, or handoff context"
                             />
@@ -419,12 +478,17 @@ export function QuotationForm({
                         <CardHeader>
                             <CardTitle>Actions</CardTitle>
                             <CardDescription>
-                                Save the quotation record now, then manage status history and attachments from the detail page.
+                                Save the quotation record now, then manage
+                                status history and attachments from the detail
+                                page.
                             </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-3">
-                            <Button className="w-full" disabled={form.processing}>
+                            <Button
+                                className="w-full"
+                                disabled={form.processing}
+                            >
                                 {form.processing
                                     ? 'Saving...'
                                     : quotation
@@ -432,7 +496,11 @@ export function QuotationForm({
                                       : 'Create quotation'}
                             </Button>
 
-                            <Button className="w-full" variant="outline" asChild>
+                            <Button
+                                className="w-full"
+                                variant="outline"
+                                asChild
+                            >
                                 <Link href={cancelHref}>Cancel</Link>
                             </Button>
                         </CardContent>
@@ -445,10 +513,12 @@ export function QuotationForm({
 
                         <CardContent className="space-y-2 text-sm text-muted-foreground">
                             <p>
-                                Upload the Excel or PDF file after saving through the quotation detail page.
+                                Upload the Excel or PDF file after saving
+                                through the quotation detail page.
                             </p>
                             <p>
-                                Status changes are handled separately so each transition is logged for KPI reporting.
+                                Status changes are handled separately so each
+                                transition is logged for KPI reporting.
                             </p>
                         </CardContent>
                     </Card>

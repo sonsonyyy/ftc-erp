@@ -4,11 +4,18 @@ import DepartmentController from '@/actions/App/Http/Controllers/Payroll/Departm
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { DepartmentDetail } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     department?: DepartmentDetail;
@@ -20,7 +27,13 @@ type Props = {
     cancelHref: NonNullable<InertiaLinkProps['href']>;
 };
 
-export function DepartmentForm({ department, defaults, title, description, cancelHref }: Props) {
+export function DepartmentForm({
+    department,
+    defaults,
+    title,
+    description,
+    cancelHref,
+}: Props) {
     const form = useForm({
         name: department?.name ?? '',
         description: department?.description ?? '',
@@ -59,12 +72,16 @@ export function DepartmentForm({ department, defaults, title, description, cance
         <div className="space-y-6">
             <Heading title={title} description={description} />
 
-            <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+            <form
+                onSubmit={submit}
+                className="grid gap-6 lg:grid-cols-[2fr_1fr]"
+            >
                 <Card>
                     <CardHeader>
                         <CardTitle>Department details</CardTitle>
                         <CardDescription>
-                            Keep department records simple so employees, positions, and future reporting stay aligned.
+                            Keep department records simple so employees,
+                            positions, and future reporting stay aligned.
                         </CardDescription>
                     </CardHeader>
 
@@ -74,7 +91,12 @@ export function DepartmentForm({ department, defaults, title, description, cance
                             <Input
                                 id="name"
                                 value={form.data.name}
-                                onChange={(event) => form.setData('name', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'name',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Operations"
                             />
                             <InputError message={form.errors.name} />
@@ -86,7 +108,12 @@ export function DepartmentForm({ department, defaults, title, description, cance
                                 id="description"
                                 rows={4}
                                 value={form.data.description}
-                                onChange={(event) => form.setData('description', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'description',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Brief notes on the department scope and responsibilities."
                             />
                             <InputError message={form.errors.description} />
@@ -98,31 +125,48 @@ export function DepartmentForm({ department, defaults, title, description, cance
                     <CardHeader>
                         <CardTitle>Actions</CardTitle>
                         <CardDescription>
-                            Decide whether the department should remain selectable in employee and position forms.
+                            Decide whether the department should remain
+                            selectable in employee and position forms.
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent className="space-y-5">
                         <div className="grid gap-2">
                             <Label htmlFor="is_active">Status</Label>
-                            <select
+                            <SelectInput
                                 id="is_active"
                                 value={form.data.is_active}
-                                onChange={(event) => form.setData('is_active', event.currentTarget.value)}
-                                className="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px]"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'is_active',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="1">Active</option>
                                 <option value="0">Inactive</option>
-                            </select>
+                            </SelectInput>
                             <InputError message={form.errors.is_active} />
                         </div>
 
                         <div className="flex flex-col gap-3">
-                            <Button type="submit" className="w-full" disabled={form.processing}>
-                                {department ? 'Save department' : 'Create department'}
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={form.processing}
+                            >
+                                {department
+                                    ? 'Save department'
+                                    : 'Create department'}
                             </Button>
 
-                            <Button type="button" variant="outline" className="w-full" asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
                                 <Link href={cancelHref}>Cancel</Link>
                             </Button>
                         </div>

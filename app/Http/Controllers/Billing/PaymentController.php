@@ -278,7 +278,10 @@ class PaymentController extends Controller
                     ]);
 
                 if ($includeId !== null) {
-                    $query->orWhereKey($includeId);
+                    $query->orWhere(
+                        $query->getModel()->qualifyColumn($query->getModel()->getKeyName()),
+                        $includeId,
+                    );
                 }
             })
             ->orderByDesc('invoice_date')

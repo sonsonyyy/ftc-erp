@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { ProjectDetail, SelectOption } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     project: ProjectDetail;
@@ -560,7 +561,7 @@ export default function ProjectsShow({
                                             <Label htmlFor="status">
                                                 Next status
                                             </Label>
-                                            <select
+                                            <SelectInput
                                                 id="status"
                                                 value={statusForm.data.status}
                                                 onChange={(event) =>
@@ -580,7 +581,7 @@ export default function ProjectsShow({
                                                         {option.label}
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </SelectInput>
                                             <InputError
                                                 message={
                                                     statusForm.errors.status
@@ -670,7 +671,7 @@ export default function ProjectsShow({
                                             <Label htmlFor="user_id">
                                                 Assigned user
                                             </Label>
-                                            <select
+                                            <SelectInput
                                                 id="user_id"
                                                 value={
                                                     assignmentForm.data.user_id
@@ -695,7 +696,7 @@ export default function ProjectsShow({
                                                         {option.label}
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </SelectInput>
                                             <InputError
                                                 message={
                                                     assignmentForm.errors

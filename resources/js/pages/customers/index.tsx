@@ -1,18 +1,14 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Archive,
-    BadgeCheck,
     ChevronDown,
     Download,
     Ellipsis,
     Eye,
-    MapPinned,
     Pencil,
     Plus,
     Search,
     SlidersHorizontal,
-    UserMinus,
-    Users,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -20,12 +16,6 @@ import { DataTablePaginationFooter } from '@/components/data-table-pagination-fo
 import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardTitle,
-} from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -50,12 +40,6 @@ import type { CustomerListItem, PaginatedData, SelectOption } from '@/types';
 
 type Props = {
     customers: PaginatedData<CustomerListItem>;
-    summary: {
-        total_customers: number;
-        active_customers: number;
-        inactive_customers: number;
-        total_sites: number;
-    };
     filters: {
         search: string;
         status: string;
@@ -88,7 +72,6 @@ function statusBadgeClass(status: string): string {
 
 export default function CustomersIndex({
     customers,
-    summary,
     filters,
     statusOptions,
     can,
@@ -140,7 +123,7 @@ export default function CustomersIndex({
                     page: 1,
                 }),
                 {
-                    only: ['customers', 'filters', 'summary'],
+                    only: ['customers', 'filters'],
                     replace: true,
                     preserveState: true,
                     preserveScroll: true,
@@ -165,32 +148,6 @@ export default function CustomersIndex({
             export: 'csv',
         }),
     });
-    const summaryCards = [
-        {
-            title: 'Total customers',
-            value: summary.total_customers,
-            icon: Users,
-            iconClassName: 'bg-sky-50 text-sky-700',
-        },
-        {
-            title: 'Active customers',
-            value: summary.active_customers,
-            icon: BadgeCheck,
-            iconClassName: 'bg-emerald-50 text-emerald-700',
-        },
-        {
-            title: 'Inactive customers',
-            value: summary.inactive_customers,
-            icon: UserMinus,
-            iconClassName: 'bg-slate-100 text-slate-600',
-        },
-        {
-            title: 'Total sites',
-            value: summary.total_sites,
-            icon: MapPinned,
-            iconClassName: 'bg-indigo-50 text-indigo-700',
-        },
-    ];
 
     return (
         <>
@@ -216,36 +173,6 @@ export default function CustomersIndex({
                             </Link>
                         </Button>
                     )}
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    {summaryCards.map((card) => {
-                        const Icon = card.icon;
-
-                        return (
-                            <Card
-                                key={card.title}
-                                className="border-border/70 py-4 shadow-sm"
-                            >
-                                <CardContent className="flex items-center gap-3">
-                                    <div
-                                        className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${card.iconClassName}`}
-                                    >
-                                        <Icon className="size-5" />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <CardDescription>
-                                            {card.title}
-                                        </CardDescription>
-                                        <CardTitle className="text-2xl tracking-tight">
-                                            {card.value}
-                                        </CardTitle>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
                 </div>
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

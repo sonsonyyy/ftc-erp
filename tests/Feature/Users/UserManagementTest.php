@@ -14,16 +14,18 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-function actingAsSuperAdmin(): User
-{
-    $user = User::factory()->create();
-    $role = Role::query()->where('name', Role::SUPER_ADMIN)->firstOrFail();
+if (! function_exists('actingAsSuperAdmin')) {
+    function actingAsSuperAdmin(): User
+    {
+        $user = User::factory()->create();
+        $role = Role::query()->where('name', Role::SUPER_ADMIN)->firstOrFail();
 
-    $user->roles()->sync([$role->getKey()]);
+        $user->roles()->sync([$role->getKey()]);
 
-    test()->actingAs($user);
+        test()->actingAs($user);
 
-    return $user;
+        return $user;
+    }
 }
 
 function roleId(string $roleName): int
@@ -38,20 +40,25 @@ test('authorized users can browse paginated users', function () {
         $user->roles()->sync([roleId('Sales Admin / Business Development')]);
     });
 
+    $expectedTotalUsers = User::query()->count();
+    $expectedActiveUsers = User::query()->where('is_active', true)->count();
+    $expectedInactiveUsers = User::query()->where('is_active', false)->count();
+    $expectedRolesInUse = Role::query()->whereHas('users')->count();
+
     $this->get(route('users.index', [
         'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('users/index')
-            ->where('users.total', 16)
+            ->where('users.total', $expectedTotalUsers)
             ->where('users.current_page', 1)
             ->has('users.data', 5)
             ->where('filters.per_page', 5)
-            ->where('summary.total_users', 16)
-            ->where('summary.active_users', 16)
-            ->where('summary.inactive_users', 0)
-            ->where('summary.roles_in_use', 2)
+            ->where('summary.total_users', $expectedTotalUsers)
+            ->where('summary.active_users', $expectedActiveUsers)
+            ->where('summary.inactive_users', $expectedInactiveUsers)
+            ->where('summary.roles_in_use', $expectedRolesInUse)
             ->where('can.create', true),
         );
 });

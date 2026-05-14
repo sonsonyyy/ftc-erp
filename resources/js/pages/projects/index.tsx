@@ -1,14 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Archive,
-    BadgeCheck,
     ChevronDown,
-    ClipboardList,
-    Clock3,
     Download,
     Ellipsis,
     Eye,
-    FolderKanban,
     Pencil,
     Plus,
     Search,
@@ -20,12 +16,6 @@ import { DataTablePaginationFooter } from '@/components/data-table-pagination-fo
 import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardTitle,
-} from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -52,14 +42,12 @@ import {
 import type {
     PaginatedData,
     ProjectFilters,
-    ProjectIndexSummary,
     ProjectListItem,
     SelectOption,
 } from '@/types';
 
 type Props = {
     projects: PaginatedData<ProjectListItem>;
-    summary: ProjectIndexSummary;
     filters: ProjectFilters;
     customerOptions: SelectOption[];
     statusOptions: SelectOption[];
@@ -108,7 +96,6 @@ function statusBadgeClass(status: string): string {
 
 export default function ProjectsIndex({
     projects,
-    summary,
     filters,
     customerOptions,
     statusOptions,
@@ -172,7 +159,7 @@ export default function ProjectsIndex({
                     page: 1,
                 }),
                 {
-                    only: ['projects', 'filters', 'summary'],
+                    only: ['projects', 'filters'],
                     replace: true,
                     preserveState: true,
                     preserveScroll: true,
@@ -204,32 +191,6 @@ export default function ProjectsIndex({
             export: 'csv',
         }),
     });
-    const summaryCards = [
-        {
-            title: 'Total projects',
-            value: summary.total_projects,
-            icon: FolderKanban,
-            iconClassName: 'bg-sky-50 text-sky-700',
-        },
-        {
-            title: 'Active projects',
-            value: summary.active_projects,
-            icon: Clock3,
-            iconClassName: 'bg-amber-50 text-amber-700',
-        },
-        {
-            title: 'Completed',
-            value: summary.completed_projects,
-            icon: BadgeCheck,
-            iconClassName: 'bg-emerald-50 text-emerald-700',
-        },
-        {
-            title: 'Linked work orders',
-            value: summary.linked_work_orders,
-            icon: ClipboardList,
-            iconClassName: 'bg-indigo-50 text-indigo-700',
-        },
-    ];
 
     return (
         <>
@@ -254,36 +215,6 @@ export default function ProjectsIndex({
                             </Link>
                         </Button>
                     )}
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    {summaryCards.map((card) => {
-                        const Icon = card.icon;
-
-                        return (
-                            <Card
-                                key={card.title}
-                                className="border-border/70 py-4 shadow-sm"
-                            >
-                                <CardContent className="flex items-center gap-3">
-                                    <div
-                                        className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${card.iconClassName}`}
-                                    >
-                                        <Icon className="size-5" />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <CardDescription>
-                                            {card.title}
-                                        </CardDescription>
-                                        <CardTitle className="text-2xl tracking-tight">
-                                            {card.value}
-                                        </CardTitle>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
                 </div>
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

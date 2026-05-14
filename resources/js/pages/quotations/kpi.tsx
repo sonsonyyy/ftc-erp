@@ -23,6 +23,7 @@ import type {
     QuotationStatusBreakdownItem,
     SelectOption,
 } from '@/types';
+import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     filters: QuotationKpiFilters;
@@ -106,7 +107,7 @@ export default function QuotationsKpi({
                             options={{ preserveState: true, replace: true }}
                             className="grid gap-3 xl:grid-cols-[1.5fr_1fr_1fr_1fr_auto_auto]"
                         >
-                            <select
+                            <SelectInput
                                 name="customer"
                                 defaultValue={filters.customer ?? ''}
                                 className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
@@ -120,9 +121,9 @@ export default function QuotationsKpi({
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
 
-                            <select
+                            <SelectInput
                                 name="range"
                                 defaultValue={filters.range}
                                 onChange={(event) =>
@@ -138,7 +139,7 @@ export default function QuotationsKpi({
                                         {option.label}
                                     </option>
                                 ))}
-                            </select>
+                            </SelectInput>
 
                             <Input
                                 name="from"
