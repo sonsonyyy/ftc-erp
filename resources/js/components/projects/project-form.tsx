@@ -1,16 +1,14 @@
 import type { InertiaLinkProps } from '@inertiajs/react';
 import { Link, useForm } from '@inertiajs/react';
 import ProjectController from '@/actions/App/Http/Controllers/Projects/ProjectController';
-import Heading from '@/components/heading';
+import {
+    FormPageHeader,
+    FormSectionCard,
+    FormSidebarCard,
+    FormSteps,
+} from '@/components/form-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -95,6 +93,23 @@ export function ProjectForm({
     const selectedQuotation = quotationOptions.find(
         (option) => String(option.value) === form.data.quotation_id,
     );
+    const steps = [
+        {
+            step: '1',
+            title: 'Source',
+            caption: 'Quotation and customer linkage.',
+        },
+        {
+            step: '2',
+            title: 'Delivery',
+            caption: 'Scope, type, and schedule.',
+        },
+        {
+            step: '3',
+            title: 'Review',
+            caption: 'Context check before save.',
+        },
+    ];
 
     function handleCustomerChange(customerId: string) {
         form.setData('customer_id', customerId);
@@ -197,23 +212,21 @@ export function ProjectForm({
     }
 
     return (
-        <div className="space-y-6">
-            <Heading title={title} description={description} />
+        <div className="space-y-5">
+            <FormPageHeader title={title} description={description} />
+            <FormSteps items={steps} />
 
             <form
                 onSubmit={submit}
-                className="grid gap-6 xl:grid-cols-[2fr_1fr]"
+                className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]"
             >
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Project details</CardTitle>
-                        <CardDescription>
-                            Capture the core project record that operations and
-                            downstream work orders will rely on.
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-5">
+                    <FormSectionCard
+                        step="1"
+                        title="Source record"
+                        description="Start from the right awarded sale."
+                        contentClassName="grid gap-4 md:grid-cols-2"
+                    >
                         <div className="grid gap-2">
                             <Label htmlFor="project_no">Project number</Label>
                             <Input
@@ -242,7 +255,6 @@ export function ProjectForm({
                                             event.currentTarget.value,
                                         )
                                     }
-                                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     {statusOptions.map((option) => (
                                         <option
@@ -269,7 +281,6 @@ export function ProjectForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No quotation linked</option>
                                 {availableQuotationOptions.map((option) => (
@@ -281,10 +292,6 @@ export function ProjectForm({
                                     </option>
                                 ))}
                             </SelectInput>
-                            <p className="text-sm text-muted-foreground">
-                                Selecting an awarded quotation auto-fills the
-                                customer and site to match the handoff.
-                            </p>
                             <InputError message={form.errors.quotation_id} />
                         </div>
 
@@ -298,7 +305,6 @@ export function ProjectForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Select customer</option>
                                 {customerOptions.map((option) => (
@@ -310,10 +316,6 @@ export function ProjectForm({
                                     </option>
                                 ))}
                             </SelectInput>
-                            <p className="text-sm text-muted-foreground">
-                                Changing the customer filters the available
-                                sites and quotation choices.
-                            </p>
                             <InputError message={form.errors.customer_id} />
                         </div>
 
@@ -329,7 +331,6 @@ export function ProjectForm({
                                     )
                                 }
                                 disabled={form.data.customer_id === ''}
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <option value="">
                                     {form.data.customer_id === ''
@@ -345,15 +346,18 @@ export function ProjectForm({
                                     </option>
                                 ))}
                             </SelectInput>
-                            <p className="text-sm text-muted-foreground">
-                                Keep the site aligned with the awarded quotation
-                                when this project comes from sales handoff.
-                            </p>
                             <InputError
                                 message={form.errors.customer_site_id}
                             />
                         </div>
+                    </FormSectionCard>
 
+                    <FormSectionCard
+                        step="2"
+                        title="Delivery plan"
+                        description="Operational details for execution."
+                        contentClassName="grid gap-4 md:grid-cols-2"
+                    >
                         <div className="grid gap-2">
                             <Label htmlFor="title">Project title</Label>
                             <Input
@@ -436,83 +440,77 @@ export function ProjectForm({
                             />
                             <InputError message={form.errors.description} />
                         </div>
-                    </CardContent>
-                </Card>
+                    </FormSectionCard>
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Linkage summary</CardTitle>
-                        <CardDescription>
-                            Double-check the operational context before you save
-                            the project record.
-                        </CardDescription>
-                    </CardHeader>
+                <div className="space-y-5 xl:sticky xl:top-6 xl:self-start">
+                    <FormSidebarCard
+                        title="Context check"
+                        description="Confirm the upstream record before saving."
+                    >
+                        <div className="space-y-3">
+                            <div className="rounded-lg border border-dashed px-4 py-3">
+                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                    Awarded quotation
+                                </p>
+                                <p className="mt-1 font-medium">
+                                    {selectedQuotation?.label ??
+                                        'No quotation linked'}
+                                </p>
+                            </div>
 
-                    <CardContent className="space-y-3">
-                        <div className="rounded-lg border border-dashed px-4 py-3">
-                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                Awarded quotation
-                            </p>
-                            <p className="mt-1 font-medium">
-                                {selectedQuotation?.label ??
-                                    'No quotation linked'}
-                            </p>
+                            <div className="rounded-lg border border-dashed px-4 py-3">
+                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                    Customer
+                                </p>
+                                <p className="mt-1 font-medium">
+                                    {selectedCustomer?.label ??
+                                        'Select a customer'}
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg border border-dashed px-4 py-3">
+                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                    Site
+                                </p>
+                                <p className="mt-1 font-medium">
+                                    {selectedSite?.label ??
+                                        (form.data.customer_id === ''
+                                            ? 'Select a customer first'
+                                            : 'Select a site')}
+                                </p>
+                            </div>
                         </div>
+                    </FormSidebarCard>
 
-                        <div className="rounded-lg border border-dashed px-4 py-3">
-                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                Customer
-                            </p>
-                            <p className="mt-1 font-medium">
-                                {selectedCustomer?.label ?? 'Select a customer'}
-                            </p>
+                    <FormSidebarCard
+                        title={project ? 'Save changes' : 'Create project'}
+                        description="Assignments and status movement continue on the detail page."
+                    >
+                        <div className="space-y-3">
+                            <Button
+                                className="w-full"
+                                disabled={form.processing}
+                            >
+                                {form.processing
+                                    ? project
+                                        ? 'Saving changes...'
+                                        : 'Creating project...'
+                                    : project
+                                      ? 'Save changes'
+                                      : 'Create project'}
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
+                                <Link href={cancelHref}>Cancel</Link>
+                            </Button>
                         </div>
-
-                        <div className="rounded-lg border border-dashed px-4 py-3">
-                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                Site
-                            </p>
-                            <p className="mt-1 font-medium">
-                                {selectedSite?.label ??
-                                    (form.data.customer_id === ''
-                                        ? 'Select a customer first'
-                                        : 'Select a site')}
-                            </p>
-                        </div>
-
-                        <p className="text-sm text-muted-foreground">
-                            Use the quotation first when this project starts
-                            from an awarded sale so the customer and site stay
-                            consistent across modules.
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Save project</CardTitle>
-                        <CardDescription>
-                            Keep the project master clean. Status changes and
-                            team assignments happen on the detail page.
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="space-y-3">
-                        <Button className="w-full" disabled={form.processing}>
-                            {form.processing
-                                ? project
-                                    ? 'Saving changes...'
-                                    : 'Creating project...'
-                                : project
-                                  ? 'Save changes'
-                                  : 'Create project'}
-                        </Button>
-
-                        <Button variant="outline" className="w-full" asChild>
-                            <Link href={cancelHref}>Cancel</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
+                    </FormSidebarCard>
+                </div>
             </form>
         </div>
     );

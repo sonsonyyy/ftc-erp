@@ -1,16 +1,14 @@
 import type { InertiaLinkProps } from '@inertiajs/react';
 import { Link, useForm } from '@inertiajs/react';
 import QuotationController from '@/actions/App/Http/Controllers/Quotations/QuotationController';
-import Heading from '@/components/heading';
+import {
+    FormPageHeader,
+    FormSectionCard,
+    FormSidebarCard,
+    FormSteps,
+} from '@/components/form-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -85,6 +83,23 @@ export function QuotationForm({
     const isCreate = quotation === undefined;
     const showLostReason = isCreate && form.data.status === 'lost';
     const showMaterializedAt = isCreate && form.data.status === 'awarded';
+    const steps = [
+        {
+            step: '1',
+            title: 'Record',
+            caption: 'Number, subject, and commercial value.',
+        },
+        {
+            step: '2',
+            title: 'Customer',
+            caption: 'Account, site, and timeline.',
+        },
+        {
+            step: '3',
+            title: 'Ownership',
+            caption: 'Routing notes before handoff.',
+        },
+    ];
 
     function handleCustomerChange(customerId: string) {
         form.setData('customer_id', customerId);
@@ -161,24 +176,21 @@ export function QuotationForm({
     }
 
     return (
-        <div className="space-y-6">
-            <Heading title={title} description={description} />
+        <div className="space-y-5">
+            <FormPageHeader title={title} description={description} />
+            <FormSteps items={steps} />
 
             <form
                 onSubmit={submit}
-                className="grid gap-6 xl:grid-cols-[2fr_1fr]"
+                className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]"
             >
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Quotation details</CardTitle>
-                        <CardDescription>
-                            Track externally prepared quotations and keep the
-                            customer, amount, and ownership data clean for
-                            reporting.
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-5">
+                    <FormSectionCard
+                        step="1"
+                        title="Quotation record"
+                        description="Core commercial details."
+                        contentClassName="grid gap-4 md:grid-cols-2"
+                    >
                         <div className="grid gap-2">
                             <Label htmlFor="quotation_no">
                                 Quotation number
@@ -209,7 +221,6 @@ export function QuotationForm({
                                             event.currentTarget.value,
                                         )
                                     }
-                                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     {statusOptions.map((option) => (
                                         <option
@@ -234,7 +245,6 @@ export function QuotationForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Select customer</option>
                                 {customerOptions.map((option) => (
@@ -247,39 +257,6 @@ export function QuotationForm({
                                 ))}
                             </SelectInput>
                             <InputError message={form.errors.customer_id} />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="customer_site_id">Site</Label>
-                            <SelectInput
-                                id="customer_site_id"
-                                value={form.data.customer_site_id}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'customer_site_id',
-                                        event.currentTarget.value,
-                                    )
-                                }
-                                disabled={form.data.customer_id === ''}
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                <option value="">
-                                    {form.data.customer_id === ''
-                                        ? 'Select customer first'
-                                        : 'Optional site'}
-                                </option>
-                                {availableSiteOptions.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </SelectInput>
-                            <InputError
-                                message={form.errors.customer_site_id}
-                            />
                         </div>
 
                         <div className="grid gap-2 md:col-span-2">
@@ -354,7 +331,75 @@ export function QuotationForm({
                                 message={form.errors.quotation_amount}
                             />
                         </div>
+                    </FormSectionCard>
 
+                    <FormSectionCard
+                        step="2"
+                        title="Customer and schedule"
+                        description="Who the quotation is for."
+                        contentClassName="grid gap-4 md:grid-cols-2"
+                    >
+                        <div className="grid gap-2">
+                            <Label htmlFor="customer_site_id">Site</Label>
+                            <SelectInput
+                                id="customer_site_id"
+                                value={form.data.customer_site_id}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'customer_site_id',
+                                        event.currentTarget.value,
+                                    )
+                                }
+                                disabled={form.data.customer_id === ''}
+                            >
+                                <option value="">
+                                    {form.data.customer_id === ''
+                                        ? 'Select customer first'
+                                        : 'Optional site'}
+                                </option>
+                                {availableSiteOptions.map((option) => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </SelectInput>
+                            <InputError
+                                message={form.errors.customer_site_id}
+                            />
+                        </div>
+
+                        {showMaterializedAt && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="materialized_at">
+                                    Awarded / materialized date
+                                </Label>
+                                <Input
+                                    id="materialized_at"
+                                    type="date"
+                                    value={form.data.materialized_at}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'materialized_at',
+                                            event.currentTarget.value,
+                                        )
+                                    }
+                                />
+                                <InputError
+                                    message={form.errors.materialized_at}
+                                />
+                            </div>
+                        )}
+                    </FormSectionCard>
+
+                    <FormSectionCard
+                        step="3"
+                        title="Ownership and notes"
+                        description="Internal routing before status history starts."
+                        contentClassName="grid gap-4 md:grid-cols-2"
+                    >
                         <div className="grid gap-2">
                             <Label htmlFor="assigned_sales_user_id">
                                 Assigned sales owner
@@ -368,7 +413,6 @@ export function QuotationForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Unassigned</option>
                                 {userOptions.map((option) => (
@@ -398,7 +442,6 @@ export function QuotationForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Not specified</option>
                                 {userOptions.map((option) => (
@@ -414,28 +457,6 @@ export function QuotationForm({
                                 message={form.errors.prepared_by_user_id}
                             />
                         </div>
-
-                        {showMaterializedAt && (
-                            <div className="grid gap-2">
-                                <Label htmlFor="materialized_at">
-                                    Awarded / materialized date
-                                </Label>
-                                <Input
-                                    id="materialized_at"
-                                    type="date"
-                                    value={form.data.materialized_at}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'materialized_at',
-                                            event.currentTarget.value,
-                                        )
-                                    }
-                                />
-                                <InputError
-                                    message={form.errors.materialized_at}
-                                />
-                            </div>
-                        )}
 
                         {showLostReason && (
                             <div className="grid gap-2 md:col-span-2">
@@ -470,21 +491,15 @@ export function QuotationForm({
                             />
                             <InputError message={form.errors.remarks} />
                         </div>
-                    </CardContent>
-                </Card>
+                    </FormSectionCard>
+                </div>
 
-                <div className="space-y-6">
-                    <Card className="h-fit">
-                        <CardHeader>
-                            <CardTitle>Actions</CardTitle>
-                            <CardDescription>
-                                Save the quotation record now, then manage
-                                status history and attachments from the detail
-                                page.
-                            </CardDescription>
-                        </CardHeader>
-
-                        <CardContent className="space-y-3">
+                <div className="space-y-5 xl:sticky xl:top-6 xl:self-start">
+                    <FormSidebarCard
+                        title={quotation ? 'Save changes' : 'Create quotation'}
+                        description="Attachments and status history continue after save."
+                    >
+                        <div className="space-y-3">
                             <Button
                                 className="w-full"
                                 disabled={form.processing}
@@ -503,25 +518,13 @@ export function QuotationForm({
                             >
                                 <Link href={cancelHref}>Cancel</Link>
                             </Button>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </FormSidebarCard>
 
-                    <Card className="h-fit">
-                        <CardHeader>
-                            <CardTitle>Workflow note</CardTitle>
-                        </CardHeader>
-
-                        <CardContent className="space-y-2 text-sm text-muted-foreground">
-                            <p>
-                                Upload the Excel or PDF file after saving
-                                through the quotation detail page.
-                            </p>
-                            <p>
-                                Status changes are handled separately so each
-                                transition is logged for KPI reporting.
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <FormSidebarCard
+                        title="After save"
+                        description="Use the detail page for file uploads and status transitions."
+                    />
                 </div>
             </form>
         </div>

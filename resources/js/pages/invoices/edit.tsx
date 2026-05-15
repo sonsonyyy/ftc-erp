@@ -27,7 +27,7 @@ export default function InvoicesEdit(props: Props) {
             <InvoiceForm
                 {...props}
                 title="Edit Invoice"
-                description="Update the billing header and line coverage before payments are posted."
+                description="Update billing details before payments are posted."
                 cancelHref={invoicesShow(props.invoice.id)}
             />
         </div>

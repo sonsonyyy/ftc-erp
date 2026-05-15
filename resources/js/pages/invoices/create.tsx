@@ -24,7 +24,7 @@ export default function InvoicesCreate(props: Props) {
             <InvoiceForm
                 {...props}
                 title="New Invoice"
-                description="Create a billing record and link it to the relevant customer, quotation, project, or work order."
+                description="Create a billing record and link it to the right source."
                 cancelHref={invoicesIndex()}
             />
         </div>

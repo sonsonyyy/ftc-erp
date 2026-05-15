@@ -46,7 +46,7 @@ export default function WorkOrdersEdit({
                     priorityOptions={priorityOptions}
                     serviceTypeOptions={serviceTypeOptions}
                     title={`Edit ${workOrder.work_order_no}`}
-                    description="Update the work order master record while preserving status movement, notes, and materials history on the detail page."
+                    description="Update the work order record details."
                     cancelHref={workOrdersShow(workOrder.id)}
                 />
             </div>

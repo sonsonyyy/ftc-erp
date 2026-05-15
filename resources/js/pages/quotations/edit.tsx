@@ -35,7 +35,7 @@ export default function QuotationsEdit({
                     siteOptions={siteOptions}
                     userOptions={userOptions}
                     title={`Edit ${quotation.quotation_no}`}
-                    description="Update the quotation details while keeping status transitions and KPI history on the detail page."
+                    description="Update the quotation record details."
                     cancelHref={quotationsShow(quotation.id)}
                 />
             </div>

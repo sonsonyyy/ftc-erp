@@ -36,7 +36,7 @@ export default function ProjectsCreate({
                     statusOptions={statusOptions}
                     defaults={defaults}
                     title="New project"
-                    description="Register the operations project record that will anchor schedules, assignments, and downstream work orders."
+                    description="Create the project record used by operations."
                     cancelHref={projectsIndex()}
                 />
             </div>

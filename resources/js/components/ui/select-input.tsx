@@ -27,6 +27,22 @@ type SelectOption = {
     disabled: boolean;
 };
 
+const LEGACY_TRIGGER_CLASSES = new Set([
+    'h-9',
+    'rounded-md',
+    'border',
+    'border-input',
+    'bg-transparent',
+    'px-3',
+    'text-sm',
+    'outline-none',
+    'focus-visible:border-ring',
+    'focus-visible:ring-[3px]',
+    'focus-visible:ring-ring/50',
+    'disabled:cursor-not-allowed',
+    'disabled:opacity-60',
+]);
+
 export type SelectInputProps = {
     id?: string;
     value?: SelectValueInput;
@@ -83,6 +99,21 @@ function extractOptions(children: React.ReactNode): SelectOption[] {
     });
 
     return options;
+}
+
+function sanitizeTriggerClassName(className?: string): string | undefined {
+    if (!className) {
+        return undefined;
+    }
+
+    const sanitizedTokens = className
+        .split(/\s+/)
+        .filter(Boolean)
+        .filter((token) => !LEGACY_TRIGGER_CLASSES.has(token));
+
+    return sanitizedTokens.length > 0
+        ? sanitizedTokens.join(' ')
+        : undefined;
 }
 
 export function SelectInput({
@@ -144,7 +175,10 @@ export function SelectInput({
                     aria-describedby={ariaDescribedBy}
                     aria-invalid={ariaInvalid}
                     aria-label={ariaLabel}
-                    className={cn('w-full min-w-0', className)}
+                    className={cn(
+                        'w-full min-w-0',
+                        sanitizeTriggerClassName(className),
+                    )}
                 >
                     <SelectValue placeholder={resolvedPlaceholder} />
                 </SelectTrigger>

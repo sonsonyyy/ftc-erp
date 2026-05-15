@@ -35,7 +35,7 @@ export default function QuotationsCreate({
                     statusOptions={statusOptions}
                     defaults={defaults}
                     title="New quotation"
-                    description="Register a quotation that was prepared externally so it can be tracked, reported, and eventually handed off downstream."
+                    description="Capture a quotation record for tracking and handoff."
                     cancelHref={quotationsIndex()}
                 />
             </div>

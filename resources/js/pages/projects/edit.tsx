@@ -36,7 +36,7 @@ export default function ProjectsEdit({
                     siteOptions={siteOptions}
                     quotationOptions={quotationOptions}
                     title={`Edit ${project.project_no}`}
-                    description="Adjust the project master record while keeping status progression and staffing history on the detail page."
+                    description="Update the core project record."
                     cancelHref={projectsShow(project.id)}
                 />
             </div>

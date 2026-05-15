@@ -46,7 +46,7 @@ export default function WorkOrdersCreate({
                     statusOptions={statusOptions}
                     defaults={defaults}
                     title="New work order"
-                    description="Register service, installation support, or execution work under the right customer and project context."
+                    description="Create a work order under the correct customer and project."
                     cancelHref={workOrdersIndex()}
                 />
             </div>

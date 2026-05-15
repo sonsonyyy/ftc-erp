@@ -1,16 +1,14 @@
 import type { InertiaLinkProps } from '@inertiajs/react';
 import { Link, useForm } from '@inertiajs/react';
 import WorkOrderController from '@/actions/App/Http/Controllers/WorkOrders/WorkOrderController';
-import Heading from '@/components/heading';
+import {
+    FormPageHeader,
+    FormSectionCard,
+    FormSidebarCard,
+    FormSteps,
+} from '@/components/form-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -118,6 +116,23 @@ export function WorkOrderForm({
     const selectedProject = projectOptions.find(
         (option) => String(option.value) === form.data.project_id,
     );
+    const steps = [
+        {
+            step: '1',
+            title: 'Source',
+            caption: 'Project, quotation, customer, and site.',
+        },
+        {
+            step: '2',
+            title: 'Execution',
+            caption: 'Service type, priority, and schedule.',
+        },
+        {
+            step: '3',
+            title: 'Review',
+            caption: 'Final context before dispatch.',
+        },
+    ];
 
     function handleCustomerChange(customerId: string) {
         form.setData('customer_id', customerId);
@@ -262,24 +277,21 @@ export function WorkOrderForm({
     }
 
     return (
-        <div className="space-y-6">
-            <Heading title={title} description={description} />
+        <div className="space-y-5">
+            <FormPageHeader title={title} description={description} />
+            <FormSteps items={steps} />
 
             <form
                 onSubmit={submit}
-                className="grid gap-6 xl:grid-cols-[2fr_1fr]"
+                className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]"
             >
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Work order details</CardTitle>
-                        <CardDescription>
-                            Register service or execution work tied to the
-                            correct customer, site, quotation, and project
-                            context.
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-5">
+                    <FormSectionCard
+                        step="1"
+                        title="Source record"
+                        description="Match the work order to the right upstream record."
+                        contentClassName="grid gap-4 md:grid-cols-2"
+                    >
                         <div className="grid gap-2">
                             <Label htmlFor="work_order_no">
                                 Work order number
@@ -310,7 +322,6 @@ export function WorkOrderForm({
                                             event.currentTarget.value,
                                         )
                                     }
-                                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     {statusOptions.map((option) => (
                                         <option
@@ -335,7 +346,6 @@ export function WorkOrderForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No project linked</option>
                                 {availableProjectOptions.map((option) => (
@@ -347,10 +357,6 @@ export function WorkOrderForm({
                                     </option>
                                 ))}
                             </SelectInput>
-                            <p className="text-sm text-muted-foreground">
-                                Selecting a project pulls in its customer, site,
-                                and linked quotation when one exists.
-                            </p>
                             <InputError message={form.errors.project_id} />
                         </div>
 
@@ -366,7 +372,6 @@ export function WorkOrderForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No quotation linked</option>
                                 {availableQuotationOptions.map((option) => (
@@ -378,10 +383,6 @@ export function WorkOrderForm({
                                     </option>
                                 ))}
                             </SelectInput>
-                            <p className="text-sm text-muted-foreground">
-                                Choose the quotation first when this work order
-                                comes straight from an awarded sales handoff.
-                            </p>
                             <InputError message={form.errors.quotation_id} />
                         </div>
 
@@ -395,7 +396,6 @@ export function WorkOrderForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Select customer</option>
                                 {customerOptions.map((option) => (
@@ -407,10 +407,6 @@ export function WorkOrderForm({
                                     </option>
                                 ))}
                             </SelectInput>
-                            <p className="text-sm text-muted-foreground">
-                                Changing the customer narrows the site, project,
-                                and quotation choices to that account.
-                            </p>
                             <InputError message={form.errors.customer_id} />
                         </div>
 
@@ -426,7 +422,6 @@ export function WorkOrderForm({
                                     )
                                 }
                                 disabled={form.data.customer_id === ''}
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 <option value="">
                                     {form.data.customer_id === ''
@@ -442,16 +437,18 @@ export function WorkOrderForm({
                                     </option>
                                 ))}
                             </SelectInput>
-                            <p className="text-sm text-muted-foreground">
-                                Keep the site in sync with the selected project
-                                or quotation so field work lands on the right
-                                record.
-                            </p>
                             <InputError
                                 message={form.errors.customer_site_id}
                             />
                         </div>
+                    </FormSectionCard>
 
+                    <FormSectionCard
+                        step="2"
+                        title="Execution details"
+                        description="Dispatch information for field teams."
+                        contentClassName="grid gap-4 md:grid-cols-2"
+                    >
                         <div className="grid gap-2">
                             <Label htmlFor="service_type">Service type</Label>
                             <SelectInput
@@ -463,7 +460,6 @@ export function WorkOrderForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Select service type</option>
                                 {serviceTypeOptions.map((option) => (
@@ -507,7 +503,6 @@ export function WorkOrderForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {priorityOptions.map((option) => (
                                     <option
@@ -536,7 +531,14 @@ export function WorkOrderForm({
                             />
                             <InputError message={form.errors.summary} />
                         </div>
+                    </FormSectionCard>
 
+                    <FormSectionCard
+                        step="3"
+                        title="Notes"
+                        description="Optional field context before follow-through starts."
+                        contentClassName="grid gap-4 md:grid-cols-2"
+                    >
                         <div className="grid gap-2 md:col-span-2">
                             <Label htmlFor="findings">Findings / notes</Label>
                             <Textarea
@@ -553,92 +555,87 @@ export function WorkOrderForm({
                             />
                             <InputError message={form.errors.findings} />
                         </div>
-                    </CardContent>
-                </Card>
+                    </FormSectionCard>
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Linkage summary</CardTitle>
-                        <CardDescription>
-                            Confirm the execution record is being created under
-                            the right upstream context.
-                        </CardDescription>
-                    </CardHeader>
+                <div className="space-y-5 xl:sticky xl:top-6 xl:self-start">
+                    <FormSidebarCard
+                        title="Context check"
+                        description="Verify the operational chain before saving."
+                    >
+                        <div className="space-y-3">
+                            <div className="rounded-lg border border-dashed px-4 py-3">
+                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                    Project
+                                </p>
+                                <p className="mt-1 font-medium">
+                                    {selectedProject?.label ??
+                                        'No project linked'}
+                                </p>
+                            </div>
 
-                    <CardContent className="space-y-3">
-                        <div className="rounded-lg border border-dashed px-4 py-3">
-                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                Project
-                            </p>
-                            <p className="mt-1 font-medium">
-                                {selectedProject?.label ?? 'No project linked'}
-                            </p>
+                            <div className="rounded-lg border border-dashed px-4 py-3">
+                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                    Awarded quotation
+                                </p>
+                                <p className="mt-1 font-medium">
+                                    {selectedQuotation?.label ??
+                                        'No quotation linked'}
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg border border-dashed px-4 py-3">
+                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                    Customer
+                                </p>
+                                <p className="mt-1 font-medium">
+                                    {selectedCustomer?.label ??
+                                        'Select a customer'}
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg border border-dashed px-4 py-3">
+                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                    Site
+                                </p>
+                                <p className="mt-1 font-medium">
+                                    {selectedSite?.label ??
+                                        (form.data.customer_id === ''
+                                            ? 'Select a customer first'
+                                            : 'Select a site')}
+                                </p>
+                            </div>
                         </div>
+                    </FormSidebarCard>
 
-                        <div className="rounded-lg border border-dashed px-4 py-3">
-                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                Awarded quotation
-                            </p>
-                            <p className="mt-1 font-medium">
-                                {selectedQuotation?.label ??
-                                    'No quotation linked'}
-                            </p>
+                    <FormSidebarCard
+                        title={workOrder ? 'Save changes' : 'Create work order'}
+                        description="Materials, notes, and status progression continue on the detail page."
+                    >
+                        <div className="space-y-3">
+                            <Button
+                                className="w-full"
+                                disabled={form.processing}
+                            >
+                                {form.processing
+                                    ? workOrder
+                                        ? 'Saving changes...'
+                                        : 'Creating work order...'
+                                    : workOrder
+                                      ? 'Save changes'
+                                      : 'Create work order'}
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
+                                <Link href={cancelHref}>Cancel</Link>
+                            </Button>
                         </div>
-
-                        <div className="rounded-lg border border-dashed px-4 py-3">
-                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                Customer
-                            </p>
-                            <p className="mt-1 font-medium">
-                                {selectedCustomer?.label ?? 'Select a customer'}
-                            </p>
-                        </div>
-
-                        <div className="rounded-lg border border-dashed px-4 py-3">
-                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                Site
-                            </p>
-                            <p className="mt-1 font-medium">
-                                {selectedSite?.label ??
-                                    (form.data.customer_id === ''
-                                        ? 'Select a customer first'
-                                        : 'Select a site')}
-                            </p>
-                        </div>
-
-                        <p className="text-sm text-muted-foreground">
-                            Start from the project when execution belongs to an
-                            active project, or use the quotation when the work
-                            order needs to bypass project setup.
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Save work order</CardTitle>
-                        <CardDescription>
-                            Status progression, technician notes, and material
-                            tracking continue on the detail page.
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="space-y-3">
-                        <Button className="w-full" disabled={form.processing}>
-                            {form.processing
-                                ? workOrder
-                                    ? 'Saving changes...'
-                                    : 'Creating work order...'
-                                : workOrder
-                                  ? 'Save changes'
-                                  : 'Create work order'}
-                        </Button>
-
-                        <Button variant="outline" className="w-full" asChild>
-                            <Link href={cancelHref}>Cancel</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
+                    </FormSidebarCard>
+                </div>
             </form>
         </div>
     );

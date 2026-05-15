@@ -1,18 +1,17 @@
 import type { InertiaLinkProps } from '@inertiajs/react';
 import { Link, useForm } from '@inertiajs/react';
 import InvoiceController from '@/actions/App/Http/Controllers/Billing/InvoiceController';
-import Heading from '@/components/heading';
+import {
+    FormPageHeader,
+    FormSectionCard,
+    FormSidebarCard,
+    FormSteps,
+} from '@/components/form-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SelectInput } from '@/components/ui/select-input';
 import { Textarea } from '@/components/ui/textarea';
 import type {
     BillingProjectOption,
@@ -23,7 +22,6 @@ import type {
     InvoiceLineInput,
     SelectOption,
 } from '@/types';
-import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     invoice?: InvoiceDetail;
@@ -114,6 +112,23 @@ export function InvoiceForm({
         return sum + quantity * unitPrice;
     }, 0);
     const total = subtotal + Number(form.data.tax_amount || 0);
+    const steps = [
+        {
+            step: '1',
+            title: 'Header',
+            caption: 'Reference, customer, and dates.',
+        },
+        {
+            step: '2',
+            title: 'Links',
+            caption: 'Quotation, project, and work order context.',
+        },
+        {
+            step: '3',
+            title: 'Lines',
+            caption: 'Billable coverage and totals.',
+        },
+    ];
 
     function updateItem(
         index: number,
@@ -233,20 +248,21 @@ export function InvoiceForm({
     }
 
     return (
-        <div className="space-y-6">
-            <Heading title={title} description={description} />
+        <div className="space-y-5">
+            <FormPageHeader title={title} description={description} />
+            <FormSteps items={steps} />
 
-            <form onSubmit={submit} className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Invoice header</CardTitle>
-                        <CardDescription>
-                            Capture the billing document reference, linked
-                            operational records, and collection timeline.
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <form
+                onSubmit={submit}
+                className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]"
+            >
+                <div className="space-y-5">
+                    <FormSectionCard
+                        step="1"
+                        title="Billing header"
+                        description="Document reference and collection dates."
+                        contentClassName="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+                    >
                         <div className="grid gap-2">
                             <Label htmlFor="invoice_no">Invoice no.</Label>
                             <Input
@@ -273,7 +289,6 @@ export function InvoiceForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {statusOptions.map((option) => (
                                     <option
@@ -298,7 +313,6 @@ export function InvoiceForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Select customer</option>
                                 {customerOptions.map((option) => (
@@ -362,7 +376,14 @@ export function InvoiceForm({
                             />
                             <InputError message={form.errors.tax_amount} />
                         </div>
+                    </FormSectionCard>
 
+                    <FormSectionCard
+                        step="2"
+                        title="Linked records"
+                        description="Tie the invoice back to sales or operations."
+                        contentClassName="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+                    >
                         <div className="grid gap-2">
                             <Label htmlFor="quotation_id">Quotation</Label>
                             <SelectInput
@@ -373,7 +394,6 @@ export function InvoiceForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No linked quotation</option>
                                 {quotationOptions.map((option) => (
@@ -398,7 +418,6 @@ export function InvoiceForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No linked project</option>
                                 {projectOptions.map((option) => (
@@ -423,7 +442,6 @@ export function InvoiceForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">No linked work order</option>
                                 {workOrderOptions.map((option) => (
@@ -450,37 +468,32 @@ export function InvoiceForm({
                                         event.currentTarget.value,
                                     )
                                 }
-                                placeholder="Optional collection notes, billing coverage, or supporting context."
+                                placeholder="Optional collection notes or billing context."
                             />
                             <InputError message={form.errors.remarks} />
                         </div>
-                    </CardContent>
-                </Card>
+                    </FormSectionCard>
 
-                <Card>
-                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <CardTitle>Invoice lines</CardTitle>
-                            <CardDescription>
-                                Add the billable items or milestone coverage
-                                that make up the invoice subtotal.
-                            </CardDescription>
+                    <FormSectionCard
+                        step="3"
+                        title="Invoice lines"
+                        description="Build the billable subtotal."
+                        contentClassName="space-y-4"
+                    >
+                        <div className="flex justify-end">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={addItem}
+                            >
+                                Add line
+                            </Button>
                         </div>
 
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={addItem}
-                        >
-                            Add line
-                        </Button>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
                         {form.data.items.map((item, index) => (
                             <div
                                 key={index}
-                                className="grid gap-4 rounded-lg border p-4 xl:grid-cols-[2fr_0.7fr_0.8fr_1.2fr_auto]"
+                                className="grid gap-4 rounded-xl border bg-muted/10 p-4 xl:grid-cols-[2fr_0.7fr_0.8fr_1.2fr_auto]"
                             >
                                 <div className="grid gap-2 xl:col-span-2">
                                     <Label
@@ -633,44 +646,15 @@ export function InvoiceForm({
                                 </div>
                             </div>
                         ))}
-                    </CardContent>
-                </Card>
+                    </FormSectionCard>
+                </div>
 
-                <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Actions</CardTitle>
-                            <CardDescription>
-                                Save the invoice now. Collections and supporting
-                                attachments can be handled from the detail page.
-                            </CardDescription>
-                        </CardHeader>
-
-                        <CardContent className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                            <Button type="button" variant="outline" asChild>
-                                <Link href={cancelHref}>Cancel</Link>
-                            </Button>
-
-                            <Button disabled={form.processing}>
-                                {form.processing
-                                    ? 'Saving...'
-                                    : invoice
-                                      ? 'Update invoice'
-                                      : 'Create invoice'}
-                            </Button>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="h-fit">
-                        <CardHeader>
-                            <CardTitle>Totals</CardTitle>
-                            <CardDescription>
-                                Live billing summary based on the current line
-                                items.
-                            </CardDescription>
-                        </CardHeader>
-
-                        <CardContent className="space-y-3 text-sm">
+                <div className="space-y-5 xl:sticky xl:top-6 xl:self-start">
+                    <FormSidebarCard
+                        title="Totals"
+                        description="Live summary from the current lines."
+                    >
+                        <div className="space-y-3 text-sm">
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">
                                     Subtotal
@@ -695,8 +679,35 @@ export function InvoiceForm({
                                     {formatCurrency(total)}
                                 </span>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </FormSidebarCard>
+
+                    <FormSidebarCard
+                        title={invoice ? 'Save changes' : 'Create invoice'}
+                        description="Collections and attachments continue on the detail page."
+                    >
+                        <div className="space-y-3">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                asChild
+                                className="w-full"
+                            >
+                                <Link href={cancelHref}>Cancel</Link>
+                            </Button>
+
+                            <Button
+                                disabled={form.processing}
+                                className="w-full"
+                            >
+                                {form.processing
+                                    ? 'Saving...'
+                                    : invoice
+                                      ? 'Update invoice'
+                                      : 'Create invoice'}
+                            </Button>
+                        </div>
+                    </FormSidebarCard>
                 </div>
             </form>
         </div>

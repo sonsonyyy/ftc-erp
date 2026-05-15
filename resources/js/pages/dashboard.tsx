@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import type { LucideIcon } from 'lucide-react';
+import type { ComponentProps, ReactNode } from 'react';
 import {
     AlertTriangle,
     ArrowRightLeft,
@@ -8,6 +8,7 @@ import {
     ClipboardList,
     FileText,
     FolderKanban,
+    type LucideIcon,
     Package,
     ShieldCheck,
     Wallet,
@@ -16,13 +17,9 @@ import {
     Bar,
     BarChart,
     CartesianGrid,
-    Cell,
-    Label,
     LabelList,
     Line,
     LineChart,
-    Pie,
-    PieChart,
     XAxis,
     YAxis,
 } from 'recharts';
@@ -70,6 +67,8 @@ type Props = {
     dashboard: DashboardData;
 };
 
+type LinkHref = ComponentProps<typeof Link>['href'];
+
 const warehouseActivityChartConfig = {
     stock_in: {
         label: 'Stock In',
@@ -85,28 +84,6 @@ const warehouseActivityChartConfig = {
     },
 } satisfies ChartConfig;
 
-const quotationChartConfig = {
-    won: {
-        label: 'Won',
-        color: '#22c55e',
-    },
-    lost: {
-        label: 'Lost',
-        color: '#ef4444',
-    },
-    pending: {
-        label: 'Pending',
-        color: '#f59e0b',
-    },
-} satisfies ChartConfig;
-
-const complianceChartConfig = {
-    count: {
-        label: 'Due items',
-        color: '#2563eb',
-    },
-} satisfies ChartConfig;
-
 const monthlyBillingChartConfig = {
     amount: {
         label: 'Billed amount',
@@ -118,6 +95,13 @@ const arAgingChartConfig = {
     amount: {
         label: 'Outstanding',
         color: '#ef4444',
+    },
+} satisfies ChartConfig;
+
+const complianceChartConfig = {
+    count: {
+        label: 'Due items',
+        color: '#2563eb',
     },
 } satisfies ChartConfig;
 
@@ -244,7 +228,7 @@ function AccessRestrictedPanel({
     return (
         <div
             className={cn(
-                'flex min-h-[112px] items-center justify-center rounded-xl border border-dashed bg-muted/10 px-4 text-center text-[11px] leading-5 text-muted-foreground sm:text-xs',
+                'flex min-h-[96px] items-center justify-center rounded-xl border border-dashed bg-muted/15 px-4 text-center text-[11px] leading-5 text-muted-foreground',
                 className,
             )}
         >
@@ -253,74 +237,129 @@ function AccessRestrictedPanel({
     );
 }
 
-function SectionAction({
-    href,
-    label,
-}: {
-    href: React.ComponentProps<typeof Link>['href'];
-    label: string;
-}) {
+function SectionAction({ href, label }: { href: LinkHref; label: string }) {
     return (
         <Button
             variant="outline"
             size="sm"
             asChild
-            className="h-7 gap-1.5 px-2.5 text-[11px]"
+            className="h-8 gap-1.5 rounded-full px-3 text-[11px] font-medium"
         >
             <Link href={href}>
-                <ArrowUpRight />
+                <ArrowUpRight className="size-3.5" />
                 {label}
             </Link>
         </Button>
     );
 }
 
-function OverviewHeader({
+function CompactCard({
     icon: Icon,
     title,
     description,
+    children,
 }: {
     icon: LucideIcon;
     title: string;
     description: string;
+    children: ReactNode;
 }) {
     return (
-        <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-sm font-medium">
-                <Icon className="size-3.5 text-muted-foreground" />
-                <span>{title}</span>
+        <Card className="h-full gap-3 py-4">
+            <CardHeader className="space-y-1 px-4 pb-0">
+                <div className="flex items-center gap-2">
+                    <Icon className="size-4 text-muted-foreground" />
+                    <CardTitle className="text-[15px]">{title}</CardTitle>
+                </div>
+                <CardDescription className="text-[12px] leading-5">
+                    {description}
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 px-4">{children}</CardContent>
+        </Card>
+    );
+}
+
+function DashboardSectionHeader({
+    icon: Icon,
+    title,
+    description,
+    action,
+}: {
+    icon: LucideIcon;
+    title: string;
+    description: string;
+    action?: ReactNode;
+}) {
+    return (
+        <CardHeader className="flex flex-row items-start justify-between gap-3 px-4 pb-0">
+            <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                    <Icon className="size-4 text-muted-foreground" />
+                    <CardTitle className="text-[15px]">{title}</CardTitle>
+                </div>
+                <CardDescription className="text-[12px] leading-5">
+                    {description}
+                </CardDescription>
             </div>
-            <CardDescription className="text-[11px] leading-4.5">
-                {description}
-            </CardDescription>
+            {action}
+        </CardHeader>
+    );
+}
+
+function StatBox({
+    label,
+    value,
+    caption,
+    className,
+}: {
+    label: string;
+    value: string;
+    caption?: string;
+    className?: string;
+}) {
+    return (
+        <div
+            className={cn(
+                'rounded-xl border bg-muted/10 px-3 py-2.5',
+                className,
+            )}
+        >
+            <p className="text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+                {label}
+            </p>
+            <p className="mt-1 text-lg font-semibold tracking-tight">{value}</p>
+            {caption ? (
+                <p className="mt-1 text-[11px] leading-4.5 text-muted-foreground">
+                    {caption}
+                </p>
+            ) : null}
+        </div>
+    );
+}
+
+function StatusTile({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-center justify-between rounded-lg border px-2.5 py-2 text-[11px]">
+            <span className="truncate text-muted-foreground">{label}</span>
+            <span className="font-medium text-foreground">{value}</span>
         </div>
     );
 }
 
 export default function Dashboard({ dashboard }: Props) {
-    const quotationHasData = (dashboard.quotations.total_quotations ?? 0) > 0;
-    const quotationChartData = dashboard.quotations.breakdown.map((item) => ({
-        ...item,
-        value: item.count,
-        fill:
-            item.key === 'won'
-                ? 'var(--color-won)'
-                : item.key === 'lost'
-                  ? 'var(--color-lost)'
-                  : 'var(--color-pending)',
-    }));
     const inventoryHasMovementData =
         dashboard.inventory.warehouse_activity.length > 0;
     const complianceHasTrendData =
         dashboard.compliance.due_items_trend.length > 0;
     const compactTableClass =
-        'text-[13px] [&_td]:px-4 [&_td]:py-3 [&_th]:h-9 [&_th]:px-4 [&_th]:text-[11px] [&_th]:tracking-[0.12em]';
+        'text-[12px] [&_td]:align-middle [&_td]:px-4 [&_td]:py-2.5 [&_th]:h-8 [&_th]:px-4 [&_th]:text-[10px] [&_th]:tracking-[0.14em]';
 
     return (
         <>
             <Head title="Dashboard" />
 
-            <div className="app-page flex flex-1 flex-col gap-5 lg:gap-6">
+            <div className="app-page flex flex-1 flex-col gap-5">
                 <div className="space-y-1">
                     <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
                         Dashboard
@@ -330,591 +369,449 @@ export default function Dashboard({ dashboard }: Props) {
                     </p>
                 </div>
 
-                <div className="grid items-start gap-3 min-[1680px]:grid-cols-12 lg:grid-cols-2">
-                    <Card className="gap-2 min-[1680px]:col-span-4 lg:col-span-2">
-                        <CardHeader className="gap-2 px-4 pt-4 pb-0">
-                            <OverviewHeader
-                                icon={Package}
-                                title="Inventory"
-                                description="Low stock and recent warehouse movement."
-                            />
-                        </CardHeader>
-
-                        <CardContent className="grid gap-3 px-4 pb-4">
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                <div className="rounded-xl border bg-muted/10 p-3">
-                                    <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                                        Low stock
-                                    </p>
-                                    <p className="mt-1.5 text-xl font-semibold tracking-tight sm:text-2xl">
-                                        {formatNumber(
+                <div className="grid gap-3 sm:grid-cols-2 xl:auto-rows-fr xl:grid-cols-4">
+                    <CompactCard
+                        icon={Package}
+                        title="Inventory"
+                        description="Warehouse stock and movement pulse."
+                    >
+                        {dashboard.can.view_low_stock ||
+                        dashboard.can.view_stock_movements ? (
+                            <>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <StatBox
+                                        label="Low stock"
+                                        value={formatNumber(
                                             dashboard.inventory.low_stock_count,
                                         )}
-                                    </p>
-                                    <p className="mt-2 text-xs text-muted-foreground">
-                                        {dashboard.can.view_low_stock
-                                            ? 'Items below reorder level.'
-                                            : restrictedMessage(
-                                                  'inventory snapshot',
-                                              )}
-                                    </p>
-
-                                    {dashboard.can.view_low_stock ? (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            asChild
-                                            className="mt-3 h-7 w-full text-[12px]"
-                                        >
-                                            <Link href={inventoryLowStock()}>
-                                                <ArrowUpRight />
-                                                View low stock
-                                            </Link>
-                                        </Button>
-                                    ) : null}
-                                </div>
-
-                                <div className="rounded-xl border bg-muted/10 p-3">
-                                    <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                                        Movements, 7 days
-                                    </p>
-                                    <p className="mt-1.5 text-xl font-semibold tracking-tight sm:text-2xl">
-                                        {formatNumber(
+                                        caption="Reorder watchlist"
+                                    />
+                                    <StatBox
+                                        label="7d movements"
+                                        value={formatNumber(
                                             dashboard.inventory
                                                 .movement_count_7_days,
                                         )}
-                                    </p>
-                                    <p className="mt-2 text-xs text-muted-foreground">
-                                        {dashboard.can.view_stock_movements
-                                            ? 'Stock in, out, issues, and returns.'
-                                            : restrictedMessage(
-                                                  'stock movement',
-                                              )}
-                                    </p>
+                                        caption="Warehouse activity"
+                                    />
+                                </div>
 
+                                <div className="flex flex-wrap gap-1.5 border-t pt-2">
+                                    {dashboard.can.view_low_stock ? (
+                                        <SectionAction
+                                            href={inventoryLowStock()}
+                                            label="Low stock"
+                                        />
+                                    ) : null}
                                     {dashboard.can.view_stock_movements ? (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            asChild
-                                            className="mt-3 h-7 w-full text-[12px]"
-                                        >
-                                            <Link href={stockMovementsIndex()}>
-                                                <ArrowUpRight />
-                                                View movements
-                                            </Link>
-                                        </Button>
+                                        <SectionAction
+                                            href={stockMovementsIndex()}
+                                            label="Movements"
+                                        />
                                     ) : null}
                                 </div>
-                            </div>
+                            </>
+                        ) : (
+                            <AccessRestrictedPanel
+                                message={restrictedMessage('inventory')}
+                            />
+                        )}
+                    </CompactCard>
 
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-[13px] font-medium">
-                                        Warehouse activity (7 days)
-                                    </p>
+                    <CompactCard
+                        icon={FileText}
+                        title="Quotations"
+                        description="Pipeline volume and follow-ups."
+                    >
+                        {dashboard.can.view_quotations ? (
+                            <>
+                                <div className="flex items-start justify-between gap-3 rounded-xl border bg-muted/10 px-3 py-2.5">
+                                    <div>
+                                        <p className="text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+                                            This month
+                                        </p>
+                                        <p className="mt-1 text-2xl font-semibold tracking-tight">
+                                            {formatNumber(
+                                                dashboard.quotations
+                                                    .total_quotations,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <Badge
+                                        variant="outline"
+                                        className="rounded-full px-2.5 py-1 text-[10px] font-medium"
+                                    >
+                                        {dashboard.quotations.conversion_rate}%
+                                    </Badge>
                                 </div>
 
-                                {dashboard.can.view_stock_movements &&
-                                inventoryHasMovementData ? (
-                                    <ChartContainer
-                                        config={warehouseActivityChartConfig}
-                                        className="min-h-[118px] w-full sm:min-h-[128px]"
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {dashboard.quotations.breakdown.map(
+                                        (item) => (
+                                            <StatusTile
+                                                key={item.key}
+                                                label={item.label}
+                                                value={String(item.count)}
+                                            />
+                                        ),
+                                    )}
+                                </div>
+
+                                <div className="flex items-center justify-between border-t pt-2 text-[11px]">
+                                    <span className="text-muted-foreground">
+                                        Pipeline value
+                                    </span>
+                                    <span className="font-medium">
+                                        {formatCurrency(
+                                            dashboard.quotations.total_value,
+                                            0,
+                                        )}
+                                    </span>
+                                </div>
+
+                                <div className="flex flex-wrap gap-1.5">
+                                    <SectionAction
+                                        href={quotationsIndex()}
+                                        label="Open quotations"
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <AccessRestrictedPanel
+                                message={restrictedMessage('quotation')}
+                            />
+                        )}
+                    </CompactCard>
+
+                    <CompactCard
+                        icon={FolderKanban}
+                        title="Projects"
+                        description="Awarded work and delivery status."
+                    >
+                        {dashboard.can.view_projects ? (
+                            <>
+                                <div className="flex items-start justify-between gap-3 rounded-xl border bg-muted/10 px-3 py-2.5">
+                                    <div>
+                                        <p className="text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+                                            Active
+                                        </p>
+                                        <p className="mt-1 text-2xl font-semibold tracking-tight">
+                                            {formatNumber(
+                                                dashboard.projects
+                                                    .active_projects,
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+                                            Value
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold tracking-tight">
+                                            {dashboard.projects
+                                                .total_project_value === null
+                                                ? 'Restricted'
+                                                : formatCompactCurrency(
+                                                      dashboard.projects
+                                                          .total_project_value,
+                                                  )}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    {dashboard.projects.statuses.map((item) => (
+                                        <StatusTile
+                                            key={item.key}
+                                            label={item.label}
+                                            value={String(item.count)}
+                                        />
+                                    ))}
+                                </div>
+
+                                <div className="flex flex-wrap gap-1.5 border-t pt-2">
+                                    <SectionAction
+                                        href={projectsIndex()}
+                                        label="Open projects"
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <AccessRestrictedPanel
+                                message={restrictedMessage('project')}
+                            />
+                        )}
+                    </CompactCard>
+
+                    <CompactCard
+                        icon={ClipboardList}
+                        title="Work orders"
+                        description="Execution load and review queue."
+                    >
+                        {dashboard.can.view_work_orders ? (
+                            <>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <StatBox
+                                        label="Active"
+                                        value={formatNumber(
+                                            dashboard.work_orders
+                                                .active_work_orders,
+                                        )}
+                                        caption="Field and service work"
+                                    />
+                                    <StatBox
+                                        label="For review"
+                                        value={formatNumber(
+                                            dashboard.work_orders
+                                                .for_review_count,
+                                        )}
+                                        caption="Awaiting close-out"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    {dashboard.work_orders.statuses.map(
+                                        (item) => (
+                                            <StatusTile
+                                                key={item.key}
+                                                label={item.label}
+                                                value={String(item.count)}
+                                            />
+                                        ),
+                                    )}
+                                </div>
+
+                                <div className="flex flex-wrap gap-1.5 border-t pt-2">
+                                    <SectionAction
+                                        href={workOrdersIndex()}
+                                        label="Open work orders"
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <AccessRestrictedPanel
+                                message={restrictedMessage('work order')}
+                            />
+                        )}
+                    </CompactCard>
+                </div>
+
+                <div className="grid gap-3 xl:grid-cols-[minmax(0,1.7fr)_minmax(340px,0.95fr)]">
+                    <Card className="gap-3 py-4">
+                        <DashboardSectionHeader
+                            icon={Wallet}
+                            title="Monthly Billing / Revenue"
+                            description="Billed amount per month (₱)"
+                            action={
+                                <Badge
+                                    variant="outline"
+                                    className="rounded-full px-2.5 py-1 text-[10px] font-medium"
+                                >
+                                    {dashboard.monthly_billing.range_label}
+                                </Badge>
+                            }
+                        />
+
+                        <CardContent className="px-4 pb-1">
+                            {dashboard.can.view_billing ? (
+                                <ChartContainer
+                                    config={monthlyBillingChartConfig}
+                                    className="h-[220px] w-full sm:h-[240px]"
+                                >
+                                    <BarChart
+                                        accessibilityLayer
+                                        data={dashboard.monthly_billing.items}
+                                        margin={{
+                                            left: 4,
+                                            right: 4,
+                                            top: 16,
+                                            bottom: 0,
+                                        }}
                                     >
-                                        <BarChart
-                                            accessibilityLayer
-                                            data={
-                                                dashboard.inventory
-                                                    .warehouse_activity
+                                        <CartesianGrid
+                                            vertical={false}
+                                            strokeDasharray="3 3"
+                                        />
+                                        <XAxis
+                                            dataKey="month"
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tickMargin={8}
+                                            tick={{ fontSize: 10 }}
+                                        />
+                                        <YAxis
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tickFormatter={(value) =>
+                                                formatCompactCurrency(
+                                                    Number(value),
+                                                )
                                             }
-                                            barGap={8}
+                                            width={52}
+                                            tick={{ fontSize: 10 }}
+                                        />
+                                        <ChartTooltip
+                                            content={
+                                                <ChartTooltipContent
+                                                    formatter={(value) =>
+                                                        formatCurrency(
+                                                            toNumericValue(
+                                                                value,
+                                                            ),
+                                                            0,
+                                                        )
+                                                    }
+                                                />
+                                            }
+                                        />
+                                        <Bar
+                                            dataKey="amount"
+                                            fill="var(--color-amount)"
+                                            radius={[6, 6, 0, 0]}
+                                            maxBarSize={46}
                                         >
-                                            <CartesianGrid vertical={false} />
-                                            <XAxis
-                                                dataKey="date"
-                                                tickLine={false}
-                                                axisLine={false}
-                                                tickMargin={8}
-                                            />
-                                            <ChartTooltip
-                                                content={
-                                                    <ChartTooltipContent
-                                                        formatter={(value) =>
-                                                            formatMetricQuantity(
-                                                                toNumericValue(
-                                                                    value,
-                                                                ),
-                                                            )
-                                                        }
-                                                    />
+                                            <LabelList
+                                                dataKey="amount"
+                                                position="top"
+                                                formatter={(value) =>
+                                                    formatCompactCurrency(
+                                                        toNumericValue(value),
+                                                    )
                                                 }
+                                                className="fill-foreground text-[10px]"
                                             />
-                                            <Bar
-                                                dataKey="stock_in"
-                                                fill="var(--color-stock_in)"
-                                                radius={[4, 4, 0, 0]}
-                                            />
-                                            <Bar
-                                                dataKey="stock_out"
-                                                fill="var(--color-stock_out)"
-                                                radius={[4, 4, 0, 0]}
-                                            />
-                                            <Bar
-                                                dataKey="transfers"
-                                                fill="var(--color-transfers)"
-                                                radius={[4, 4, 0, 0]}
-                                            />
-                                        </BarChart>
-                                    </ChartContainer>
+                                        </Bar>
+                                    </BarChart>
+                                </ChartContainer>
+                            ) : (
+                                <AccessRestrictedPanel
+                                    className="min-h-[220px]"
+                                    message={restrictedMessage('billing')}
+                                />
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                        <Card className="gap-3 py-4">
+                            <DashboardSectionHeader
+                                icon={Wallet}
+                                title="AR Aging Summary"
+                                description="Outstanding receivables by aging (₱)"
+                                action={
+                                    <Badge
+                                        variant="outline"
+                                        className="rounded-full px-2.5 py-1 text-[10px] font-medium"
+                                    >
+                                        {dashboard.ar_aging.as_of_label}
+                                    </Badge>
+                                }
+                            />
+
+                            <CardContent className="space-y-3 px-4 pb-1">
+                                {dashboard.can.view_billing ? (
+                                    <>
+                                        <ChartContainer
+                                            config={arAgingChartConfig}
+                                            className="h-[170px] w-full"
+                                        >
+                                            <BarChart
+                                                accessibilityLayer
+                                                data={dashboard.ar_aging.items}
+                                                margin={{
+                                                    left: 4,
+                                                    right: 4,
+                                                    top: 16,
+                                                    bottom: 0,
+                                                }}
+                                            >
+                                                <CartesianGrid
+                                                    vertical={false}
+                                                    strokeDasharray="3 3"
+                                                />
+                                                <XAxis
+                                                    dataKey="bucket"
+                                                    tickLine={false}
+                                                    axisLine={false}
+                                                    tickMargin={8}
+                                                    tick={{ fontSize: 10 }}
+                                                />
+                                                <YAxis
+                                                    tickLine={false}
+                                                    axisLine={false}
+                                                    tickFormatter={(value) =>
+                                                        formatCompactCurrency(
+                                                            Number(value),
+                                                        )
+                                                    }
+                                                    width={48}
+                                                    tick={{ fontSize: 10 }}
+                                                />
+                                                <ChartTooltip
+                                                    content={
+                                                        <ChartTooltipContent
+                                                            formatter={(
+                                                                value,
+                                                            ) =>
+                                                                formatCurrency(
+                                                                    toNumericValue(
+                                                                        value,
+                                                                    ),
+                                                                    0,
+                                                                )
+                                                            }
+                                                        />
+                                                    }
+                                                />
+                                                <Bar
+                                                    dataKey="amount"
+                                                    fill="var(--color-amount)"
+                                                    radius={[6, 6, 0, 0]}
+                                                    maxBarSize={40}
+                                                />
+                                            </BarChart>
+                                        </ChartContainer>
+
+                                        <div className="border-t pt-2 text-[11px] text-muted-foreground">
+                                            Total AR:{' '}
+                                            <span className="font-medium text-foreground">
+                                                {formatCurrency(
+                                                    dashboard.ar_aging.total_ar,
+                                                    0,
+                                                )}
+                                            </span>
+                                        </div>
+                                    </>
                                 ) : (
                                     <AccessRestrictedPanel
-                                        className="min-h-[118px] sm:min-h-[128px]"
-                                        message={
-                                            dashboard.can.view_stock_movements
-                                                ? 'No warehouse activity in the last 7 days.'
-                                                : restrictedMessage(
-                                                      'stock movement',
-                                                  )
-                                        }
+                                        className="min-h-[170px]"
+                                        message={restrictedMessage('billing')}
                                     />
                                 )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
 
-                    <Card className="gap-2 min-[1680px]:col-span-2">
-                        <CardHeader className="gap-2 px-4 pt-4 pb-0">
-                            <OverviewHeader
-                                icon={FileText}
-                                title="Quotations"
-                                description="Total quotations this month"
-                            />
-                            <div>
-                                <p className="text-xl font-semibold tracking-tight sm:text-2xl">
-                                    {dashboard.can.view_quotations
-                                        ? formatNumber(
-                                              dashboard.quotations
-                                                  .total_quotations,
-                                          )
-                                        : 'Restricted'}
-                                </p>
-                            </div>
-                        </CardHeader>
-
-                        <CardContent className="grid gap-3 px-4 pb-4">
-                            {dashboard.can.view_quotations ? (
-                                <>
-                                    {quotationHasData ? (
-                                        <div className="grid gap-3 sm:grid-cols-[118px_1fr] sm:items-center">
-                                            <ChartContainer
-                                                config={quotationChartConfig}
-                                                className="mx-auto min-h-[112px] w-full max-w-[112px] sm:min-h-[124px] sm:max-w-[124px]"
-                                            >
-                                                <PieChart>
-                                                    <ChartTooltip
-                                                        content={
-                                                            <ChartTooltipContent
-                                                                formatter={(
-                                                                    value,
-                                                                ) =>
-                                                                    formatNumber(
-                                                                        toNumericValue(
-                                                                            value,
-                                                                        ),
-                                                                    )
-                                                                }
-                                                            />
-                                                        }
-                                                    />
-                                                    <Pie
-                                                        data={
-                                                            quotationChartData
-                                                        }
-                                                        dataKey="value"
-                                                        nameKey="label"
-                                                        innerRadius={32}
-                                                        outerRadius={50}
-                                                        strokeWidth={3}
-                                                    >
-                                                        {quotationChartData.map(
-                                                            (item) => (
-                                                                <Cell
-                                                                    key={
-                                                                        item.key
-                                                                    }
-                                                                    fill={
-                                                                        item.fill
-                                                                    }
-                                                                />
-                                                            ),
-                                                        )}
-                                                        <Label
-                                                            content={({
-                                                                viewBox,
-                                                            }) => {
-                                                                const centerX =
-                                                                    viewBox &&
-                                                                    'cx' in
-                                                                        viewBox
-                                                                        ? viewBox.cx
-                                                                        : 0;
-                                                                const centerY =
-                                                                    viewBox &&
-                                                                    'cy' in
-                                                                        viewBox
-                                                                        ? viewBox.cy
-                                                                        : 0;
-
-                                                                return (
-                                                                    <text
-                                                                        x={
-                                                                            centerX
-                                                                        }
-                                                                        y={
-                                                                            centerY
-                                                                        }
-                                                                        textAnchor="middle"
-                                                                        dominantBaseline="middle"
-                                                                    >
-                                                                        <tspan
-                                                                            x={
-                                                                                centerX
-                                                                            }
-                                                                            y={
-                                                                                centerY -
-                                                                                6
-                                                                            }
-                                                                            className="fill-foreground text-base font-semibold"
-                                                                        >
-                                                                            {dashboard
-                                                                                .quotations
-                                                                                .conversion_rate ??
-                                                                                0}
-                                                                            %
-                                                                        </tspan>
-                                                                        <tspan
-                                                                            x={
-                                                                                centerX
-                                                                            }
-                                                                            y={
-                                                                                centerY +
-                                                                                14
-                                                                            }
-                                                                            className="fill-muted-foreground text-[9px]"
-                                                                        >
-                                                                            Conversion
-                                                                        </tspan>
-                                                                    </text>
-                                                                );
-                                                            }}
-                                                        />
-                                                    </Pie>
-                                                </PieChart>
-                                            </ChartContainer>
-
-                                            <div className="grid gap-2 text-[13px]">
-                                                {dashboard.quotations.breakdown.map(
-                                                    (item) => (
-                                                        <div
-                                                            key={item.key}
-                                                            className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2"
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <span
-                                                                    className={cn(
-                                                                        'size-2.5 rounded-full',
-                                                                        item.key ===
-                                                                            'won' &&
-                                                                            'bg-emerald-500',
-                                                                        item.key ===
-                                                                            'lost' &&
-                                                                            'bg-rose-500',
-                                                                        item.key ===
-                                                                            'pending' &&
-                                                                            'bg-amber-500',
-                                                                    )}
-                                                                />
-                                                                <span className="font-medium">
-                                                                    {item.label}
-                                                                </span>
-                                                            </div>
-                                                            <span className="text-muted-foreground">
-                                                                {item.count} (
-                                                                {
-                                                                    item.percentage
-                                                                }
-                                                                %)
-                                                            </span>
-                                                        </div>
-                                                    ),
-                                                )}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <AccessRestrictedPanel
-                                            className="min-h-[132px]"
-                                            message="No quotation activity recorded for this month."
-                                        />
-                                    )}
-
-                                    <div className="rounded-xl border bg-muted/10 px-3.5 py-3">
-                                        <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                                            Total value
-                                        </p>
-                                        <p className="mt-1 text-lg font-semibold tracking-tight">
-                                            {formatCurrency(
-                                                dashboard.quotations
-                                                    .total_value,
-                                                0,
-                                            )}
-                                        </p>
-                                    </div>
-                                </>
-                            ) : (
-                                <AccessRestrictedPanel
-                                    message={restrictedMessage('quotation')}
-                                />
-                            )}
-                        </CardContent>
-
-                        <CardFooter className="px-4 pt-0 pb-4">
-                            {dashboard.can.view_quotations ? (
-                                <Button
-                                    variant="outline"
-                                    asChild
-                                    className="h-7 w-full text-[12px]"
-                                >
-                                    <Link href={quotationsIndex()}>
-                                        <ArrowUpRight />
-                                        View quotations
-                                    </Link>
-                                </Button>
-                            ) : null}
-                        </CardFooter>
-                    </Card>
-
-                    <Card className="gap-2 min-[1680px]:col-span-2">
-                        <CardHeader className="gap-2 px-4 pt-4 pb-0">
-                            <OverviewHeader
-                                icon={FolderKanban}
-                                title="Projects"
-                                description="Active projects"
-                            />
-                            <div>
-                                <p className="text-xl font-semibold tracking-tight sm:text-2xl">
-                                    {dashboard.can.view_projects
-                                        ? formatNumber(
-                                              dashboard.projects
-                                                  .active_projects,
-                                          )
-                                        : 'Restricted'}
-                                </p>
-                            </div>
-                        </CardHeader>
-
-                        <CardContent className="grid gap-3 px-4 pb-4">
-                            {dashboard.can.view_projects ? (
-                                <>
-                                    <div className="grid gap-2">
-                                        {dashboard.projects.statuses.map(
-                                            (item) => (
-                                                <div
-                                                    key={item.key}
-                                                    className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-[13px]"
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span
-                                                            className={cn(
-                                                                'size-2.5 rounded-full',
-                                                                item.key ===
-                                                                    'planning' &&
-                                                                    'bg-blue-500',
-                                                                item.key ===
-                                                                    'in_progress' &&
-                                                                    'bg-orange-500',
-                                                                item.key ===
-                                                                    'on_hold' &&
-                                                                    'bg-amber-500',
-                                                                item.key ===
-                                                                    'completed' &&
-                                                                    'bg-emerald-500',
-                                                            )}
-                                                        />
-                                                        <span className="font-medium">
-                                                            {item.label}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-muted-foreground">
-                                                        {item.count}
-                                                    </span>
-                                                </div>
-                                            ),
-                                        )}
-                                    </div>
-
-                                    <div className="rounded-xl border bg-muted/10 px-3.5 py-3">
-                                        <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                                            Total project value
-                                        </p>
-                                        <p className="mt-1 text-lg font-semibold tracking-tight">
-                                            {formatCurrency(
-                                                dashboard.projects
-                                                    .total_project_value,
-                                                0,
-                                            )}
-                                        </p>
-                                    </div>
-                                </>
-                            ) : (
-                                <AccessRestrictedPanel
-                                    message={restrictedMessage('project')}
-                                />
-                            )}
-                        </CardContent>
-
-                        <CardFooter className="px-4 pt-0 pb-4">
-                            {dashboard.can.view_projects ? (
-                                <Button
-                                    variant="outline"
-                                    asChild
-                                    className="h-7 w-full text-[12px]"
-                                >
-                                    <Link href={projectsIndex()}>
-                                        <ArrowUpRight />
-                                        View projects
-                                    </Link>
-                                </Button>
-                            ) : null}
-                        </CardFooter>
-                    </Card>
-
-                    <Card className="gap-2 min-[1680px]:col-span-2">
-                        <CardHeader className="gap-2 px-4 pt-4 pb-0">
-                            <OverviewHeader
-                                icon={ClipboardList}
-                                title="Work orders"
-                                description="Active service & execution work"
-                            />
-                            <div>
-                                <p className="text-xl font-semibold tracking-tight sm:text-2xl">
-                                    {dashboard.can.view_work_orders
-                                        ? formatNumber(
-                                              dashboard.work_orders
-                                                  .active_work_orders,
-                                          )
-                                        : 'Restricted'}
-                                </p>
-                            </div>
-                        </CardHeader>
-
-                        <CardContent className="grid gap-3 px-4 pb-4">
-                            {dashboard.can.view_work_orders ? (
-                                <>
-                                    <div className="space-y-3">
-                                        <p className="text-[13px] font-medium">
-                                            By status
-                                        </p>
-
-                                        <div className="space-y-2">
-                                            {dashboard.work_orders.statuses.map(
-                                                (item) => (
-                                                    <div
-                                                        key={item.key}
-                                                        className="grid grid-cols-[72px_1fr_auto] items-center gap-2.5 text-[13px]"
-                                                    >
-                                                        <span className="font-medium text-foreground">
-                                                            {item.label}
-                                                        </span>
-                                                        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                                                            <div
-                                                                className="h-full rounded-full transition-all"
-                                                                style={{
-                                                                    width: `${item.percentage}%`,
-                                                                    backgroundColor:
-                                                                        item.color,
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {item.count} (
-                                                            {item.percentage}
-                                                            %)
-                                                        </span>
-                                                    </div>
-                                                ),
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="rounded-xl border bg-muted/10 px-3.5 py-3">
-                                        <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                                            For review
-                                        </p>
-                                        <p className="mt-1 text-lg font-semibold tracking-tight">
-                                            {formatNumber(
-                                                dashboard.work_orders
-                                                    .for_review_count,
-                                            )}
-                                        </p>
-                                        <p className="mt-1 text-xs text-muted-foreground">
-                                            Awaiting review
-                                        </p>
-                                    </div>
-                                </>
-                            ) : (
-                                <AccessRestrictedPanel
-                                    message={restrictedMessage('work order')}
-                                />
-                            )}
-                        </CardContent>
-
-                        <CardFooter className="px-4 pt-0 pb-4">
-                            {dashboard.can.view_work_orders ? (
-                                <Button
-                                    variant="outline"
-                                    asChild
-                                    className="h-7 w-full text-[12px]"
-                                >
-                                    <Link href={workOrdersIndex()}>
-                                        <ArrowUpRight />
-                                        View work orders
-                                    </Link>
-                                </Button>
-                            ) : null}
-                        </CardFooter>
-                    </Card>
-
-                    <Card className="gap-2 min-[1680px]:col-span-2">
-                        <CardHeader className="gap-2 px-4 pt-4 pb-0">
-                            <OverviewHeader
+                        <Card className="gap-3 py-4">
+                            <DashboardSectionHeader
                                 icon={ShieldCheck}
-                                title="Compliance"
-                                description="Items due soon"
+                                title="Compliance watch"
+                                description="Deadlines building in the next 30 days."
+                                action={
+                                    dashboard.can.view_compliance ? (
+                                        <SectionAction
+                                            href={complianceRecordsIndex()}
+                                            label="Open registry"
+                                        />
+                                    ) : undefined
+                                }
                             />
-                            <div>
-                                <p className="text-xl font-semibold tracking-tight sm:text-2xl">
-                                    {dashboard.can.view_compliance
-                                        ? formatNumber(
-                                              dashboard.compliance
-                                                  .due_soon_count,
-                                          )
-                                        : 'Restricted'}
-                                </p>
-                            </div>
-                        </CardHeader>
 
-                        <CardContent className="grid gap-3 px-4 pb-4">
-                            {dashboard.can.view_compliance ? (
-                                <>
-                                    <div className="space-y-2">
-                                        <p className="text-[13px] font-medium">
-                                            Due items (next 30 days)
-                                        </p>
-
+                            <CardContent className="grid gap-3 px-4">
+                                {dashboard.can.view_compliance ? (
+                                    <>
                                         {complianceHasTrendData ? (
                                             <ChartContainer
                                                 config={complianceChartConfig}
-                                                className="min-h-[72px] w-full sm:min-h-[84px]"
+                                                className="h-[110px] w-full"
                                             >
                                                 <LineChart
                                                     accessibilityLayer
@@ -923,12 +820,24 @@ export default function Dashboard({ dashboard }: Props) {
                                                             .due_items_trend
                                                     }
                                                     margin={{
-                                                        left: 4,
-                                                        right: 4,
+                                                        left: 2,
+                                                        right: 2,
                                                         top: 8,
                                                         bottom: 0,
                                                     }}
                                                 >
+                                                    <CartesianGrid
+                                                        vertical={false}
+                                                        strokeDasharray="3 3"
+                                                    />
+                                                    <XAxis
+                                                        dataKey="label"
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                        tickMargin={8}
+                                                        tick={{ fontSize: 10 }}
+                                                    />
+                                                    <YAxis hide />
                                                     <ChartTooltip
                                                         content={
                                                             <ChartTooltipContent
@@ -951,524 +860,147 @@ export default function Dashboard({ dashboard }: Props) {
                                                         strokeWidth={2}
                                                         dot={false}
                                                     />
-                                                    <XAxis
-                                                        dataKey="label"
-                                                        hide
-                                                    />
-                                                    <YAxis hide />
                                                 </LineChart>
                                             </ChartContainer>
                                         ) : (
                                             <AccessRestrictedPanel
-                                                className="min-h-[72px] sm:min-h-[84px]"
-                                                message="No compliance deadlines in the next 30 days."
+                                                className="min-h-[110px]"
+                                                message="No deadlines in the next 30 days."
                                             />
                                         )}
-                                    </div>
 
-                                    <div className="grid gap-2 min-[1850px]:grid-cols-3 sm:grid-cols-2">
-                                        <div className="rounded-xl border px-3 py-3">
-                                            <p className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                                                For renewal
-                                            </p>
-                                            <p className="mt-1 text-lg font-semibold tracking-tight">
-                                                {formatNumber(
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            <StatusTile
+                                                label="Renewal"
+                                                value={formatNumber(
                                                     dashboard.compliance
                                                         .for_renewal_count,
                                                 )}
-                                            </p>
-                                        </div>
-
-                                        <div className="rounded-xl border px-3 py-3">
-                                            <p className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                                                Overdue
-                                            </p>
-                                            <p className="mt-1 text-lg font-semibold tracking-tight">
-                                                {formatNumber(
+                                            />
+                                            <StatusTile
+                                                label="Overdue"
+                                                value={formatNumber(
                                                     dashboard.compliance
                                                         .overdue_count,
                                                 )}
-                                            </p>
-                                        </div>
-
-                                        <div className="rounded-xl border px-3 py-3">
-                                            <p className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
-                                                Expired / Open alerts
-                                            </p>
-                                            <p className="mt-1 text-lg font-semibold tracking-tight">
-                                                {formatNumber(
+                                            />
+                                            <StatusTile
+                                                label="Expired"
+                                                value={formatNumber(
                                                     dashboard.compliance
                                                         .expired_count,
                                                 )}
-                                            </p>
-                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                {dashboard.can
-                                                    .view_compliance_alerts
-                                                    ? `${formatNumber(dashboard.compliance.open_alert_count)} open alerts`
-                                                    : 'Alert visibility is restricted'}
-                                            </p>
+                                            />
                                         </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <AccessRestrictedPanel
-                                    message={restrictedMessage('compliance')}
-                                />
-                            )}
-                        </CardContent>
-
-                        <CardFooter className="gap-2 px-4 pt-0 pb-4">
-                            {dashboard.can.view_compliance ? (
-                                <>
-                                    <Button
-                                        variant="outline"
-                                        asChild
-                                        className="h-7 flex-1 text-[12px]"
-                                    >
-                                        <Link href={complianceRecordsIndex()}>
-                                            <ArrowUpRight />
-                                            Registry
-                                        </Link>
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        asChild
-                                        className="h-7 flex-1 text-[12px]"
-                                    >
-                                        <Link
-                                            href={complianceRecordsCalendar()}
-                                        >
-                                            <ArrowUpRight />
-                                            Calendar
-                                        </Link>
-                                    </Button>
-                                </>
-                            ) : null}
-                        </CardFooter>
-                    </Card>
-                </div>
-
-                <div className="grid items-start gap-3 xl:grid-cols-12">
-                    <Card className="gap-3 xl:col-span-6">
-                        <CardHeader className="flex flex-col gap-2 px-4 pt-4 pb-0 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-1.5">
-                                    <Wallet className="size-3.5 text-muted-foreground" />
-                                    <CardTitle className="text-sm">
-                                        Monthly Billing / Revenue
-                                    </CardTitle>
-                                </div>
-                                <CardDescription className="text-[11px] leading-4.5">
-                                    Billed amount per month (₱)
-                                </CardDescription>
-                            </div>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 self-start text-[11px]"
-                            >
-                                {dashboard.monthly_billing.range_label}
-                            </Button>
-                        </CardHeader>
-
-                        <CardContent className="px-4 pb-4">
-                            {dashboard.can.view_billing ? (
-                                <ChartContainer
-                                    config={monthlyBillingChartConfig}
-                                    className="min-h-[180px] w-full sm:min-h-[192px]"
-                                >
-                                    <BarChart
-                                        accessibilityLayer
-                                        data={dashboard.monthly_billing.items}
-                                        margin={{
-                                            left: 8,
-                                            right: 8,
-                                            top: 16,
-                                            bottom: 0,
-                                        }}
-                                    >
-                                        <CartesianGrid vertical={false} />
-                                        <XAxis
-                                            dataKey="month"
-                                            tickLine={false}
-                                            axisLine={false}
-                                            tickMargin={8}
-                                        />
-                                        <YAxis
-                                            tickLine={false}
-                                            axisLine={false}
-                                            tickFormatter={(value) =>
-                                                formatCompactCurrency(
-                                                    Number(value),
-                                                )
-                                            }
-                                            width={56}
-                                        />
-                                        <ChartTooltip
-                                            content={
-                                                <ChartTooltipContent
-                                                    formatter={(value) =>
-                                                        formatCurrency(
-                                                            toNumericValue(
-                                                                value,
-                                                            ),
-                                                            0,
-                                                        )
-                                                    }
-                                                />
-                                            }
-                                        />
-                                        <Bar
-                                            dataKey="amount"
-                                            fill="var(--color-amount)"
-                                            radius={[6, 6, 0, 0]}
-                                            maxBarSize={48}
-                                        >
-                                            <LabelList
-                                                dataKey="amount"
-                                                position="top"
-                                                formatter={(value) =>
-                                                    formatCompactCurrency(
-                                                        toNumericValue(value),
-                                                    )
-                                                }
-                                                className="fill-foreground text-[11px]"
-                                            />
-                                        </Bar>
-                                    </BarChart>
-                                </ChartContainer>
-                            ) : (
-                                <AccessRestrictedPanel
-                                    className="min-h-[180px] sm:min-h-[192px]"
-                                    message={restrictedMessage('billing')}
-                                />
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card className="gap-3 xl:col-span-6">
-                        <CardHeader className="flex flex-col gap-2 px-4 pt-4 pb-0 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-1.5">
-                                    <Wallet className="size-3.5 text-muted-foreground" />
-                                    <CardTitle className="text-sm">
-                                        AR Aging Summary
-                                    </CardTitle>
-                                </div>
-                                <CardDescription className="text-[11px] leading-4.5">
-                                    Outstanding receivables by aging (₱)
-                                </CardDescription>
-                            </div>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 self-start text-[11px]"
-                            >
-                                {dashboard.ar_aging.as_of_label}
-                            </Button>
-                        </CardHeader>
-
-                        <CardContent className="space-y-2.5 px-4 pb-4">
-                            {dashboard.can.view_billing ? (
-                                <>
-                                    <ChartContainer
-                                        config={arAgingChartConfig}
-                                        className="min-h-[180px] w-full sm:min-h-[192px]"
-                                    >
-                                        <BarChart
-                                            accessibilityLayer
-                                            data={dashboard.ar_aging.items}
-                                            margin={{
-                                                left: 8,
-                                                right: 8,
-                                                top: 16,
-                                                bottom: 0,
-                                            }}
-                                        >
-                                            <CartesianGrid vertical={false} />
-                                            <XAxis
-                                                dataKey="bucket"
-                                                tickLine={false}
-                                                axisLine={false}
-                                                tickMargin={8}
-                                            />
-                                            <YAxis
-                                                tickLine={false}
-                                                axisLine={false}
-                                                tickFormatter={(value) =>
-                                                    formatCompactCurrency(
-                                                        Number(value),
-                                                    )
-                                                }
-                                                width={56}
-                                            />
-                                            <ChartTooltip
-                                                content={
-                                                    <ChartTooltipContent
-                                                        formatter={(value) =>
-                                                            formatCurrency(
-                                                                toNumericValue(
-                                                                    value,
-                                                                ),
-                                                                0,
-                                                            )
-                                                        }
-                                                    />
-                                                }
-                                            />
-                                            <Bar
-                                                dataKey="amount"
-                                                fill="var(--color-amount)"
-                                                radius={[6, 6, 0, 0]}
-                                                maxBarSize={48}
-                                            >
-                                                <LabelList
-                                                    dataKey="amount"
-                                                    position="top"
-                                                    formatter={(value) =>
-                                                        formatCompactCurrency(
-                                                            toNumericValue(
-                                                                value,
-                                                            ),
-                                                        )
-                                                    }
-                                                    className="fill-foreground text-[11px]"
-                                                />
-                                            </Bar>
-                                        </BarChart>
-                                    </ChartContainer>
-
-                                    <p className="text-xs text-muted-foreground sm:text-sm">
-                                        Total AR:{' '}
-                                        <span className="font-medium text-foreground">
-                                            {formatCurrency(
-                                                dashboard.ar_aging.total_ar,
-                                                0,
-                                            )}
-                                        </span>
-                                    </p>
-                                </>
-                            ) : (
-                                <AccessRestrictedPanel
-                                    className="min-h-[180px] sm:min-h-[192px]"
-                                    message={restrictedMessage('billing')}
-                                />
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="grid items-start gap-3 xl:grid-cols-12">
-                    <Card className="gap-3 overflow-hidden xl:col-span-6">
-                        <CardHeader className="flex flex-col gap-2 px-4 pt-4 pb-0 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-1.5">
-                                    <AlertTriangle className="size-3.5 text-muted-foreground" />
-                                    <CardTitle className="text-sm">
-                                        Low stock
-                                    </CardTitle>
-                                </div>
-                                <CardDescription className="text-[11px] leading-4.5">
-                                    Items to replenish or transfer.
-                                </CardDescription>
-                            </div>
-
-                            {dashboard.can.view_low_stock ? (
-                                <SectionAction
-                                    href={inventoryLowStock()}
-                                    label="View all"
-                                />
-                            ) : null}
-                        </CardHeader>
-
-                        <CardContent className="px-0">
-                            {dashboard.can.view_low_stock ? (
-                                <Table className={compactTableClass}>
-                                    <TableHeader className="bg-muted/25">
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableHead>Item</TableHead>
-                                            <TableHead>Category</TableHead>
-                                            <TableHead className="text-right">
-                                                On hand
-                                            </TableHead>
-                                            <TableHead className="text-right">
-                                                Reorder
-                                            </TableHead>
-                                            <TableHead className="text-right">
-                                                Shortage
-                                            </TableHead>
-                                            <TableHead>Location</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {dashboard.low_stock.length > 0 ? (
-                                            dashboard.low_stock.map((item) => (
-                                                <TableRow
-                                                    key={item.id}
-                                                    className="hover:bg-muted/35"
-                                                >
-                                                    <TableCell className="min-w-0">
-                                                        <Link
-                                                            href={inventoryShow(
-                                                                item.id,
-                                                            )}
-                                                            className="line-clamp-2 text-[13px] leading-5 font-medium hover:underline"
-                                                        >
-                                                            {item.item_name}
-                                                        </Link>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {item.item_code}
-                                                        </p>
-                                                    </TableCell>
-                                                    <TableCell className="text-muted-foreground">
-                                                        {item.category ??
-                                                            'Uncategorized'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right text-muted-foreground">
-                                                        {formatMetricQuantity(
-                                                            item.on_hand,
-                                                        )}{' '}
-                                                        {item.unit}
-                                                    </TableCell>
-                                                    <TableCell className="text-right text-muted-foreground">
-                                                        {formatMetricQuantity(
-                                                            item.reorder,
-                                                        )}{' '}
-                                                        {item.unit}
-                                                    </TableCell>
-                                                    <TableCell className="text-right font-medium text-red-600">
-                                                        {formatMetricQuantity(
-                                                            item.shortage,
-                                                        )}{' '}
-                                                        {item.unit}
-                                                    </TableCell>
-                                                    <TableCell className="text-muted-foreground">
-                                                        {item.location ??
-                                                            'No location'}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow className="hover:bg-transparent">
-                                                <TableCell
-                                                    colSpan={6}
-                                                    className="py-8 text-center text-xs text-muted-foreground sm:text-sm"
-                                                >
-                                                    No low-stock items right
-                                                    now.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            ) : (
-                                <div className="px-4 pb-4">
+                                    </>
+                                ) : (
                                     <AccessRestrictedPanel
-                                        message={restrictedMessage('inventory')}
+                                        className="min-h-[180px]"
+                                        message={restrictedMessage(
+                                            'compliance',
+                                        )}
                                     />
-                                </div>
-                            )}
-                        </CardContent>
-
-                        {dashboard.can.view_low_stock ? (
-                            <CardFooter className="border-t bg-muted/20 px-4 py-2.5 text-[11px] text-muted-foreground sm:text-xs">
-                                {tableFooterLabel(
-                                    dashboard.low_stock.length,
-                                    dashboard.inventory.low_stock_total,
-                                    'items',
                                 )}
-                            </CardFooter>
-                        ) : null}
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
 
-                    <Card className="gap-3 overflow-hidden xl:col-span-6">
-                        <CardHeader className="flex flex-col gap-2 px-4 pt-4 pb-0 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-1.5">
-                                    <ArrowRightLeft className="size-3.5 text-muted-foreground" />
-                                    <CardTitle className="text-sm">
-                                        Recent movements
-                                    </CardTitle>
-                                </div>
-                                <CardDescription className="text-[11px] leading-4.5">
-                                    Warehouse entries from the last 7 days.
-                                </CardDescription>
-                            </div>
+                <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.95fr)]">
+                    <Card className="gap-3 overflow-hidden py-4">
+                        <DashboardSectionHeader
+                            icon={ArrowRightLeft}
+                            title="Recent movements"
+                            description="Warehouse entries from the last 7 days."
+                            action={
+                                dashboard.can.view_stock_movements ? (
+                                    <SectionAction
+                                        href={stockMovementsIndex()}
+                                        label="View log"
+                                    />
+                                ) : undefined
+                            }
+                        />
 
-                            {dashboard.can.view_stock_movements ? (
-                                <SectionAction
-                                    href={stockMovementsIndex()}
-                                    label="View log"
-                                />
-                            ) : null}
-                        </CardHeader>
-
-                        <CardContent className="grid gap-3 px-4 pb-4">
+                        <CardContent className="grid gap-3 px-4">
                             {dashboard.can.view_stock_movements ? (
                                 <>
-                                    <ChartContainer
-                                        config={warehouseActivityChartConfig}
-                                        className="min-h-[84px] w-full sm:min-h-[96px]"
-                                    >
-                                        <LineChart
-                                            accessibilityLayer
-                                            data={
-                                                dashboard.inventory
-                                                    .warehouse_activity
+                                    {inventoryHasMovementData ? (
+                                        <ChartContainer
+                                            config={
+                                                warehouseActivityChartConfig
                                             }
-                                            margin={{
-                                                left: 4,
-                                                right: 4,
-                                                top: 8,
-                                                bottom: 0,
-                                            }}
+                                            className="h-[125px] w-full"
                                         >
-                                            <CartesianGrid vertical={false} />
-                                            <XAxis
-                                                dataKey="date"
-                                                tickLine={false}
-                                                axisLine={false}
-                                                tickMargin={8}
-                                            />
-                                            <YAxis hide />
-                                            <ChartTooltip
-                                                content={
-                                                    <ChartTooltipContent
-                                                        formatter={(value) =>
-                                                            formatMetricQuantity(
-                                                                toNumericValue(
-                                                                    value,
-                                                                ),
-                                                            )
-                                                        }
-                                                    />
+                                            <LineChart
+                                                accessibilityLayer
+                                                data={
+                                                    dashboard.inventory
+                                                        .warehouse_activity
                                                 }
-                                            />
-                                            <Line
-                                                type="monotone"
-                                                dataKey="stock_in"
-                                                stroke="var(--color-stock_in)"
-                                                strokeWidth={2}
-                                                dot={false}
-                                            />
-                                            <Line
-                                                type="monotone"
-                                                dataKey="stock_out"
-                                                stroke="var(--color-stock_out)"
-                                                strokeWidth={2}
-                                                dot={false}
-                                            />
-                                            <Line
-                                                type="monotone"
-                                                dataKey="transfers"
-                                                stroke="var(--color-transfers)"
-                                                strokeWidth={2}
-                                                dot={false}
-                                            />
-                                        </LineChart>
-                                    </ChartContainer>
+                                                margin={{
+                                                    left: 2,
+                                                    right: 2,
+                                                    top: 8,
+                                                    bottom: 0,
+                                                }}
+                                            >
+                                                <CartesianGrid
+                                                    vertical={false}
+                                                    strokeDasharray="3 3"
+                                                />
+                                                <XAxis
+                                                    dataKey="date"
+                                                    tickLine={false}
+                                                    axisLine={false}
+                                                    tickMargin={8}
+                                                    tick={{ fontSize: 10 }}
+                                                />
+                                                <YAxis hide />
+                                                <ChartTooltip
+                                                    content={
+                                                        <ChartTooltipContent
+                                                            formatter={(
+                                                                value,
+                                                            ) =>
+                                                                formatMetricQuantity(
+                                                                    toNumericValue(
+                                                                        value,
+                                                                    ),
+                                                                )
+                                                            }
+                                                        />
+                                                    }
+                                                />
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="stock_in"
+                                                    stroke="var(--color-stock_in)"
+                                                    strokeWidth={2}
+                                                    dot={false}
+                                                />
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="stock_out"
+                                                    stroke="var(--color-stock_out)"
+                                                    strokeWidth={2}
+                                                    dot={false}
+                                                />
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="transfers"
+                                                    stroke="var(--color-transfers)"
+                                                    strokeWidth={2}
+                                                    dot={false}
+                                                />
+                                            </LineChart>
+                                        </ChartContainer>
+                                    ) : (
+                                        <AccessRestrictedPanel
+                                            className="min-h-[125px]"
+                                            message="No warehouse activity in the last 7 days."
+                                        />
+                                    )}
 
                                     <Table className={compactTableClass}>
                                         <TableHeader className="bg-muted/25">
@@ -1490,7 +1022,7 @@ export default function Dashboard({ dashboard }: Props) {
                                                     (movement) => (
                                                         <TableRow
                                                             key={movement.id}
-                                                            className="hover:bg-muted/35"
+                                                            className="hover:bg-muted/30"
                                                         >
                                                             <TableCell className="text-muted-foreground">
                                                                 {formatDateLabel(
@@ -1501,7 +1033,7 @@ export default function Dashboard({ dashboard }: Props) {
                                                                 <Badge
                                                                     variant="outline"
                                                                     className={cn(
-                                                                        'text-[11px]',
+                                                                        'text-[10px]',
                                                                         movementBadgeClass(
                                                                             movement.type,
                                                                         ),
@@ -1535,7 +1067,7 @@ export default function Dashboard({ dashboard }: Props) {
                                                 <TableRow className="hover:bg-transparent">
                                                     <TableCell
                                                         colSpan={6}
-                                                        className="py-8 text-center text-xs text-muted-foreground sm:text-sm"
+                                                        className="py-6 text-center text-[11px] text-muted-foreground"
                                                     >
                                                         No recent movements in
                                                         the last 7 days.
@@ -1555,7 +1087,7 @@ export default function Dashboard({ dashboard }: Props) {
                         </CardContent>
 
                         {dashboard.can.view_stock_movements ? (
-                            <CardFooter className="border-t bg-muted/20 px-4 py-2.5 text-[11px] text-muted-foreground sm:text-xs">
+                            <CardFooter className="border-t bg-muted/20 px-4 py-2.5 text-[11px] text-muted-foreground">
                                 {tableFooterLabel(
                                     dashboard.recent_movements.length,
                                     dashboard.inventory.movement_count_7_days,
@@ -1564,234 +1096,345 @@ export default function Dashboard({ dashboard }: Props) {
                             </CardFooter>
                         ) : null}
                     </Card>
-                </div>
 
-                <div className="grid items-start gap-3 xl:grid-cols-12">
-                    <Card className="gap-3 overflow-hidden xl:col-span-6">
-                        <CardHeader className="flex flex-col gap-2 px-4 pt-4 pb-0 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-1.5">
-                                    <CalendarDays className="size-3.5 text-muted-foreground" />
-                                    <CardTitle className="text-sm">
-                                        Upcoming Jobs
-                                    </CardTitle>
-                                </div>
-                                <CardDescription className="text-[11px] leading-4.5">
-                                    Scheduled field activity ahead.
-                                </CardDescription>
-                            </div>
+                    <div className="grid gap-3">
+                        <Card className="gap-3 overflow-hidden py-4">
+                            <DashboardSectionHeader
+                                icon={FileText}
+                                title="Pending Follow-ups"
+                                description="Quotations needing the next sales touch."
+                                action={
+                                    dashboard.can.view_quotations ? (
+                                        <SectionAction
+                                            href={quotationsIndex()}
+                                            label="View all"
+                                        />
+                                    ) : undefined
+                                }
+                            />
 
-                            {dashboard.can.view_work_orders ? (
-                                <SectionAction
-                                    href={workOrdersIndex()}
-                                    label="View all"
-                                />
-                            ) : null}
-                        </CardHeader>
-
-                        <CardContent className="px-0">
-                            {dashboard.can.view_work_orders ? (
-                                <Table className={compactTableClass}>
-                                    <TableHeader className="bg-muted/25">
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableHead>Customer</TableHead>
-                                            <TableHead>Job Type</TableHead>
-                                            <TableHead>Schedule Date</TableHead>
-                                            <TableHead>Site</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {dashboard.upcoming_jobs.length > 0 ? (
-                                            dashboard.upcoming_jobs.map(
-                                                (job) => (
-                                                    <TableRow
-                                                        key={job.id}
-                                                        className="hover:bg-muted/35"
-                                                    >
-                                                        <TableCell className="min-w-0">
-                                                            <span className="line-clamp-2 text-[13px] leading-5 font-medium">
-                                                                {job.customer}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell className="min-w-0 text-muted-foreground">
-                                                            <span className="line-clamp-2 leading-5">
-                                                                {job.job_type}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex items-center gap-2 text-muted-foreground">
-                                                                <CalendarDays className="size-3" />
-                                                                <span className="leading-5">
-                                                                    {formatDateLabel(
-                                                                        job.schedule_date,
-                                                                        {
-                                                                            includeWeekday: true,
-                                                                        },
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell className="min-w-0 text-muted-foreground">
-                                                            <span className="line-clamp-2 leading-5">
-                                                                {job.site}
-                                                            </span>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ),
-                                            )
-                                        ) : (
+                            <CardContent className="px-0">
+                                {dashboard.can.view_quotations ? (
+                                    <Table className={compactTableClass}>
+                                        <TableHeader className="bg-muted/25">
                                             <TableRow className="hover:bg-transparent">
-                                                <TableCell
-                                                    colSpan={4}
-                                                    className="py-8 text-center text-xs text-muted-foreground sm:text-sm"
-                                                >
-                                                    No upcoming jobs scheduled.
-                                                </TableCell>
+                                                <TableHead>
+                                                    Quotation / Customer
+                                                </TableHead>
+                                                <TableHead>Subject</TableHead>
+                                                <TableHead>Due Date</TableHead>
+                                                <TableHead>Sales Rep</TableHead>
                                             </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            ) : (
-                                <div className="px-4 pb-4">
-                                    <AccessRestrictedPanel
-                                        message={restrictedMessage(
-                                            'work order',
-                                        )}
-                                    />
-                                </div>
-                            )}
-                        </CardContent>
-
-                        {dashboard.can.view_work_orders ? (
-                            <CardFooter className="border-t bg-muted/20 px-4 py-2.5 text-[11px] text-muted-foreground sm:text-xs">
-                                {tableFooterLabel(
-                                    dashboard.upcoming_jobs.length,
-                                    dashboard.work_orders.upcoming_job_total,
-                                    'jobs',
+                                        </TableHeader>
+                                        <TableBody>
+                                            {dashboard.pending_follow_ups
+                                                .length > 0 ? (
+                                                dashboard.pending_follow_ups.map(
+                                                    (followUp) => (
+                                                        <TableRow
+                                                            key={followUp.id}
+                                                            className="hover:bg-muted/30"
+                                                        >
+                                                            <TableCell className="min-w-0">
+                                                                <span className="line-clamp-2 text-[12px] leading-5 font-medium">
+                                                                    {
+                                                                        followUp.quotation_customer
+                                                                    }
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell className="min-w-0 text-muted-foreground">
+                                                                <span className="line-clamp-2 leading-5">
+                                                                    {
+                                                                        followUp.subject
+                                                                    }
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div
+                                                                    className={cn(
+                                                                        'flex items-center gap-1.5',
+                                                                        followUp.is_urgent
+                                                                            ? 'text-red-600'
+                                                                            : 'text-muted-foreground',
+                                                                    )}
+                                                                >
+                                                                    <CalendarDays className="size-3" />
+                                                                    <span className="leading-5 font-medium">
+                                                                        {formatDateLabel(
+                                                                            followUp.due_date,
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-muted-foreground">
+                                                                <span className="line-clamp-2 leading-5">
+                                                                    {
+                                                                        followUp.sales_rep
+                                                                    }
+                                                                </span>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ),
+                                                )
+                                            ) : (
+                                                <TableRow className="hover:bg-transparent">
+                                                    <TableCell
+                                                        colSpan={4}
+                                                        className="py-6 text-center text-[11px] text-muted-foreground"
+                                                    >
+                                                        No pending follow-ups
+                                                        right now.
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                ) : (
+                                    <div className="px-4 pb-4">
+                                        <AccessRestrictedPanel
+                                            message={restrictedMessage(
+                                                'quotation',
+                                            )}
+                                        />
+                                    </div>
                                 )}
-                            </CardFooter>
-                        ) : null}
-                    </Card>
-
-                    <Card className="gap-3 overflow-hidden xl:col-span-6">
-                        <CardHeader className="flex flex-col gap-2 px-4 pt-4 pb-0 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-1.5">
-                                    <FileText className="size-3.5 text-muted-foreground" />
-                                    <CardTitle className="text-sm">
-                                        Pending Follow-ups
-                                    </CardTitle>
-                                </div>
-                                <CardDescription className="text-[11px] leading-4.5">
-                                    Quotations needing the next sales touch.
-                                </CardDescription>
-                            </div>
+                            </CardContent>
 
                             {dashboard.can.view_quotations ? (
+                                <CardFooter className="border-t bg-muted/20 px-4 py-2.5 text-[11px] text-muted-foreground">
+                                    {tableFooterLabel(
+                                        dashboard.pending_follow_ups.length,
+                                        dashboard.quotations
+                                            .pending_follow_up_total,
+                                        'follow-ups',
+                                    )}
+                                </CardFooter>
+                            ) : null}
+                        </Card>
+
+                        <Card className="gap-3 overflow-hidden py-4">
+                            <DashboardSectionHeader
+                                icon={CalendarDays}
+                                title="Upcoming Jobs"
+                                description="Scheduled field activity ahead."
+                                action={
+                                    dashboard.can.view_work_orders ? (
+                                        <SectionAction
+                                            href={workOrdersIndex()}
+                                            label="View all"
+                                        />
+                                    ) : undefined
+                                }
+                            />
+
+                            <CardContent className="px-0">
+                                {dashboard.can.view_work_orders ? (
+                                    <Table className={compactTableClass}>
+                                        <TableHeader className="bg-muted/25">
+                                            <TableRow className="hover:bg-transparent">
+                                                <TableHead>Customer</TableHead>
+                                                <TableHead>Job Type</TableHead>
+                                                <TableHead>
+                                                    Schedule Date
+                                                </TableHead>
+                                                <TableHead>Site</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {dashboard.upcoming_jobs.length >
+                                            0 ? (
+                                                dashboard.upcoming_jobs.map(
+                                                    (job) => (
+                                                        <TableRow
+                                                            key={job.id}
+                                                            className="hover:bg-muted/30"
+                                                        >
+                                                            <TableCell className="min-w-0">
+                                                                <span className="line-clamp-2 text-[12px] leading-5 font-medium">
+                                                                    {
+                                                                        job.customer
+                                                                    }
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell className="min-w-0 text-muted-foreground">
+                                                                <span className="line-clamp-2 leading-5">
+                                                                    {
+                                                                        job.job_type
+                                                                    }
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="flex items-center gap-1.5 text-muted-foreground">
+                                                                    <CalendarDays className="size-3" />
+                                                                    <span className="leading-5">
+                                                                        {formatDateLabel(
+                                                                            job.schedule_date,
+                                                                            {
+                                                                                includeWeekday: true,
+                                                                            },
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="min-w-0 text-muted-foreground">
+                                                                <span className="line-clamp-2 leading-5">
+                                                                    {job.site}
+                                                                </span>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ),
+                                                )
+                                            ) : (
+                                                <TableRow className="hover:bg-transparent">
+                                                    <TableCell
+                                                        colSpan={4}
+                                                        className="py-6 text-center text-[11px] text-muted-foreground"
+                                                    >
+                                                        No upcoming jobs
+                                                        scheduled.
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                ) : (
+                                    <div className="px-4 pb-4">
+                                        <AccessRestrictedPanel
+                                            message={restrictedMessage(
+                                                'work order',
+                                            )}
+                                        />
+                                    </div>
+                                )}
+                            </CardContent>
+
+                            {dashboard.can.view_work_orders ? (
+                                <CardFooter className="border-t bg-muted/20 px-4 py-2.5 text-[11px] text-muted-foreground">
+                                    {tableFooterLabel(
+                                        dashboard.upcoming_jobs.length,
+                                        dashboard.work_orders
+                                            .upcoming_job_total,
+                                        'jobs',
+                                    )}
+                                </CardFooter>
+                            ) : null}
+                        </Card>
+                    </div>
+                </div>
+
+                <Card className="gap-3 overflow-hidden py-4">
+                    <DashboardSectionHeader
+                        icon={AlertTriangle}
+                        title="Low stock"
+                        description="Items to replenish or transfer."
+                        action={
+                            dashboard.can.view_low_stock ? (
                                 <SectionAction
-                                    href={quotationsIndex()}
+                                    href={inventoryLowStock()}
                                     label="View all"
                                 />
-                            ) : null}
-                        </CardHeader>
+                            ) : undefined
+                        }
+                    />
 
-                        <CardContent className="px-0">
-                            {dashboard.can.view_quotations ? (
-                                <Table className={compactTableClass}>
-                                    <TableHeader className="bg-muted/25">
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableHead>
-                                                Quotation / Customer
-                                            </TableHead>
-                                            <TableHead>Subject</TableHead>
-                                            <TableHead>Due Date</TableHead>
-                                            <TableHead>Sales Rep</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {dashboard.pending_follow_ups.length >
-                                        0 ? (
-                                            dashboard.pending_follow_ups.map(
-                                                (followUp) => (
-                                                    <TableRow
-                                                        key={followUp.id}
-                                                        className="hover:bg-muted/35"
+                    <CardContent className="px-0">
+                        {dashboard.can.view_low_stock ? (
+                            <Table className={compactTableClass}>
+                                <TableHeader className="bg-muted/25">
+                                    <TableRow className="hover:bg-transparent">
+                                        <TableHead>Item</TableHead>
+                                        <TableHead>Category</TableHead>
+                                        <TableHead className="text-right">
+                                            On hand
+                                        </TableHead>
+                                        <TableHead className="text-right">
+                                            Reorder
+                                        </TableHead>
+                                        <TableHead className="text-right">
+                                            Shortage
+                                        </TableHead>
+                                        <TableHead>Location</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {dashboard.low_stock.length > 0 ? (
+                                        dashboard.low_stock.map((item) => (
+                                            <TableRow
+                                                key={item.id}
+                                                className="hover:bg-muted/30"
+                                            >
+                                                <TableCell className="min-w-0">
+                                                    <Link
+                                                        href={inventoryShow(
+                                                            item.id,
+                                                        )}
+                                                        className="line-clamp-2 text-[12px] leading-5 font-medium hover:underline"
                                                     >
-                                                        <TableCell className="min-w-0">
-                                                            <span className="line-clamp-2 text-[13px] leading-5 font-medium">
-                                                                {
-                                                                    followUp.quotation_customer
-                                                                }
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell className="min-w-0 text-muted-foreground">
-                                                            <span className="line-clamp-2 leading-5">
-                                                                {
-                                                                    followUp.subject
-                                                                }
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div
-                                                                className={cn(
-                                                                    'flex items-center gap-1.5',
-                                                                    followUp.is_urgent
-                                                                        ? 'text-red-600'
-                                                                        : 'text-muted-foreground',
-                                                                )}
-                                                            >
-                                                                <CalendarDays className="size-3" />
-                                                                <span className="leading-5 font-medium">
-                                                                    {formatDateLabel(
-                                                                        followUp.due_date,
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell className="text-muted-foreground">
-                                                            <span className="line-clamp-2 leading-5">
-                                                                {
-                                                                    followUp.sales_rep
-                                                                }
-                                                            </span>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ),
-                                            )
-                                        ) : (
-                                            <TableRow className="hover:bg-transparent">
-                                                <TableCell
-                                                    colSpan={4}
-                                                    className="py-8 text-center text-xs text-muted-foreground sm:text-sm"
-                                                >
-                                                    No pending follow-ups right
-                                                    now.
+                                                        {item.item_name}
+                                                    </Link>
+                                                    <p className="text-[11px] text-muted-foreground">
+                                                        {item.item_code}
+                                                    </p>
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground">
+                                                    {item.category ??
+                                                        'Uncategorized'}
+                                                </TableCell>
+                                                <TableCell className="text-right text-muted-foreground">
+                                                    {formatMetricQuantity(
+                                                        item.on_hand,
+                                                    )}{' '}
+                                                    {item.unit}
+                                                </TableCell>
+                                                <TableCell className="text-right text-muted-foreground">
+                                                    {formatMetricQuantity(
+                                                        item.reorder,
+                                                    )}{' '}
+                                                    {item.unit}
+                                                </TableCell>
+                                                <TableCell className="text-right font-medium text-red-600">
+                                                    {formatMetricQuantity(
+                                                        item.shortage,
+                                                    )}{' '}
+                                                    {item.unit}
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground">
+                                                    {item.location ??
+                                                        'No location'}
                                                 </TableCell>
                                             </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            ) : (
-                                <div className="px-4 pb-4">
-                                    <AccessRestrictedPanel
-                                        message={restrictedMessage('quotation')}
-                                    />
-                                </div>
-                            )}
-                        </CardContent>
+                                        ))
+                                    ) : (
+                                        <TableRow className="hover:bg-transparent">
+                                            <TableCell
+                                                colSpan={6}
+                                                className="py-6 text-center text-[11px] text-muted-foreground"
+                                            >
+                                                No low-stock items right now.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        ) : (
+                            <div className="px-4 pb-4">
+                                <AccessRestrictedPanel
+                                    message={restrictedMessage('inventory')}
+                                />
+                            </div>
+                        )}
+                    </CardContent>
 
-                        {dashboard.can.view_quotations ? (
-                            <CardFooter className="border-t bg-muted/20 px-4 py-2.5 text-[11px] text-muted-foreground sm:text-xs">
-                                {tableFooterLabel(
-                                    dashboard.pending_follow_ups.length,
-                                    dashboard.quotations
-                                        .pending_follow_up_total,
-                                    'follow-ups',
-                                )}
-                            </CardFooter>
-                        ) : null}
-                    </Card>
-                </div>
+                    {dashboard.can.view_low_stock ? (
+                        <CardFooter className="border-t bg-muted/20 px-4 py-2.5 text-[11px] text-muted-foreground">
+                            {tableFooterLabel(
+                                dashboard.low_stock.length,
+                                dashboard.inventory.low_stock_total,
+                                'items',
+                            )}
+                        </CardFooter>
+                    ) : null}
+                </Card>
             </div>
         </>
     );
