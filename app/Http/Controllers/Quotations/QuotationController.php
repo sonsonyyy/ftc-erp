@@ -360,8 +360,10 @@ class QuotationController extends Controller
 
         $range = $this->resolveKpiRange($request);
         $customerId = $request->integer('customer') ?: null;
+        $status = $request->string('status')->toString();
         $baseQuery = Quotation::query()
             ->forCustomer($customerId)
+            ->status($status)
             ->betweenQuotationDates($range['from'], $range['to']);
 
         $submittedStatuses = $this->submittedStatuses();
@@ -457,12 +459,14 @@ class QuotationController extends Controller
         return Inertia::render('quotations/kpi', [
             'filters' => [
                 'customer' => $customerId,
+                'status' => $status,
                 'range' => $range['range'],
                 'from' => $range['from'],
                 'to' => $range['to'],
             ],
             'rangeOptions' => $this->rangeOptions(),
             'customerOptions' => $this->customerOptions(),
+            'statusOptions' => $this->statusOptions(),
             'metrics' => [
                 'total_submitted' => $totalSubmitted,
                 'total_awarded' => $totalAwarded,

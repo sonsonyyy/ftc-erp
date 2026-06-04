@@ -139,6 +139,61 @@ test('quotation kpi dashboard can be filtered by customer', function () {
         );
 });
 
+test('quotation kpi dashboard can be filtered by type and custom dates', function () {
+    actingAsQuotationKpiRole('Management / CEO');
+
+    $customer = Customer::factory()->create([
+        'company_name' => 'Range Filter Customer',
+    ]);
+
+    Quotation::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'quotation_amount' => 1200,
+        'status' => QuotationStatus::Awarded,
+        'quotation_date' => '2026-04-10',
+        'materialized_at' => '2026-04-15',
+    ]);
+
+    Quotation::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'quotation_amount' => 1800,
+        'status' => QuotationStatus::Awarded,
+        'quotation_date' => '2026-05-10',
+        'materialized_at' => '2026-05-13',
+    ]);
+
+    Quotation::factory()->create([
+        'customer_id' => $customer->getKey(),
+        'quotation_amount' => 5000,
+        'status' => QuotationStatus::Submitted,
+        'quotation_date' => '2026-05-12',
+    ]);
+
+    $this->get(route('quotations.kpi', [
+        'range' => 'custom',
+        'from' => '2026-05-01',
+        'to' => '2026-05-31',
+        'status' => QuotationStatus::Awarded->value,
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('quotations/kpi')
+            ->where('filters.range', 'custom')
+            ->where('filters.status', QuotationStatus::Awarded->value)
+            ->where('filters.from', '2026-05-01')
+            ->where('filters.to', '2026-05-31')
+            ->where('metrics.total_submitted', 1)
+            ->where('metrics.total_awarded', 1)
+            ->where('metrics.total_quotation_value', 1800)
+            ->where('metrics.awarded_value', 1800)
+            ->where('metrics.pending_count', 0)
+            ->where('metrics.lost_count', 0)
+            ->where('statusBreakdown.3.status', QuotationStatus::Awarded->value)
+            ->where('statusBreakdown.3.count', 1)
+            ->where('topCustomersByAwardedValue.0.total_value', 1800),
+        );
+});
+
 test('users without permissions cannot view the quotation kpi dashboard', function () {
     $user = User::factory()->create();
 

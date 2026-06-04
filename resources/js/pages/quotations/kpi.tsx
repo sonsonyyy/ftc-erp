@@ -1,5 +1,5 @@
-import { Form, Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import { dashboard } from '@/routes';
 import {
     index as quotationsIndex,
@@ -15,6 +15,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import type {
     QuotationCustomerKpiItem,
     QuotationKpiFilters,
@@ -29,14 +30,12 @@ type Props = {
     filters: QuotationKpiFilters;
     rangeOptions: SelectOption[];
     customerOptions: SelectOption[];
+    statusOptions: SelectOption[];
     metrics: QuotationKpiMetrics;
     statusBreakdown: QuotationStatusBreakdownItem[];
     topCustomersByQuotationValue: QuotationCustomerKpiItem[];
     topCustomersByAwardedValue: QuotationCustomerKpiItem[];
     lostReasons: QuotationLostReasonItem[];
-    can: {
-        view_registry: boolean;
-    };
 };
 
 function formatCurrency(amount: number): string {
@@ -55,40 +54,128 @@ export default function QuotationsKpi({
     filters,
     rangeOptions,
     customerOptions,
+    statusOptions,
     metrics,
     statusBreakdown,
     topCustomersByQuotationValue,
     topCustomersByAwardedValue,
     lostReasons,
-    can,
 }: Props) {
-    const [selectedRange, setSelectedRange] = useState(filters.range);
-    const showCustomRange = selectedRange === 'custom';
+    const [kpiFilters, setKpiFilters] = useState({
+        customer: filters.customer === null ? '' : String(filters.customer),
+        status: filters.status,
+        range: filters.range,
+        from: filters.from ?? '',
+        to: filters.to ?? '',
+    });
+    const showCustomRange = kpiFilters.range === 'custom';
+
+    useEffect(() => {
+        setKpiFilters((currentFilters) => {
+            const nextFilters = {
+                customer:
+                    filters.customer === null ? '' : String(filters.customer),
+                status: filters.status,
+                range: filters.range,
+                from: filters.from ?? '',
+                to: filters.to ?? '',
+            };
+
+            if (
+                currentFilters.customer === nextFilters.customer &&
+                currentFilters.status === nextFilters.status &&
+                currentFilters.range === nextFilters.range &&
+                currentFilters.from === nextFilters.from &&
+                currentFilters.to === nextFilters.to
+            ) {
+                return currentFilters;
+            }
+
+            return nextFilters;
+        });
+    }, [
+        filters.customer,
+        filters.from,
+        filters.range,
+        filters.status,
+        filters.to,
+    ]);
+
+    useEffect(() => {
+        const currentCustomer =
+            filters.customer === null ? '' : String(filters.customer);
+        const currentFrom = filters.from ?? '';
+        const currentTo = filters.to ?? '';
+
+        if (
+            kpiFilters.customer === currentCustomer &&
+            kpiFilters.status === filters.status &&
+            kpiFilters.range === filters.range &&
+            kpiFilters.from === currentFrom &&
+            kpiFilters.to === currentTo
+        ) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.cancelAll();
+            router.get(
+                toUrl(quotationsKpi()),
+                cleanQueryParams({
+                    customer:
+                        kpiFilters.customer === ''
+                            ? undefined
+                            : Number(kpiFilters.customer),
+                    status: kpiFilters.status || undefined,
+                    range: kpiFilters.range,
+                    from:
+                        kpiFilters.range === 'custom'
+                            ? kpiFilters.from || undefined
+                            : undefined,
+                    to:
+                        kpiFilters.range === 'custom'
+                            ? kpiFilters.to || undefined
+                            : undefined,
+                }),
+                {
+                    only: [
+                        'filters',
+                        'metrics',
+                        'statusBreakdown',
+                        'topCustomersByQuotationValue',
+                        'topCustomersByAwardedValue',
+                        'lostReasons',
+                    ],
+                    replace: true,
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        }, 250);
+
+        return () => window.clearTimeout(timeout);
+    }, [
+        filters.customer,
+        filters.from,
+        filters.range,
+        filters.status,
+        filters.to,
+        kpiFilters,
+    ]);
 
     return (
         <>
             <Head title="Quotation Sales KPI" />
 
             <div className="app-page flex flex-1 flex-col gap-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl font-semibold tracking-tight">
-                            Quotation Sales KPI
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Monitor quotation throughput, conversion, awarded
-                            value, and loss patterns using source transactions
-                            only.
-                        </p>
-                    </div>
-
-                    {can.view_registry && (
-                        <Button variant="outline" asChild>
-                            <Link href={quotationsIndex()}>
-                                Back to registry
-                            </Link>
-                        </Button>
-                    )}
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        Quotation Sales KPI
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Monitor quotation throughput, conversion, awarded value,
+                        and loss patterns using source transactions only.
+                    </p>
                 </div>
 
                 <Card>
@@ -101,16 +188,15 @@ export default function QuotationsKpi({
                     </CardHeader>
 
                     <CardContent>
-                        <Form
-                            action={quotationsKpi()}
-                            method="get"
-                            options={{ preserveState: true, replace: true }}
-                            className="grid gap-3 xl:grid-cols-[1.5fr_1fr_1fr_1fr_auto_auto]"
-                        >
+                        <div className="grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_auto]">
                             <SelectInput
-                                name="customer"
-                                defaultValue={filters.customer ?? ''}
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                value={kpiFilters.customer}
+                                onChange={(event) =>
+                                    setKpiFilters((currentFilters) => ({
+                                        ...currentFilters,
+                                        customer: event.currentTarget.value,
+                                    }))
+                                }
                             >
                                 <option value="">All customers</option>
                                 {customerOptions.map((option) => (
@@ -124,12 +210,33 @@ export default function QuotationsKpi({
                             </SelectInput>
 
                             <SelectInput
-                                name="range"
-                                defaultValue={filters.range}
+                                value={kpiFilters.status}
                                 onChange={(event) =>
-                                    setSelectedRange(event.currentTarget.value)
+                                    setKpiFilters((currentFilters) => ({
+                                        ...currentFilters,
+                                        status: event.currentTarget.value,
+                                    }))
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            >
+                                <option value="">All types</option>
+                                {statusOptions.map((option) => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </SelectInput>
+
+                            <SelectInput
+                                value={kpiFilters.range}
+                                onChange={(event) =>
+                                    setKpiFilters((currentFilters) => ({
+                                        ...currentFilters,
+                                        range: event.currentTarget.value,
+                                    }))
+                                }
                             >
                                 {rangeOptions.map((option) => (
                                     <option
@@ -142,25 +249,39 @@ export default function QuotationsKpi({
                             </SelectInput>
 
                             <Input
-                                name="from"
                                 type="date"
-                                defaultValue={filters.from ?? ''}
+                                value={kpiFilters.from}
+                                onChange={(event) =>
+                                    setKpiFilters((currentFilters) => ({
+                                        ...currentFilters,
+                                        range: 'custom',
+                                        from: event.currentTarget.value,
+                                    }))
+                                }
                                 disabled={!showCustomRange}
                             />
 
                             <Input
-                                name="to"
                                 type="date"
-                                defaultValue={filters.to ?? ''}
+                                value={kpiFilters.to}
+                                onChange={(event) =>
+                                    setKpiFilters((currentFilters) => ({
+                                        ...currentFilters,
+                                        range: 'custom',
+                                        to: event.currentTarget.value,
+                                    }))
+                                }
                                 disabled={!showCustomRange}
                             />
 
-                            <Button type="submit">Apply</Button>
-
-                            <Button variant="outline" asChild>
+                            <Button
+                                variant="outline"
+                                asChild
+                                className="xl:justify-self-end"
+                            >
                                 <Link href={quotationsKpi()}>Reset</Link>
                             </Button>
-                        </Form>
+                        </div>
                     </CardContent>
                 </Card>
 

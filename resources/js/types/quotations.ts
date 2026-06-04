@@ -169,6 +169,7 @@ export type QuotationFilters = {
 
 export type QuotationKpiFilters = {
     customer: number | null;
+    status: string;
     range: string;
     from: string | null;
     to: string | null;
