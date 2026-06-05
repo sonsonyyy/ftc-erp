@@ -6,7 +6,10 @@ use Illuminate\Support\Facades\Schema;
 uses(RefreshDatabase::class);
 
 test('attachment links migration is safe when the table already exists', function () {
+    $uniqueIndexName = 'att_links_attachable_unique';
+
     expect(Schema::hasTable('attachment_links'))->toBeTrue();
+    expect(strlen($uniqueIndexName))->toBeLessThanOrEqual(64);
 
     $migration = require database_path('migrations/2026_04_19_000007_create_attachment_links_table.php');
 

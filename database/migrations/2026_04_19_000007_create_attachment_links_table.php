@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private const UNIQUE_INDEX_NAME = 'att_links_attachable_unique';
+
     /**
      * Run the migrations.
      */
@@ -14,7 +16,10 @@ return new class extends Migration
         if (Schema::hasTable('attachment_links')) {
             if (! Schema::hasIndex('attachment_links', ['attachment_id', 'attachable_type', 'attachable_id'], 'unique')) {
                 Schema::table('attachment_links', function (Blueprint $table) {
-                    $table->unique(['attachment_id', 'attachable_type', 'attachable_id']);
+                    $table->unique(
+                        ['attachment_id', 'attachable_type', 'attachable_id'],
+                        self::UNIQUE_INDEX_NAME,
+                    );
                 });
             }
 
@@ -27,7 +32,10 @@ return new class extends Migration
             $table->morphs('attachable');
             $table->timestamps();
 
-            $table->unique(['attachment_id', 'attachable_type', 'attachable_id']);
+            $table->unique(
+                ['attachment_id', 'attachable_type', 'attachable_id'],
+                self::UNIQUE_INDEX_NAME,
+            );
         });
     }
 
