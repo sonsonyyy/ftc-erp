@@ -41,7 +41,6 @@ class PurchaseOrderController extends Controller
         $this->authorize('viewAny', PurchaseOrder::class);
 
         $search = $request->string('search')->toString();
-        $supplierId = $request->integer('supplier') ?: null;
         $status = $request->string('status')->toString();
         $perPage = $this->resolvePerPage($request);
 
@@ -56,7 +55,6 @@ class PurchaseOrderController extends Controller
             ->withSum('items as ordered_quantity_total', 'ordered_quantity')
             ->withSum('receiptItems as received_quantity_total', 'received_quantity')
             ->search($search)
-            ->forSupplier($supplierId)
             ->status($status)
             ->orderByDesc('order_date')
             ->orderByDesc('id');
@@ -74,11 +72,9 @@ class PurchaseOrderController extends Controller
             'purchaseOrders' => $purchaseOrders,
             'filters' => [
                 'search' => $search,
-                'supplier' => $supplierId,
                 'status' => $status,
                 'per_page' => $perPage,
             ],
-            'supplierOptions' => $this->supplierOptions(),
             'statusOptions' => $this->statusOptions(includeDerived: true),
             'can' => [
                 'create' => $request->user()?->can('create', PurchaseOrder::class) ?? false,

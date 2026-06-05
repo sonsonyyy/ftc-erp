@@ -132,7 +132,6 @@ export type InventoryFilters = {
     search: string;
     category: number | null;
     status: string;
-    low_stock: string;
     per_page: number;
 };
 
@@ -225,7 +224,6 @@ export type WarehouseFormData = {
 
 export type WarehouseFilters = {
     search: string;
-    activity: string;
     per_page: number;
 };
 
@@ -271,7 +269,6 @@ export type StockMovementFormDefaults = {
 export type StockMovementFilters = {
     search: string;
     warehouse: number | null;
-    item: number | null;
     type: string;
     per_page: number;
 };
@@ -353,8 +350,6 @@ export type StockIssuanceDetail = {
 export type StockIssuanceFilters = {
     search: string;
     warehouse: number | null;
-    project: number | null;
-    work_order: number | null;
     per_page: number;
 };
 
@@ -430,8 +425,6 @@ export type StockReturnDetail = {
 export type StockReturnFilters = {
     search: string;
     warehouse: number | null;
-    project: number | null;
-    work_order: number | null;
     per_page: number;
 };
 

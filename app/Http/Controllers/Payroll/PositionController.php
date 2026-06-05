@@ -27,7 +27,7 @@ class PositionController extends Controller
 
         $search = $request->string('search')->toString();
         $departmentId = $request->integer('department') ?: null;
-        $active = $request->string('active')->toString();
+        $status = $request->string('status')->toString();
         $perPage = $this->resolvePerPage($request);
 
         $positions = Position::query()
@@ -35,7 +35,7 @@ class PositionController extends Controller
             ->withCount('employees')
             ->search($search)
             ->forDepartment($departmentId)
-            ->active($active)
+            ->active($status)
             ->orderBy('title')
             ->paginate($perPage)
             ->withQueryString()
@@ -46,11 +46,11 @@ class PositionController extends Controller
             'filters' => [
                 'search' => $search,
                 'department' => $departmentId,
-                'active' => $active,
+                'status' => $status,
                 'per_page' => $perPage,
             ],
             'departmentOptions' => $this->departmentOptions(),
-            'activityOptions' => $this->activityOptions(),
+            'statusOptions' => $this->activityOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Position::class) ?? false,
             ],
@@ -211,8 +211,8 @@ class PositionController extends Controller
     private function activityOptions(): array
     {
         return [
-            ['value' => 'active', 'label' => 'Active only'],
-            ['value' => 'inactive', 'label' => 'Inactive only'],
+            ['value' => 'active', 'label' => 'Active'],
+            ['value' => 'inactive', 'label' => 'Inactive'],
         ];
     }
 

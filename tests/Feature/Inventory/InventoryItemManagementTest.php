@@ -67,7 +67,7 @@ test('inventory item page size can be customized', function () {
         );
 });
 
-test('inventory list can be filtered by search category status and low stock flag', function () {
+test('inventory list can be filtered by search category and status', function () {
     actingAsInventoryItemRole('Warehouse / Inventory Officer');
 
     $warehouse = Warehouse::factory()->create();
@@ -110,7 +110,6 @@ test('inventory list can be filtered by search category status and low stock fla
         'search' => 'alpha',
         'category' => $sprinklerCategory->getKey(),
         'status' => InventoryItemStatus::Active->value,
-        'low_stock' => '1',
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -118,7 +117,6 @@ test('inventory list can be filtered by search category status and low stock fla
             ->where('filters.search', 'alpha')
             ->where('filters.category', $sprinklerCategory->getKey())
             ->where('filters.status', InventoryItemStatus::Active->value)
-            ->where('filters.low_stock', '1')
             ->where('inventoryItems.total', 1)
             ->where('inventoryItems.data.0.item_code', 'ITM-ALPHA-001'),
         );
@@ -208,7 +206,6 @@ test('inventory export respects the active filters', function () {
         'search' => 'Alpha',
         'category' => $sprinklerCategory->getKey(),
         'status' => InventoryItemStatus::Active->value,
-        'low_stock' => '1',
         'export' => 'csv',
     ]));
 

@@ -25,13 +25,13 @@ class DepartmentController extends Controller
         $this->authorize('viewAny', Department::class);
 
         $search = $request->string('search')->toString();
-        $active = $request->string('active')->toString();
+        $status = $request->string('status')->toString();
         $perPage = $this->resolvePerPage($request);
 
         $departments = Department::query()
             ->withCount(['positions', 'employees'])
             ->search($search)
-            ->active($active)
+            ->active($status)
             ->orderBy('name')
             ->paginate($perPage)
             ->withQueryString()
@@ -41,10 +41,10 @@ class DepartmentController extends Controller
             'departments' => $departments,
             'filters' => [
                 'search' => $search,
-                'active' => $active,
+                'status' => $status,
                 'per_page' => $perPage,
             ],
-            'activityOptions' => $this->activityOptions(),
+            'statusOptions' => $this->activityOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Department::class) ?? false,
             ],
@@ -179,8 +179,8 @@ class DepartmentController extends Controller
     private function activityOptions(): array
     {
         return [
-            ['value' => 'active', 'label' => 'Active only'],
-            ['value' => 'inactive', 'label' => 'Inactive only'],
+            ['value' => 'active', 'label' => 'Active'],
+            ['value' => 'inactive', 'label' => 'Inactive'],
         ];
     }
 

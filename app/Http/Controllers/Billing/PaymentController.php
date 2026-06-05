@@ -29,7 +29,6 @@ class PaymentController extends Controller
         $this->authorize('viewAny', Payment::class);
 
         $search = $request->string('search')->toString();
-        $customerId = $request->integer('customer') ?: null;
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
         $perPage = $this->resolvePerPage($request);
@@ -41,7 +40,6 @@ class PaymentController extends Controller
             ])
             ->withCount('allocations')
             ->search($search)
-            ->forCustomer($customerId)
             ->betweenPaymentDates($from, $to)
             ->orderByDesc('payment_date')
             ->orderByDesc('id')
@@ -53,12 +51,10 @@ class PaymentController extends Controller
             'payments' => $payments,
             'filters' => [
                 'search' => $search,
-                'customer' => $customerId,
                 'from' => $from,
                 'to' => $to,
                 'per_page' => $perPage,
             ],
-            'customerOptions' => $this->customerOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Payment::class) ?? false,
             ],

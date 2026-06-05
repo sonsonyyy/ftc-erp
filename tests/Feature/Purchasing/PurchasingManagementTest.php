@@ -177,14 +177,14 @@ test('authorized users can browse and filter paginated suppliers', function () {
 
     $this->get(route('suppliers.index', [
         'search' => 'alpha',
-        'activity' => 'active',
+        'status' => 'active',
         'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('suppliers/index')
             ->where('filters.search', 'alpha')
-            ->where('filters.activity', 'active')
+            ->where('filters.status', 'active')
             ->where('filters.per_page', 5)
             ->where('suppliers.total', 1)
             ->where('suppliers.data.0.company_name', 'Alpha Fire Supply')
@@ -300,7 +300,6 @@ test('authorized users can browse filter and create purchase requests', function
 
     $this->get(route('purchase-requests.index', [
         'search' => 'alpha',
-        'supplier' => $context['supplier']->getKey(),
         'status' => PurchaseRequestStatus::Submitted->value,
         'per_page' => 5,
     ]))
@@ -308,7 +307,6 @@ test('authorized users can browse filter and create purchase requests', function
         ->assertInertia(fn (Assert $page) => $page
             ->component('purchase-requests/index')
             ->where('filters.search', 'alpha')
-            ->where('filters.supplier', $context['supplier']->getKey())
             ->where('filters.status', PurchaseRequestStatus::Submitted->value)
             ->where('filters.per_page', 5)
             ->where('purchaseRequests.total', 1)
@@ -466,7 +464,6 @@ test('authorized users can create purchase orders and linked request becomes ord
 
     $this->get(route('purchase-orders.index', [
         'search' => 'po-new',
-        'supplier' => $purchaseRequest->supplier_id,
         'status' => PurchaseOrderStatus::Approved->value,
         'per_page' => 5,
     ]))
@@ -474,7 +471,6 @@ test('authorized users can create purchase orders and linked request becomes ord
         ->assertInertia(fn (Assert $page) => $page
             ->component('purchase-orders/index')
             ->where('filters.search', 'po-new')
-            ->where('filters.supplier', $purchaseRequest->supplier_id)
             ->where('filters.status', PurchaseOrderStatus::Approved->value)
             ->where('filters.per_page', 5)
             ->where('purchaseOrders.total', 1)
@@ -623,7 +619,6 @@ test('recording a purchase receipt updates stock and marks the order as fully re
 
     $this->get(route('purchase-receipts.index', [
         'search' => 'rcv-new',
-        'supplier' => $context['supplier']->getKey(),
         'warehouse' => $context['warehouse']->getKey(),
         'per_page' => 5,
     ]))
@@ -631,7 +626,6 @@ test('recording a purchase receipt updates stock and marks the order as fully re
         ->assertInertia(fn (Assert $page) => $page
             ->component('purchase-receipts/index')
             ->where('filters.search', 'rcv-new')
-            ->where('filters.supplier', $context['supplier']->getKey())
             ->where('filters.warehouse', $context['warehouse']->getKey())
             ->where('filters.per_page', 5)
             ->where('purchaseReceipts.total', 1)

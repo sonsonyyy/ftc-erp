@@ -42,7 +42,6 @@ class InvoiceController extends Controller
         $this->authorize('viewAny', Invoice::class);
 
         $search = $request->string('search')->toString();
-        $customerId = $request->integer('customer') ?: null;
         $status = $request->string('status')->toString();
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
@@ -57,7 +56,6 @@ class InvoiceController extends Controller
             ])
             ->withCount(['attachments', 'paymentAllocations'])
             ->search($search)
-            ->forCustomer($customerId)
             ->status($status)
             ->betweenInvoiceDates($from, $to)
             ->orderByDesc('invoice_date')
@@ -76,13 +74,11 @@ class InvoiceController extends Controller
             'invoices' => $invoices,
             'filters' => [
                 'search' => $search,
-                'customer' => $customerId,
                 'status' => $status,
                 'from' => $from,
                 'to' => $to,
                 'per_page' => $perPage,
             ],
-            'customerOptions' => $this->customerOptions(),
             'statusOptions' => $this->statusOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Invoice::class) ?? false,

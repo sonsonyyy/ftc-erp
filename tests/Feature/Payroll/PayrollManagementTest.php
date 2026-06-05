@@ -74,14 +74,14 @@ test('hr users can browse paginated and filtered departments', function () {
 
     $this->get(route('departments.index', [
         'search' => 'administration',
-        'active' => 'active',
+        'status' => 'active',
         'per_page' => 5,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('departments/index')
             ->where('filters.search', 'administration')
-            ->where('filters.active', 'active')
+            ->where('filters.status', 'active')
             ->where('filters.per_page', 5)
             ->where('departments.total', 1)
             ->where('departments.data.0.name', 'Administration'),
@@ -153,7 +153,7 @@ test('hr users can create filter update and archive positions', function () {
     $this->get(route('positions.index', [
         'search' => 'payroll',
         'department' => $administration->getKey(),
-        'active' => 'active',
+        'status' => 'active',
         'per_page' => 5,
     ]))
         ->assertOk()
@@ -163,6 +163,7 @@ test('hr users can create filter update and archive positions', function () {
             ->where('filters.search', 'payroll')
             ->where('positions.data.0.title', 'Payroll Officer')
             ->where('filters.department', $administration->getKey())
+            ->where('filters.status', 'active')
             ->where('filters.per_page', 5),
         );
 
@@ -289,7 +290,7 @@ test('hr users can filter create update and archive employees', function () {
         'department' => $operations->getKey(),
         'position' => $technician->getKey(),
         'employment_status' => EmploymentStatus::Regular->value,
-        'active' => 'active',
+        'state' => 'active',
         'per_page' => 5,
     ]))
         ->assertOk()
@@ -300,6 +301,8 @@ test('hr users can filter create update and archive employees', function () {
             ->where('filters.search', 'alicia')
             ->where('filters.department', $operations->getKey())
             ->where('filters.position', $technician->getKey())
+            ->where('filters.employment_status', EmploymentStatus::Regular->value)
+            ->where('filters.state', 'active')
             ->where('filters.per_page', 5)
             ->where('summary.total_employees', 3)
             ->where('summary.active_employees', 2)
@@ -453,6 +456,9 @@ test('hr users can create filter update and archive payroll runs', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('payroll-runs/index')
             ->where('filters.search', 'pr-2026-0009')
+            ->where('filters.status', PayrollRunStatus::Draft->value)
+            ->where('filters.from', '2026-04-01')
+            ->where('filters.to', '2026-04-30')
             ->where('filters.per_page', 5)
             ->where('payrollRuns.total', 1)
             ->where('payrollRuns.data.0.payroll_run_no', 'PR-2026-0009')

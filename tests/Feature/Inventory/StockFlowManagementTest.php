@@ -78,7 +78,6 @@ test('authorized users can record manual stock movements and filter the movement
     $this->get(route('stock-movements.index', [
         'search' => 'adj',
         'warehouse' => $warehouse->getKey(),
-        'item' => $inventoryItem->getKey(),
         'type' => StockMovementType::StockOut->value,
         'per_page' => 5,
     ]))
@@ -87,7 +86,6 @@ test('authorized users can record manual stock movements and filter the movement
             ->component('stock-movements/index')
             ->where('filters.search', 'adj')
             ->where('filters.warehouse', $warehouse->getKey())
-            ->where('filters.item', $inventoryItem->getKey())
             ->where('filters.type', StockMovementType::StockOut->value)
             ->where('filters.per_page', 5)
             ->where('movements.total', 1)
@@ -191,8 +189,6 @@ test('authorized users can create stock issuances that reduce balances and log p
     $this->get(route('stock-issuances.index', [
         'search' => 'iss-2026',
         'warehouse' => $warehouse->getKey(),
-        'project' => $project->getKey(),
-        'work_order' => $workOrder->getKey(),
         'per_page' => 5,
     ]))
         ->assertOk()
@@ -200,8 +196,6 @@ test('authorized users can create stock issuances that reduce balances and log p
             ->component('stock-issuances/index')
             ->where('filters.search', 'iss-2026')
             ->where('filters.warehouse', $warehouse->getKey())
-            ->where('filters.project', $project->getKey())
-            ->where('filters.work_order', $workOrder->getKey())
             ->where('filters.per_page', 5)
             ->where('stockIssuances.total', 1)
             ->where('stockIssuances.data.0.issuance_no', 'ISS-2026-0001'),
@@ -313,8 +307,6 @@ test('authorized users can create stock returns that increase balances', functio
     $this->get(route('stock-returns.index', [
         'search' => 'ret-2026',
         'warehouse' => $warehouse->getKey(),
-        'project' => $project->getKey(),
-        'work_order' => $workOrder->getKey(),
         'per_page' => 5,
     ]))
         ->assertOk()
@@ -322,8 +314,6 @@ test('authorized users can create stock returns that increase balances', functio
             ->component('stock-returns/index')
             ->where('filters.search', 'ret-2026')
             ->where('filters.warehouse', $warehouse->getKey())
-            ->where('filters.project', $project->getKey())
-            ->where('filters.work_order', $workOrder->getKey())
             ->where('filters.per_page', 5)
             ->where('stockReturns.total', 1)
             ->where('stockReturns.data.0.return_no', 'RET-2026-0001'),

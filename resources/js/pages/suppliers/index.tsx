@@ -1,26 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    ChevronDown,
-    Eye,
-    Pencil,
-    Plus,
-    Search,
-    SlidersHorizontal,
-} from 'lucide-react';
+import { Eye, Pencil, Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -40,7 +26,7 @@ import type {
 type Props = {
     suppliers: PaginatedData<SupplierListItem>;
     filters: SupplierFilters;
-    activityOptions: SelectOption[];
+    statusOptions: SelectOption[];
     can: {
         create: boolean;
     };
@@ -68,24 +54,24 @@ function badgeClass(isActive: boolean): string {
 export default function SuppliersIndex({
     suppliers,
     filters,
-    activityOptions,
+    statusOptions,
     can,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
-        activity: filters.activity,
+        status: filters.status,
         per_page: String(filters.per_page),
     });
 
     useEffect(() => {
         setTableFilters((currentFilters) => {
             const nextFilters = {
-                activity: filters.activity,
+                status: filters.status,
                 per_page: String(filters.per_page),
             };
 
             if (
-                currentFilters.activity === nextFilters.activity &&
+                currentFilters.status === nextFilters.status &&
                 currentFilters.per_page === nextFilters.per_page
             ) {
                 return currentFilters;
@@ -93,7 +79,7 @@ export default function SuppliersIndex({
 
             return nextFilters;
         });
-    }, [filters.activity, filters.per_page]);
+    }, [filters.per_page, filters.status]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
@@ -101,7 +87,7 @@ export default function SuppliersIndex({
 
         if (
             normalizedSearch === filters.search &&
-            tableFilters.activity === filters.activity &&
+            tableFilters.status === filters.status &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -113,7 +99,7 @@ export default function SuppliersIndex({
                 toUrl(suppliersIndex()),
                 cleanQueryParams({
                     search: normalizedSearch,
-                    activity: tableFilters.activity,
+                    status: tableFilters.status,
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -128,14 +114,12 @@ export default function SuppliersIndex({
 
         return () => window.clearTimeout(timeout);
     }, [
-        filters.activity,
         filters.per_page,
         filters.search,
+        filters.status,
         searchInput,
         tableFilters,
     ]);
-
-    const activeFilterCount = tableFilters.activity === '' ? 0 : 1;
 
     return (
         <>
@@ -176,55 +160,27 @@ export default function SuppliersIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.activity === ''
-                                            ? 'all'
-                                            : tableFilters.activity
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            activity:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
-                                >
-                                    <DropdownMenuRadioItem value="all">
-                                        All suppliers
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuSeparator />
-                                    {activityOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
                 </div>
 

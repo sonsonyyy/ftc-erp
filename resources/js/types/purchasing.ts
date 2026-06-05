@@ -22,7 +22,7 @@ export type SupplierListItem = {
 
 export type SupplierFilters = {
     search: string;
-    activity: string;
+    status: string;
     per_page: number;
 };
 
@@ -87,7 +87,6 @@ export type SupplierDetail = {
 
 export type PurchaseRequestFilters = {
     search: string;
-    supplier: number | null;
     status: string;
     per_page: number;
 };
@@ -233,7 +232,6 @@ export type PurchaseRequestDetail = {
 
 export type PurchaseOrderFilters = {
     search: string;
-    supplier: number | null;
     status: string;
     per_page: number;
 };
@@ -415,7 +413,6 @@ export type PurchaseOrderDetail = {
 
 export type PurchaseReceiptFilters = {
     search: string;
-    supplier: number | null;
     warehouse: number | null;
     per_page: number;
 };

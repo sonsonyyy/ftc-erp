@@ -28,13 +28,13 @@ class SupplierController extends Controller
         $this->authorize('viewAny', Supplier::class);
 
         $search = $request->string('search')->toString();
-        $activity = $request->string('activity')->toString();
+        $status = $request->string('status')->toString();
         $perPage = $this->resolvePerPage($request);
 
         $suppliers = Supplier::query()
             ->withCount(['purchaseRequests', 'purchaseOrders', 'attachments'])
             ->search($search)
-            ->active($activity)
+            ->active($status)
             ->orderBy('company_name')
             ->orderBy('supplier_code')
             ->paginate($perPage)
@@ -45,10 +45,10 @@ class SupplierController extends Controller
             'suppliers' => $suppliers,
             'filters' => [
                 'search' => $search,
-                'activity' => $activity,
+                'status' => $status,
                 'per_page' => $perPage,
             ],
-            'activityOptions' => $this->activityOptions(),
+            'statusOptions' => $this->activityOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Supplier::class) ?? false,
             ],

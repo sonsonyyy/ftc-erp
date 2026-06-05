@@ -36,7 +36,6 @@ class InventoryItemController extends Controller
         $search = $request->string('search')->toString();
         $categoryId = $request->integer('category') ?: null;
         $status = $request->string('status')->toString();
-        $lowStockOnly = $request->string('low_stock')->toString() === '1';
         $perPage = $this->resolvePerPage($request);
 
         $query = InventoryItem::query()
@@ -45,7 +44,6 @@ class InventoryItemController extends Controller
             ->search($search)
             ->forCategory($categoryId)
             ->status($status)
-            ->when($lowStockOnly, fn ($query) => $query->belowReorderLevel())
             ->orderBy('item_name')
             ->orderBy('id');
 
@@ -64,7 +62,6 @@ class InventoryItemController extends Controller
                 'search' => $search,
                 'category' => $categoryId,
                 'status' => $status,
-                'low_stock' => $lowStockOnly ? '1' : '',
                 'per_page' => $perPage,
             ],
             'categoryOptions' => $this->categoryOptions(),

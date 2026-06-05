@@ -26,14 +26,12 @@ class WarehouseController extends Controller
         $this->authorize('viewAny', Warehouse::class);
 
         $search = $request->string('search')->toString();
-        $activity = $request->string('activity')->toString();
         $perPage = $this->resolvePerPage($request);
 
         $warehouses = Warehouse::query()
             ->withCount('stockBalances')
             ->withSum('stockBalances as quantity_on_hand', 'quantity_on_hand')
             ->search($search)
-            ->activity($activity)
             ->orderBy('warehouse_name')
             ->paginate($perPage)
             ->withQueryString()
@@ -57,12 +55,7 @@ class WarehouseController extends Controller
             'warehouses' => $warehouses,
             'filters' => [
                 'search' => $search,
-                'activity' => $activity,
                 'per_page' => $perPage,
-            ],
-            'activityOptions' => [
-                ['value' => 'active', 'label' => 'Active'],
-                ['value' => 'inactive', 'label' => 'Inactive'],
             ],
             'can' => [
                 'create' => $request->user()?->can('create', Warehouse::class) ?? false,

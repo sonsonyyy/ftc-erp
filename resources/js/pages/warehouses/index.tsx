@@ -1,26 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Archive,
-    ChevronDown,
-    Eye,
-    Pencil,
-    Plus,
-    Search,
-    SlidersHorizontal,
-} from 'lucide-react';
+import { Archive, Eye, Pencil, Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -40,7 +25,6 @@ import type {
 type Props = {
     warehouses: PaginatedData<WarehouseListItem>;
     filters: WarehouseFilters;
-    activityOptions: Array<{ value: string; label: string }>;
     can: {
         create: boolean;
     };
@@ -65,35 +49,25 @@ function statusBadgeClass(isActive: boolean): string {
         : 'border-slate-200 bg-slate-100 text-slate-700';
 }
 
-export default function WarehousesIndex({
-    warehouses,
-    filters,
-    activityOptions,
-    can,
-}: Props) {
+export default function WarehousesIndex({ warehouses, filters, can }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
-        activity: filters.activity,
         per_page: String(filters.per_page),
     });
 
     useEffect(() => {
         setTableFilters((currentFilters) => {
             const nextFilters = {
-                activity: filters.activity,
                 per_page: String(filters.per_page),
             };
 
-            if (
-                currentFilters.activity === nextFilters.activity &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
+            if (currentFilters.per_page === nextFilters.per_page) {
                 return currentFilters;
             }
 
             return nextFilters;
         });
-    }, [filters.activity, filters.per_page]);
+    }, [filters.per_page]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
@@ -101,7 +75,6 @@ export default function WarehousesIndex({
 
         if (
             normalizedSearch === filters.search &&
-            tableFilters.activity === filters.activity &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -113,7 +86,6 @@ export default function WarehousesIndex({
                 toUrl(warehousesIndex()),
                 cleanQueryParams({
                     search: normalizedSearch,
-                    activity: tableFilters.activity,
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -127,15 +99,7 @@ export default function WarehousesIndex({
         }, 300);
 
         return () => window.clearTimeout(timeout);
-    }, [
-        filters.activity,
-        filters.per_page,
-        filters.search,
-        searchInput,
-        tableFilters,
-    ]);
-
-    const activeFilterCount = tableFilters.activity === '' ? 0 : 1;
+    }, [filters.per_page, filters.search, searchInput, tableFilters]);
 
     return (
         <>
@@ -176,55 +140,6 @@ export default function WarehousesIndex({
                                 className="h-9 pl-9"
                             />
                         </div>
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
-                                >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.activity === ''
-                                            ? 'all'
-                                            : tableFilters.activity
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            activity:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
-                                >
-                                    <DropdownMenuRadioItem value="all">
-                                        All activity
-                                    </DropdownMenuRadioItem>
-                                    {activityOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
                     </div>
                 </div>
 

@@ -1,27 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Archive,
-    ChevronDown,
-    Eye,
-    Pencil,
-    Plus,
-    Search,
-    SlidersHorizontal,
-} from 'lucide-react';
+import { Archive, Eye, Pencil, Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { DateRangeFilter } from '@/components/date-range-filter';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -163,11 +149,6 @@ export default function PayrollRunsIndex({
         tableFilters,
     ]);
 
-    const activeFilterCount =
-        (tableFilters.status === '' ? 0 : 1) +
-        (tableFilters.from === '' ? 0 : 1) +
-        (tableFilters.to === '' ? 0 : 1);
-
     return (
         <>
             <Head title="Payroll Runs" />
@@ -194,7 +175,7 @@ export default function PayrollRunsIndex({
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         <div className="relative w-full sm:max-w-sm">
                             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -207,100 +188,49 @@ export default function PayrollRunsIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
 
-                            <DropdownMenuContent align="start" className="w-72">
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.status === ''
-                                            ? 'all'
-                                            : tableFilters.status
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            status:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
-                                >
-                                    <DropdownMenuRadioItem value="all">
-                                        All statuses
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuSeparator />
-                                    {statusOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-
-                                <DropdownMenuSeparator />
-                                <div className="space-y-3 p-2">
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-medium text-muted-foreground">
-                                            Payroll date from
-                                        </p>
-                                        <Input
-                                            type="date"
-                                            value={tableFilters.from}
-                                            onChange={(event) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        from: event
-                                                            .currentTarget
-                                                            .value,
-                                                    }),
-                                                );
-                                            }}
-                                            className="h-9"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-medium text-muted-foreground">
-                                            Payroll date to
-                                        </p>
-                                        <Input
-                                            type="date"
-                                            value={tableFilters.to}
-                                            onChange={(event) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        to: event.currentTarget
-                                                            .value,
-                                                    }),
-                                                );
-                                            }}
-                                            className="h-9"
-                                        />
-                                    </div>
-                                </div>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <DateRangeFilter
+                            from={tableFilters.from}
+                            to={tableFilters.to}
+                            fromLabel="Payroll date from"
+                            toLabel="Payroll date to"
+                            placeholder="Payroll date from - Payroll date to"
+                            onFromChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    from: value,
+                                }));
+                            }}
+                            onToChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    to: value,
+                                }));
+                            }}
+                        />
                     </div>
                 </div>
 

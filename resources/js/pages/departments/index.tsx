@@ -1,25 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Archive,
-    ChevronDown,
-    Pencil,
-    Plus,
-    Search,
-    SlidersHorizontal,
-} from 'lucide-react';
+import { Archive, Pencil, Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -35,10 +22,10 @@ type Props = {
     departments: PaginatedData<DepartmentListItem>;
     filters: {
         search: string;
-        active: string;
+        status: string;
         per_page: number;
     };
-    activityOptions: SelectOption[];
+    statusOptions: SelectOption[];
     can: {
         create: boolean;
     };
@@ -55,24 +42,24 @@ function activityBadgeClass(isActive: boolean): string {
 export default function DepartmentsIndex({
     departments,
     filters,
-    activityOptions,
+    statusOptions,
     can,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
-        active: filters.active,
+        status: filters.status,
         per_page: String(filters.per_page),
     });
 
     useEffect(() => {
         setTableFilters((currentFilters) => {
             const nextFilters = {
-                active: filters.active,
+                status: filters.status,
                 per_page: String(filters.per_page),
             };
 
             if (
-                currentFilters.active === nextFilters.active &&
+                currentFilters.status === nextFilters.status &&
                 currentFilters.per_page === nextFilters.per_page
             ) {
                 return currentFilters;
@@ -80,7 +67,7 @@ export default function DepartmentsIndex({
 
             return nextFilters;
         });
-    }, [filters.active, filters.per_page]);
+    }, [filters.per_page, filters.status]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
@@ -88,7 +75,7 @@ export default function DepartmentsIndex({
 
         if (
             normalizedSearch === filters.search &&
-            tableFilters.active === filters.active &&
+            tableFilters.status === filters.status &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -100,7 +87,7 @@ export default function DepartmentsIndex({
                 toUrl(departmentsIndex()),
                 cleanQueryParams({
                     search: normalizedSearch,
-                    active: tableFilters.active,
+                    status: tableFilters.status,
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -115,14 +102,12 @@ export default function DepartmentsIndex({
 
         return () => window.clearTimeout(timeout);
     }, [
-        filters.active,
         filters.per_page,
         filters.search,
+        filters.status,
         searchInput,
         tableFilters,
     ]);
-
-    const activeFilterCount = tableFilters.active === '' ? 0 : 1;
 
     return (
         <>
@@ -151,7 +136,7 @@ export default function DepartmentsIndex({
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         <div className="relative w-full sm:max-w-sm">
                             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -164,54 +149,27 @@ export default function DepartmentsIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.active === ''
-                                            ? 'all'
-                                            : tableFilters.active
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            active:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
-                                >
-                                    <DropdownMenuRadioItem value="all">
-                                        All statuses
-                                    </DropdownMenuRadioItem>
-                                    {activityOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
                 </div>
 

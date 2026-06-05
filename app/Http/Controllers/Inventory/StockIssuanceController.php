@@ -31,8 +31,6 @@ class StockIssuanceController extends Controller
 
         $search = $request->string('search')->toString();
         $warehouseId = $request->integer('warehouse') ?: null;
-        $projectId = $request->integer('project') ?: null;
-        $workOrderId = $request->integer('work_order') ?: null;
         $perPage = $this->resolvePerPage($request);
 
         $stockIssuances = StockIssuance::query()
@@ -46,8 +44,6 @@ class StockIssuanceController extends Controller
             ->withSum('items as total_quantity', 'quantity')
             ->search($search)
             ->forWarehouse($warehouseId)
-            ->forProject($projectId)
-            ->forWorkOrder($workOrderId)
             ->orderByDesc('issued_date')
             ->orderByDesc('id')
             ->paginate($perPage)
@@ -85,13 +81,9 @@ class StockIssuanceController extends Controller
             'filters' => [
                 'search' => $search,
                 'warehouse' => $warehouseId,
-                'project' => $projectId,
-                'work_order' => $workOrderId,
                 'per_page' => $perPage,
             ],
             'warehouseOptions' => $this->warehouseOptions(),
-            'projectOptions' => $this->projectOptions(),
-            'workOrderOptions' => $this->workOrderOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', StockIssuance::class) ?? false,
             ],

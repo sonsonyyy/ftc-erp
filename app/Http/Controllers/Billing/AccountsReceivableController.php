@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Billing;
 
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Customer;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -25,7 +24,6 @@ class AccountsReceivableController extends Controller
         $this->authorize('viewAny', Invoice::class);
 
         $search = $request->string('search')->toString();
-        $customerId = $request->integer('customer') ?: null;
         $status = $request->string('status')->toString();
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
@@ -38,7 +36,6 @@ class AccountsReceivableController extends Controller
                 'workOrder:id,work_order_no,summary',
             ])
             ->search($search)
-            ->forCustomer($customerId)
             ->betweenInvoiceDates($from, $to)
             ->whereNotIn('status', [
                 InvoiceStatus::Draft->value,
@@ -63,13 +60,11 @@ class AccountsReceivableController extends Controller
             'summary' => $summary,
             'filters' => [
                 'search' => $search,
-                'customer' => $customerId,
                 'status' => $status,
                 'from' => $from,
                 'to' => $to,
                 'per_page' => $perPage,
             ],
-            'customerOptions' => $this->customerOptions(),
             'statusOptions' => $this->statusOptions(),
         ]);
     }
@@ -182,23 +177,6 @@ class AccountsReceivableController extends Controller
                 $bucketTotals,
             ),
         ];
-    }
-
-    /**
-     * Build shared customer options.
-     *
-     * @return array<int, array{value:int,label:string}>
-     */
-    private function customerOptions(): array
-    {
-        return Customer::query()
-            ->orderBy('company_name')
-            ->get(['id', 'customer_code', 'company_name'])
-            ->map(fn (Customer $customer) => [
-                'value' => $customer->getKey(),
-                'label' => "{$customer->customer_code} - {$customer->company_name}",
-            ])
-            ->all();
     }
 
     /**

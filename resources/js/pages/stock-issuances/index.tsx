@@ -1,28 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    ChevronDown,
-    Eye,
-    Plus,
-    Search,
-    SlidersHorizontal,
-} from 'lucide-react';
+import { Eye, Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -36,15 +19,12 @@ import type {
     SelectOption,
     StockIssuanceFilters,
     StockIssuanceListItem,
-    StockWorkOrderOption,
 } from '@/types';
 
 type Props = {
     stockIssuances: PaginatedData<StockIssuanceListItem>;
     filters: StockIssuanceFilters;
     warehouseOptions: SelectOption[];
-    projectOptions: SelectOption[];
-    workOrderOptions: StockWorkOrderOption[];
     can: {
         create: boolean;
     };
@@ -67,16 +47,11 @@ export default function StockIssuancesIndex({
     stockIssuances,
     filters,
     warehouseOptions,
-    projectOptions,
-    workOrderOptions,
     can,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
         warehouse: filters.warehouse === null ? '' : String(filters.warehouse),
-        project: filters.project === null ? '' : String(filters.project),
-        work_order:
-            filters.work_order === null ? '' : String(filters.work_order),
         per_page: String(filters.per_page),
     });
 
@@ -85,19 +60,11 @@ export default function StockIssuancesIndex({
             const nextFilters = {
                 warehouse:
                     filters.warehouse === null ? '' : String(filters.warehouse),
-                project:
-                    filters.project === null ? '' : String(filters.project),
-                work_order:
-                    filters.work_order === null
-                        ? ''
-                        : String(filters.work_order),
                 per_page: String(filters.per_page),
             };
 
             if (
                 currentFilters.warehouse === nextFilters.warehouse &&
-                currentFilters.project === nextFilters.project &&
-                currentFilters.work_order === nextFilters.work_order &&
                 currentFilters.per_page === nextFilters.per_page
             ) {
                 return currentFilters;
@@ -105,28 +72,17 @@ export default function StockIssuancesIndex({
 
             return nextFilters;
         });
-    }, [
-        filters.per_page,
-        filters.project,
-        filters.warehouse,
-        filters.work_order,
-    ]);
+    }, [filters.per_page, filters.warehouse]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
         const currentWarehouse =
             filters.warehouse === null ? '' : String(filters.warehouse);
-        const currentProject =
-            filters.project === null ? '' : String(filters.project);
-        const currentWorkOrder =
-            filters.work_order === null ? '' : String(filters.work_order);
         const currentPerPage = String(filters.per_page);
 
         if (
             normalizedSearch === filters.search &&
             tableFilters.warehouse === currentWarehouse &&
-            tableFilters.project === currentProject &&
-            tableFilters.work_order === currentWorkOrder &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -142,14 +98,6 @@ export default function StockIssuancesIndex({
                         tableFilters.warehouse === ''
                             ? undefined
                             : Number(tableFilters.warehouse),
-                    project:
-                        tableFilters.project === ''
-                            ? undefined
-                            : Number(tableFilters.project),
-                    work_order:
-                        tableFilters.work_order === ''
-                            ? undefined
-                            : Number(tableFilters.work_order),
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -165,18 +113,11 @@ export default function StockIssuancesIndex({
         return () => window.clearTimeout(timeout);
     }, [
         filters.per_page,
-        filters.project,
         filters.search,
         filters.warehouse,
-        filters.work_order,
         searchInput,
         tableFilters,
     ]);
-
-    const activeFilterCount =
-        (tableFilters.warehouse === '' ? 0 : 1) +
-        (tableFilters.project === '' ? 0 : 1) +
-        (tableFilters.work_order === '' ? 0 : 1);
 
     return (
         <>
@@ -217,141 +158,27 @@ export default function StockIssuancesIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.warehouse}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    warehouse: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[220px]"
+                        >
+                            <option value="">All warehouses</option>
+                            {warehouseOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Warehouse
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.warehouse === ''
-                                                    ? 'all'
-                                                    : tableFilters.warehouse
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        warehouse:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All warehouses
-                                            </DropdownMenuRadioItem>
-                                            {warehouseOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Project
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.project === ''
-                                                    ? 'all'
-                                                    : tableFilters.project
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        project:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All projects
-                                            </DropdownMenuRadioItem>
-                                            {projectOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Work order
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.work_order === ''
-                                                    ? 'all'
-                                                    : tableFilters.work_order
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        work_order:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All work orders
-                                            </DropdownMenuRadioItem>
-                                            {workOrderOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
                 </div>
 

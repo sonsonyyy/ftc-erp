@@ -58,7 +58,7 @@ test('warehouse page size can be customized', function () {
         );
 });
 
-test('warehouse list can be filtered by search and activity', function () {
+test('warehouse list can be filtered by search', function () {
     actingAsWarehouseInventoryRole('Warehouse / Inventory Officer');
 
     Warehouse::factory()->create([
@@ -75,13 +75,11 @@ test('warehouse list can be filtered by search and activity', function () {
 
     $this->get(route('warehouses.index', [
         'search' => 'main',
-        'activity' => 'active',
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('warehouses/index')
             ->where('filters.search', 'main')
-            ->where('filters.activity', 'active')
             ->where('warehouses.total', 1)
             ->where('warehouses.data.0.warehouse_code', 'WH-ACTIVE'),
         );

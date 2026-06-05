@@ -8,7 +8,6 @@ use App\Http\Requests\Purchasing\StorePurchaseReceiptRequest;
 use App\Models\Attachment;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseReceipt;
-use App\Models\Supplier;
 use App\Models\Warehouse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,7 +28,6 @@ class PurchaseReceiptController extends Controller
         $this->authorize('viewAny', PurchaseReceipt::class);
 
         $search = $request->string('search')->toString();
-        $supplierId = $request->integer('supplier') ?: null;
         $warehouseId = $request->integer('warehouse') ?: null;
         $perPage = $this->resolvePerPage($request);
 
@@ -66,10 +64,6 @@ class PurchaseReceiptController extends Controller
                         });
                 });
             })
-            ->when(filled($supplierId), fn ($query) => $query->whereHas(
-                'purchaseOrder',
-                fn ($purchaseOrderQuery) => $purchaseOrderQuery->where('supplier_id', $supplierId),
-            ))
             ->when(filled($warehouseId), fn ($query) => $query->where('warehouse_id', $warehouseId))
             ->orderByDesc('received_date')
             ->orderByDesc('id')
@@ -81,11 +75,9 @@ class PurchaseReceiptController extends Controller
             'purchaseReceipts' => $purchaseReceipts,
             'filters' => [
                 'search' => $search,
-                'supplier' => $supplierId,
                 'warehouse' => $warehouseId,
                 'per_page' => $perPage,
             ],
-            'supplierOptions' => $this->supplierOptions(),
             'warehouseOptions' => $this->warehouseOptions(),
         ]);
     }

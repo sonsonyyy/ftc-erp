@@ -29,7 +29,6 @@ class StockMovementController extends Controller
 
         $search = $request->string('search')->toString();
         $warehouseId = $request->integer('warehouse') ?: null;
-        $inventoryItemId = $request->integer('item') ?: null;
         $movementType = $request->string('type')->toString();
         $perPage = $this->resolvePerPage($request);
 
@@ -43,7 +42,6 @@ class StockMovementController extends Controller
             ])
             ->search($search)
             ->forWarehouse($warehouseId)
-            ->forItem($inventoryItemId)
             ->type($movementType)
             ->orderByDesc('movement_date')
             ->orderByDesc('id')
@@ -56,12 +54,10 @@ class StockMovementController extends Controller
             'filters' => [
                 'search' => $search,
                 'warehouse' => $warehouseId,
-                'item' => $inventoryItemId,
                 'type' => $movementType,
                 'per_page' => $perPage,
             ],
             'warehouseOptions' => $this->warehouseOptions(),
-            'itemOptions' => $this->itemOptions(),
             'movementTypeOptions' => $this->movementTypeOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', StockMovement::class) ?? false,
@@ -164,22 +160,6 @@ class StockMovementController extends Controller
             ->map(fn (Warehouse $warehouse) => [
                 'value' => $warehouse->getKey(),
                 'label' => "{$warehouse->warehouse_code} - {$warehouse->warehouse_name}",
-            ])->all();
-    }
-
-    /**
-     * Build inventory item dropdown options.
-     *
-     * @return array<int, array<string, int|string>>
-     */
-    private function itemOptions(): array
-    {
-        return InventoryItem::query()
-            ->orderBy('item_name')
-            ->get(['id', 'item_code', 'item_name', 'unit'])
-            ->map(fn (InventoryItem $inventoryItem) => [
-                'value' => $inventoryItem->getKey(),
-                'label' => "{$inventoryItem->item_code} - {$inventoryItem->item_name} ({$inventoryItem->unit})",
             ])->all();
     }
 

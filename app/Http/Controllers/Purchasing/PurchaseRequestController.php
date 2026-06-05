@@ -34,7 +34,6 @@ class PurchaseRequestController extends Controller
         $this->authorize('viewAny', PurchaseRequest::class);
 
         $search = $request->string('search')->toString();
-        $supplierId = $request->integer('supplier') ?: null;
         $status = $request->string('status')->toString();
         $perPage = $this->resolvePerPage($request);
 
@@ -46,7 +45,6 @@ class PurchaseRequestController extends Controller
             ])
             ->withCount(['items', 'purchaseOrders', 'attachments'])
             ->search($search)
-            ->forSupplier($supplierId)
             ->status($status)
             ->orderByDesc('request_date')
             ->orderByDesc('id')
@@ -58,11 +56,9 @@ class PurchaseRequestController extends Controller
             'purchaseRequests' => $purchaseRequests,
             'filters' => [
                 'search' => $search,
-                'supplier' => $supplierId,
                 'status' => $status,
                 'per_page' => $perPage,
             ],
-            'supplierOptions' => $this->supplierOptions(),
             'statusOptions' => $this->statusOptions(includeOrdered: true),
             'can' => [
                 'create' => $request->user()?->can('create', PurchaseRequest::class) ?? false,

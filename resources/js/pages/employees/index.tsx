@@ -3,12 +3,10 @@ import {
     Archive,
     BadgeCheck,
     Building2,
-    ChevronDown,
     Eye,
     Pencil,
     Plus,
     Search,
-    SlidersHorizontal,
     UserMinus,
     Users,
 } from 'lucide-react';
@@ -16,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,18 +23,6 @@ import {
     CardDescription,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -61,13 +48,13 @@ type Props = {
         department: number | null;
         position: number | null;
         employment_status: string;
-        active: string;
+        state: string;
         per_page: number;
     };
     departmentOptions: SelectOption[];
     positionOptions: SelectOption[];
     employmentStatusOptions: SelectOption[];
-    activityOptions: SelectOption[];
+    stateOptions: SelectOption[];
     can: {
         create: boolean;
     };
@@ -112,7 +99,7 @@ export default function EmployeesIndex({
     departmentOptions,
     positionOptions,
     employmentStatusOptions,
-    activityOptions,
+    stateOptions,
     can,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
@@ -121,7 +108,7 @@ export default function EmployeesIndex({
             filters.department === null ? '' : String(filters.department),
         position: filters.position === null ? '' : String(filters.position),
         employment_status: filters.employment_status,
-        active: filters.active,
+        state: filters.state,
         per_page: String(filters.per_page),
     });
 
@@ -135,7 +122,7 @@ export default function EmployeesIndex({
                 position:
                     filters.position === null ? '' : String(filters.position),
                 employment_status: filters.employment_status,
-                active: filters.active,
+                state: filters.state,
                 per_page: String(filters.per_page),
             };
 
@@ -144,7 +131,7 @@ export default function EmployeesIndex({
                 currentFilters.position === nextFilters.position &&
                 currentFilters.employment_status ===
                     nextFilters.employment_status &&
-                currentFilters.active === nextFilters.active &&
+                currentFilters.state === nextFilters.state &&
                 currentFilters.per_page === nextFilters.per_page
             ) {
                 return currentFilters;
@@ -153,11 +140,11 @@ export default function EmployeesIndex({
             return nextFilters;
         });
     }, [
-        filters.active,
         filters.department,
         filters.employment_status,
         filters.per_page,
         filters.position,
+        filters.state,
     ]);
 
     useEffect(() => {
@@ -173,7 +160,7 @@ export default function EmployeesIndex({
             tableFilters.department === currentDepartment &&
             tableFilters.position === currentPosition &&
             tableFilters.employment_status === filters.employment_status &&
-            tableFilters.active === filters.active &&
+            tableFilters.state === filters.state &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -194,7 +181,7 @@ export default function EmployeesIndex({
                             ? undefined
                             : Number(tableFilters.position),
                     employment_status: tableFilters.employment_status,
-                    active: tableFilters.active,
+                    state: tableFilters.state,
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -209,21 +196,15 @@ export default function EmployeesIndex({
 
         return () => window.clearTimeout(timeout);
     }, [
-        filters.active,
         filters.department,
         filters.employment_status,
         filters.per_page,
         filters.position,
         filters.search,
+        filters.state,
         searchInput,
         tableFilters,
     ]);
-
-    const activeFilterCount =
-        (tableFilters.department === '' ? 0 : 1) +
-        (tableFilters.position === '' ? 0 : 1) +
-        (tableFilters.employment_status === '' ? 0 : 1) +
-        (tableFilters.active === '' ? 0 : 1);
 
     const summaryCards = [
         {
@@ -309,7 +290,7 @@ export default function EmployeesIndex({
                 </div>
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         <div className="relative w-full sm:max-w-sm">
                             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -322,168 +303,94 @@ export default function EmployeesIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.employment_status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    employment_status:
+                                        event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[220px]"
+                        >
+                            <option value="">All employment statuses</option>
+                            {employmentStatusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
 
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuLabel>
-                                    Employment status
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.employment_status === ''
-                                            ? 'all'
-                                            : tableFilters.employment_status
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            employment_status:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
+                        <FilterSelect
+                            value={tableFilters.state}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    state: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[160px]"
+                        >
+                            <option value="">All states</option>
+                            {stateOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <DropdownMenuRadioItem value="all">
-                                        All employment statuses
-                                    </DropdownMenuRadioItem>
-                                    {employmentStatusOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
 
-                                <DropdownMenuSeparator />
-                                <DropdownMenuLabel>Activity</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.active === ''
-                                            ? 'all'
-                                            : tableFilters.active
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            active:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
+                        <FilterSelect
+                            value={tableFilters.department}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    department: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[200px]"
+                        >
+                            <option value="">All departments</option>
+                            {departmentOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <DropdownMenuRadioItem value="all">
-                                        All activity states
-                                    </DropdownMenuRadioItem>
-                                    {activityOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
 
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Department
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.department === ''
-                                                    ? 'all'
-                                                    : tableFilters.department
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        department:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All departments
-                                            </DropdownMenuRadioItem>
-                                            {departmentOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Position
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.position === ''
-                                                    ? 'all'
-                                                    : tableFilters.position
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        position:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All positions
-                                            </DropdownMenuRadioItem>
-                                            {positionOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <FilterSelect
+                            value={tableFilters.position}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    position: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[220px]"
+                        >
+                            <option value="">All positions</option>
+                            {positionOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
+                                >
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
                 </div>
 

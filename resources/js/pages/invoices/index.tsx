@@ -8,25 +8,19 @@ import {
     Pencil,
     Plus,
     Search,
-    SlidersHorizontal,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { DateRangeFilter } from '@/components/date-range-filter';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -49,7 +43,6 @@ import type {
 type Props = {
     invoices: PaginatedData<InvoiceListItem>;
     filters: InvoiceFilters;
-    customerOptions: SelectOption[];
     statusOptions: SelectOption[];
     can: {
         create: boolean;
@@ -105,13 +98,11 @@ function statusBadgeClass(status: string): string {
 export default function InvoicesIndex({
     invoices,
     filters,
-    customerOptions,
     statusOptions,
     can,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
-        customer: filters.customer === null ? '' : String(filters.customer),
         status: filters.status,
         from: filters.from ?? '',
         to: filters.to ?? '',
@@ -121,8 +112,6 @@ export default function InvoicesIndex({
     useEffect(() => {
         setTableFilters((currentFilters) => {
             const nextFilters = {
-                customer:
-                    filters.customer === null ? '' : String(filters.customer),
                 status: filters.status,
                 from: filters.from ?? '',
                 to: filters.to ?? '',
@@ -130,7 +119,6 @@ export default function InvoicesIndex({
             };
 
             if (
-                currentFilters.customer === nextFilters.customer &&
                 currentFilters.status === nextFilters.status &&
                 currentFilters.from === nextFilters.from &&
                 currentFilters.to === nextFilters.to &&
@@ -141,23 +129,14 @@ export default function InvoicesIndex({
 
             return nextFilters;
         });
-    }, [
-        filters.customer,
-        filters.from,
-        filters.per_page,
-        filters.status,
-        filters.to,
-    ]);
+    }, [filters.from, filters.per_page, filters.status, filters.to]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
-        const currentCustomer =
-            filters.customer === null ? '' : String(filters.customer);
         const currentPerPage = String(filters.per_page);
 
         if (
             normalizedSearch === filters.search &&
-            tableFilters.customer === currentCustomer &&
             tableFilters.status === filters.status &&
             tableFilters.from === (filters.from ?? '') &&
             tableFilters.to === (filters.to ?? '') &&
@@ -172,10 +151,6 @@ export default function InvoicesIndex({
                 toUrl(invoicesIndex()),
                 cleanQueryParams({
                     search: normalizedSearch,
-                    customer:
-                        tableFilters.customer === ''
-                            ? undefined
-                            : Number(tableFilters.customer),
                     status: tableFilters.status,
                     from: tableFilters.from,
                     to: tableFilters.to,
@@ -193,7 +168,6 @@ export default function InvoicesIndex({
 
         return () => window.clearTimeout(timeout);
     }, [
-        filters.customer,
         filters.from,
         filters.per_page,
         filters.search,
@@ -202,19 +176,9 @@ export default function InvoicesIndex({
         searchInput,
         tableFilters,
     ]);
-
-    const activeFilterCount =
-        (tableFilters.customer === '' ? 0 : 1) +
-        (tableFilters.status === '' ? 0 : 1) +
-        (tableFilters.from === '' ? 0 : 1) +
-        (tableFilters.to === '' ? 0 : 1);
     const exportHref = invoicesIndex({
         query: cleanQueryParams({
             search: searchInput.trim(),
-            customer:
-                tableFilters.customer === ''
-                    ? undefined
-                    : Number(tableFilters.customer),
             status: tableFilters.status,
             from: tableFilters.from,
             to: tableFilters.to,
@@ -248,7 +212,7 @@ export default function InvoicesIndex({
                 </div>
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         <div className="relative w-full sm:max-w-sm">
                             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -256,144 +220,54 @@ export default function InvoicesIndex({
                                 onChange={(event) =>
                                     setSearchInput(event.currentTarget.value)
                                 }
-                                placeholder="Search invoices"
+                                placeholder="Search invoices or customers"
                                 className="h-9 pl-9"
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
 
-                            <DropdownMenuContent align="start" className="w-72">
-                                <DropdownMenuLabel>Status</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.status === ''
-                                            ? 'all'
-                                            : tableFilters.status
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            status:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
-                                >
-                                    <DropdownMenuRadioItem value="all">
-                                        All statuses
-                                    </DropdownMenuRadioItem>
-                                    {statusOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Customer
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.customer === ''
-                                                    ? 'all'
-                                                    : tableFilters.customer
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        customer:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All customers
-                                            </DropdownMenuRadioItem>
-                                            {customerOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <div className="space-y-3 p-2">
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-medium text-muted-foreground">
-                                            Invoice date from
-                                        </p>
-                                        <Input
-                                            type="date"
-                                            value={tableFilters.from}
-                                            onChange={(event) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        from: event
-                                                            .currentTarget
-                                                            .value,
-                                                    }),
-                                                );
-                                            }}
-                                            className="h-9"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-medium text-muted-foreground">
-                                            Invoice date to
-                                        </p>
-                                        <Input
-                                            type="date"
-                                            value={tableFilters.to}
-                                            onChange={(event) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        to: event.currentTarget
-                                                            .value,
-                                                    }),
-                                                );
-                                            }}
-                                            className="h-9"
-                                        />
-                                    </div>
-                                </div>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <DateRangeFilter
+                            from={tableFilters.from}
+                            to={tableFilters.to}
+                            fromLabel="Invoice from"
+                            toLabel="Invoice to"
+                            placeholder="Invoice from - Invoice to"
+                            onFromChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    from: value,
+                                }));
+                            }}
+                            onToChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    to: value,
+                                }));
+                            }}
+                        />
                     </div>
 
                     <DropdownMenu>

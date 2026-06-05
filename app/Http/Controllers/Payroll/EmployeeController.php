@@ -32,7 +32,7 @@ class EmployeeController extends Controller
         $departmentId = $request->integer('department') ?: null;
         $positionId = $request->integer('position') ?: null;
         $employmentStatus = $request->string('employment_status')->toString();
-        $active = $request->string('active')->toString();
+        $state = $request->string('state')->toString();
         $perPage = $this->resolvePerPage($request);
 
         $employees = Employee::query()
@@ -45,7 +45,7 @@ class EmployeeController extends Controller
             ->forDepartment($departmentId)
             ->forPosition($positionId)
             ->employmentStatus($employmentStatus)
-            ->active($active)
+            ->active($state)
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->paginate($perPage)
@@ -60,13 +60,13 @@ class EmployeeController extends Controller
                 'department' => $departmentId,
                 'position' => $positionId,
                 'employment_status' => $employmentStatus,
-                'active' => $active,
+                'state' => $state,
                 'per_page' => $perPage,
             ],
             'departmentOptions' => $this->departmentOptions(),
             'positionOptions' => $this->positionOptions(),
             'employmentStatusOptions' => $this->employmentStatusOptions(),
-            'activityOptions' => $this->activityOptions(),
+            'stateOptions' => $this->activityOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Employee::class) ?? false,
             ],
@@ -370,8 +370,8 @@ class EmployeeController extends Controller
     private function activityOptions(): array
     {
         return [
-            ['value' => 'active', 'label' => 'Active only'],
-            ['value' => 'inactive', 'label' => 'Inactive only'],
+            ['value' => 'active', 'label' => 'Active'],
+            ['value' => 'inactive', 'label' => 'Inactive'],
         ];
     }
 

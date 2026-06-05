@@ -2,7 +2,6 @@ import type { AttachmentItem, SelectOption } from './customers';
 
 export type InvoiceFilters = {
     search: string;
-    customer: number | null;
     status: string;
     from: string | null;
     to: string | null;
@@ -183,7 +182,6 @@ export type InvoiceDetail = {
 
 export type PaymentFilters = {
     search: string;
-    customer: number | null;
     from: string | null;
     to: string | null;
     per_page: number;

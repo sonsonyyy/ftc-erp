@@ -10,13 +10,13 @@ import {
     Pencil,
     Plus,
     Search,
-    SlidersHorizontal,
     TriangleAlert,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,12 +29,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -112,7 +106,6 @@ export default function InventoryIndex({
     const [tableFilters, setTableFilters] = useState({
         category: filters.category === null ? '' : String(filters.category),
         status: filters.status,
-        low_stock: filters.low_stock,
         per_page: String(filters.per_page),
     });
 
@@ -122,14 +115,12 @@ export default function InventoryIndex({
                 category:
                     filters.category === null ? '' : String(filters.category),
                 status: filters.status,
-                low_stock: filters.low_stock,
                 per_page: String(filters.per_page),
             };
 
             if (
                 currentFilters.category === nextFilters.category &&
                 currentFilters.status === nextFilters.status &&
-                currentFilters.low_stock === nextFilters.low_stock &&
                 currentFilters.per_page === nextFilters.per_page
             ) {
                 return currentFilters;
@@ -137,7 +128,7 @@ export default function InventoryIndex({
 
             return nextFilters;
         });
-    }, [filters.category, filters.low_stock, filters.per_page, filters.status]);
+    }, [filters.category, filters.per_page, filters.status]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
@@ -149,7 +140,6 @@ export default function InventoryIndex({
             normalizedSearch === filters.search &&
             tableFilters.category === currentCategory &&
             tableFilters.status === filters.status &&
-            tableFilters.low_stock === filters.low_stock &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -166,7 +156,6 @@ export default function InventoryIndex({
                             ? undefined
                             : Number(tableFilters.category),
                     status: tableFilters.status,
-                    low_stock: tableFilters.low_stock,
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -182,7 +171,6 @@ export default function InventoryIndex({
         return () => window.clearTimeout(timeout);
     }, [
         filters.category,
-        filters.low_stock,
         filters.per_page,
         filters.search,
         filters.status,
@@ -190,10 +178,6 @@ export default function InventoryIndex({
         tableFilters,
     ]);
 
-    const activeFilterCount =
-        (tableFilters.category === '' ? 0 : 1) +
-        (tableFilters.status === '' ? 0 : 1) +
-        (tableFilters.low_stock === '' ? 0 : 1);
     const exportHref = inventoryIndex({
         query: cleanQueryParams({
             search: searchInput.trim(),
@@ -202,7 +186,6 @@ export default function InventoryIndex({
                     ? undefined
                     : Number(tableFilters.category),
             status: tableFilters.status,
-            low_stock: tableFilters.low_stock,
             export: 'csv',
         }),
     });
@@ -296,127 +279,49 @@ export default function InventoryIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
 
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Category
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.category === ''
-                                                    ? 'all'
-                                                    : tableFilters.category
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        category:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All categories
-                                            </DropdownMenuRadioItem>
-                                            {categoryOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Status
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="w-56">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.status === ''
-                                                    ? 'all'
-                                                    : tableFilters.status
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        status:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All statuses
-                                            </DropdownMenuRadioItem>
-                                            {statusOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.low_stock === ''
-                                            ? 'all'
-                                            : tableFilters.low_stock
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            low_stock:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
+                        <FilterSelect
+                            value={tableFilters.category}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    category: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[220px]"
+                        >
+                            <option value="">All categories</option>
+                            {categoryOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <DropdownMenuRadioItem value="all">
-                                        All stock levels
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="1">
-                                        Low stock only
-                                    </DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
 
                     <DropdownMenu>
