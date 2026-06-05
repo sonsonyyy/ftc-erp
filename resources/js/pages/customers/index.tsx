@@ -8,22 +8,18 @@ import {
     Pencil,
     Plus,
     Search,
-    SlidersHorizontal,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -140,7 +136,6 @@ export default function CustomersIndex({
         tableFilters,
     ]);
 
-    const activeFilterCount = tableFilters.status === '' ? 0 : 1;
     const exportHref = customersIndex({
         query: cleanQueryParams({
             search: searchInput.trim(),
@@ -189,56 +184,27 @@ export default function CustomersIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuLabel>Status</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.status === ''
-                                            ? 'all'
-                                            : tableFilters.status
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            status:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
-                                >
-                                    <DropdownMenuRadioItem value="all">
-                                        All statuses
-                                    </DropdownMenuRadioItem>
-                                    {statusOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
 
                     <DropdownMenu>

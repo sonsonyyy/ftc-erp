@@ -68,7 +68,7 @@ test('project page size can be customized', function () {
         );
 });
 
-test('project list can be filtered by search customer and status', function () {
+test('project list can be filtered by search and status', function () {
     actingAsProjectRole('Operations Admin');
 
     $alphaCustomer = Customer::factory()->create([
@@ -93,7 +93,7 @@ test('project list can be filtered by search customer and status', function () {
         'customer_id' => $alphaCustomer->getKey(),
         'customer_site_id' => $alphaSite->getKey(),
         'project_no' => 'PRJ-ALPHA-001',
-        'title' => 'Alpha sprinkler retrofit',
+        'title' => 'Sprinkler retrofit',
         'status' => ProjectStatus::Open,
     ]);
 
@@ -107,14 +107,12 @@ test('project list can be filtered by search customer and status', function () {
 
     $this->get(route('projects.index', [
         'search' => 'alpha',
-        'customer' => $alphaCustomer->getKey(),
         'status' => ProjectStatus::Open->value,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('projects/index')
             ->where('filters.search', 'alpha')
-            ->where('filters.customer', $alphaCustomer->getKey())
             ->where('filters.status', ProjectStatus::Open->value)
             ->where('projects.total', 1)
             ->where('projects.data.0.project_no', 'PRJ-ALPHA-001'),
@@ -160,7 +158,6 @@ test('project export respects the active filters', function () {
 
     $response = $this->get(route('projects.index', [
         'search' => 'Alpha',
-        'customer' => $alphaCustomer->getKey(),
         'status' => ProjectStatus::Open->value,
         'export' => 'csv',
     ]));

@@ -146,7 +146,6 @@ export type ProjectFormDefaults = {
 
 export type ProjectFilters = {
     search: string;
-    customer: number | null;
     status: string;
     per_page: number;
 };

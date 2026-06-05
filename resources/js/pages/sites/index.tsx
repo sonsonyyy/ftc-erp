@@ -8,25 +8,18 @@ import {
     Pencil,
     Plus,
     Search,
-    SlidersHorizontal,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -46,12 +39,10 @@ type Props = {
     sites: PaginatedData<SiteListItem>;
     filters: {
         search: string;
-        customer: number | null;
-        active: string;
+        status: string;
         per_page: number;
     };
-    customerOptions: SelectOption[];
-    activityOptions: SelectOption[];
+    statusOptions: SelectOption[];
     can: {
         create: boolean;
     };
@@ -79,29 +70,24 @@ function statusBadgeClass(isActive: boolean): string {
 export default function SitesIndex({
     sites,
     filters,
-    customerOptions,
-    activityOptions,
+    statusOptions,
     can,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
-        customer: filters.customer === null ? '' : String(filters.customer),
-        active: filters.active,
+        status: filters.status,
         per_page: String(filters.per_page),
     });
 
     useEffect(() => {
         setTableFilters((currentFilters) => {
             const nextFilters = {
-                customer:
-                    filters.customer === null ? '' : String(filters.customer),
-                active: filters.active,
+                status: filters.status,
                 per_page: String(filters.per_page),
             };
 
             if (
-                currentFilters.customer === nextFilters.customer &&
-                currentFilters.active === nextFilters.active &&
+                currentFilters.status === nextFilters.status &&
                 currentFilters.per_page === nextFilters.per_page
             ) {
                 return currentFilters;
@@ -109,18 +95,15 @@ export default function SitesIndex({
 
             return nextFilters;
         });
-    }, [filters.active, filters.customer, filters.per_page]);
+    }, [filters.per_page, filters.status]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
-        const currentCustomer =
-            filters.customer === null ? '' : String(filters.customer);
         const currentPerPage = String(filters.per_page);
 
         if (
             normalizedSearch === filters.search &&
-            tableFilters.customer === currentCustomer &&
-            tableFilters.active === filters.active &&
+            tableFilters.status === filters.status &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -132,11 +115,7 @@ export default function SitesIndex({
                 toUrl(sitesIndex()),
                 cleanQueryParams({
                     search: normalizedSearch,
-                    customer:
-                        tableFilters.customer === ''
-                            ? undefined
-                            : Number(tableFilters.customer),
-                    active: tableFilters.active,
+                    status: tableFilters.status,
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -151,25 +130,16 @@ export default function SitesIndex({
 
         return () => window.clearTimeout(timeout);
     }, [
-        filters.active,
-        filters.customer,
         filters.per_page,
         filters.search,
+        filters.status,
         searchInput,
         tableFilters,
     ]);
-
-    const activeFilterCount =
-        (tableFilters.customer === '' ? 0 : 1) +
-        (tableFilters.active === '' ? 0 : 1);
     const exportHref = sitesIndex({
         query: cleanQueryParams({
             search: searchInput.trim(),
-            customer:
-                tableFilters.customer === ''
-                    ? undefined
-                    : Number(tableFilters.customer),
-            active: tableFilters.active,
+            status: tableFilters.status,
             export: 'csv',
         }),
     });
@@ -208,100 +178,32 @@ export default function SitesIndex({
                                 onChange={(event) =>
                                     setSearchInput(event.currentTarget.value)
                                 }
-                                placeholder="Search sites"
+                                placeholder="Search sites or customers"
                                 className="h-9 pl-9"
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuLabel>Activity</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.active === ''
-                                            ? 'all'
-                                            : tableFilters.active
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            active:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
-                                >
-                                    <DropdownMenuRadioItem value="all">
-                                        All activity
-                                    </DropdownMenuRadioItem>
-                                    {activityOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Customer
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.customer === ''
-                                                    ? 'all'
-                                                    : tableFilters.customer
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        customer:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All customers
-                                            </DropdownMenuRadioItem>
-                                            {customerOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
 
                     <DropdownMenu>

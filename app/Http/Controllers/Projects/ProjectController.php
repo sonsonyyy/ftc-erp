@@ -46,7 +46,6 @@ class ProjectController extends Controller
         $this->authorize('viewAny', Project::class);
 
         $search = $request->string('search')->toString();
-        $customerId = $request->integer('customer') ?: null;
         $status = $request->string('status')->toString();
         $perPage = $this->resolvePerPage($request);
 
@@ -58,7 +57,6 @@ class ProjectController extends Controller
             ])
             ->withCount(['attachments', 'workOrders'])
             ->search($search)
-            ->forCustomer($customerId)
             ->status($status)
             ->orderByDesc('start_date')
             ->orderByDesc('id');
@@ -77,11 +75,9 @@ class ProjectController extends Controller
             'summary' => $this->projectSummary(),
             'filters' => [
                 'search' => $search,
-                'customer' => $customerId,
                 'status' => $status,
                 'per_page' => $perPage,
             ],
-            'customerOptions' => $this->customerOptions(),
             'statusOptions' => $this->statusOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Project::class) ?? false,

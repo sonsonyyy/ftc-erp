@@ -52,8 +52,6 @@ class WorkOrderController extends Controller
         $this->authorize('viewAny', WorkOrder::class);
 
         $search = $request->string('search')->toString();
-        $customerId = $request->integer('customer') ?: null;
-        $projectId = $request->integer('project') ?: null;
         $status = $request->string('status')->toString();
         $priority = $request->string('priority')->toString();
         $serviceType = $request->string('service_type')->toString();
@@ -68,8 +66,6 @@ class WorkOrderController extends Controller
             ])
             ->withCount('attachments')
             ->search($search)
-            ->forCustomer($customerId)
-            ->forProject($projectId)
             ->status($status)
             ->priority($priority)
             ->serviceType($serviceType)
@@ -90,15 +86,11 @@ class WorkOrderController extends Controller
             'summary' => $this->workOrderSummary(),
             'filters' => [
                 'search' => $search,
-                'customer' => $customerId,
-                'project' => $projectId,
                 'status' => $status,
                 'priority' => $priority,
                 'service_type' => $serviceType,
                 'per_page' => $perPage,
             ],
-            'customerOptions' => $this->customerOptions(),
-            'projectOptions' => $this->projectOptions(),
             'statusOptions' => $this->statusOptions(),
             'priorityOptions' => $this->priorityOptions(),
             'serviceTypeOptions' => $this->serviceTypeOptions(),

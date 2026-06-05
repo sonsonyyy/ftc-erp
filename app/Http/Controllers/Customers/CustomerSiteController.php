@@ -32,16 +32,14 @@ class CustomerSiteController extends Controller
         $this->authorize('viewAny', CustomerSite::class);
 
         $search = $request->string('search')->toString();
-        $customerId = $request->integer('customer') ?: null;
-        $active = $request->string('active')->toString();
+        $status = $request->string('status')->toString();
         $perPage = $this->resolvePerPage($request);
 
         $query = CustomerSite::query()
             ->with(['customer:id,customer_code,company_name'])
             ->withCount('attachments')
             ->search($search)
-            ->forCustomer($customerId)
-            ->active($active)
+            ->active($status)
             ->orderBy('site_name')
             ->orderBy('id');
 
@@ -59,12 +57,10 @@ class CustomerSiteController extends Controller
             'summary' => $this->siteSummary(),
             'filters' => [
                 'search' => $search,
-                'customer' => $customerId,
-                'active' => $active,
+                'status' => $status,
                 'per_page' => $perPage,
             ],
-            'customerOptions' => $this->customerOptions(),
-            'activityOptions' => $this->activityOptions(),
+            'statusOptions' => $this->activityOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', CustomerSite::class) ?? false,
             ],
@@ -340,8 +336,8 @@ class CustomerSiteController extends Controller
     private function activityOptions(): array
     {
         return [
-            ['value' => 'active', 'label' => 'Active only'],
-            ['value' => 'inactive', 'label' => 'Inactive only'],
+            ['value' => 'active', 'label' => 'Active'],
+            ['value' => 'inactive', 'label' => 'Inactive'],
         ];
     }
 

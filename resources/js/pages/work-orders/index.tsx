@@ -8,24 +8,18 @@ import {
     Pencil,
     Plus,
     Search,
-    SlidersHorizontal,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -48,8 +42,6 @@ import type {
 type Props = {
     workOrders: PaginatedData<WorkOrderListItem>;
     filters: WorkOrderFilters;
-    customerOptions: SelectOption[];
-    projectOptions: SelectOption[];
     statusOptions: SelectOption[];
     priorityOptions: SelectOption[];
     serviceTypeOptions: SelectOption[];
@@ -111,8 +103,6 @@ function statusBadgeClass(status: string): string {
 export default function WorkOrdersIndex({
     workOrders,
     filters,
-    customerOptions,
-    projectOptions,
     statusOptions,
     priorityOptions,
     serviceTypeOptions,
@@ -120,8 +110,6 @@ export default function WorkOrdersIndex({
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
-        customer: filters.customer === null ? '' : String(filters.customer),
-        project: filters.project === null ? '' : String(filters.project),
         status: filters.status,
         priority: filters.priority,
         service_type: filters.service_type,
@@ -131,10 +119,6 @@ export default function WorkOrdersIndex({
     useEffect(() => {
         setTableFilters((currentFilters) => {
             const nextFilters = {
-                customer:
-                    filters.customer === null ? '' : String(filters.customer),
-                project:
-                    filters.project === null ? '' : String(filters.project),
                 status: filters.status,
                 priority: filters.priority,
                 service_type: filters.service_type,
@@ -142,8 +126,6 @@ export default function WorkOrdersIndex({
             };
 
             if (
-                currentFilters.customer === nextFilters.customer &&
-                currentFilters.project === nextFilters.project &&
                 currentFilters.status === nextFilters.status &&
                 currentFilters.priority === nextFilters.priority &&
                 currentFilters.service_type === nextFilters.service_type &&
@@ -155,26 +137,18 @@ export default function WorkOrdersIndex({
             return nextFilters;
         });
     }, [
-        filters.customer,
         filters.per_page,
         filters.priority,
-        filters.project,
         filters.service_type,
         filters.status,
     ]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
-        const currentCustomer =
-            filters.customer === null ? '' : String(filters.customer);
-        const currentProject =
-            filters.project === null ? '' : String(filters.project);
         const currentPerPage = String(filters.per_page);
 
         if (
             normalizedSearch === filters.search &&
-            tableFilters.customer === currentCustomer &&
-            tableFilters.project === currentProject &&
             tableFilters.status === filters.status &&
             tableFilters.priority === filters.priority &&
             tableFilters.service_type === filters.service_type &&
@@ -189,14 +163,6 @@ export default function WorkOrdersIndex({
                 toUrl(workOrdersIndex()),
                 cleanQueryParams({
                     search: normalizedSearch,
-                    customer:
-                        tableFilters.customer === ''
-                            ? undefined
-                            : Number(tableFilters.customer),
-                    project:
-                        tableFilters.project === ''
-                            ? undefined
-                            : Number(tableFilters.project),
                     status: tableFilters.status,
                     priority: tableFilters.priority,
                     service_type: tableFilters.service_type,
@@ -214,34 +180,17 @@ export default function WorkOrdersIndex({
 
         return () => window.clearTimeout(timeout);
     }, [
-        filters.customer,
         filters.per_page,
         filters.priority,
-        filters.project,
         filters.search,
         filters.service_type,
         filters.status,
         searchInput,
         tableFilters,
     ]);
-
-    const activeFilterCount =
-        (tableFilters.customer === '' ? 0 : 1) +
-        (tableFilters.project === '' ? 0 : 1) +
-        (tableFilters.status === '' ? 0 : 1) +
-        (tableFilters.priority === '' ? 0 : 1) +
-        (tableFilters.service_type === '' ? 0 : 1);
     const exportHref = workOrdersIndex({
         query: cleanQueryParams({
             search: searchInput.trim(),
-            customer:
-                tableFilters.customer === ''
-                    ? undefined
-                    : Number(tableFilters.customer),
-            project:
-                tableFilters.project === ''
-                    ? undefined
-                    : Number(tableFilters.project),
             status: tableFilters.status,
             priority: tableFilters.priority,
             service_type: tableFilters.service_type,
@@ -283,230 +232,76 @@ export default function WorkOrdersIndex({
                                 onChange={(event) =>
                                     setSearchInput(event.currentTarget.value)
                                 }
-                                placeholder="Search work orders"
+                                placeholder="Search work orders, customers, or projects"
                                 className="h-9 pl-9"
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
 
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Status
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="w-56">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.status === ''
-                                                    ? 'all'
-                                                    : tableFilters.status
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        status:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All statuses
-                                            </DropdownMenuRadioItem>
-                                            {statusOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Priority
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="w-56">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.priority === ''
-                                                    ? 'all'
-                                                    : tableFilters.priority
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        priority:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All priorities
-                                            </DropdownMenuRadioItem>
-                                            {priorityOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Service type
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.service_type === ''
-                                                    ? 'all'
-                                                    : tableFilters.service_type
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        service_type:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All service types
-                                            </DropdownMenuRadioItem>
-                                            {serviceTypeOptions.map(
-                                                (option) => (
-                                                    <DropdownMenuRadioItem
-                                                        key={option.value}
-                                                        value={String(
-                                                            option.value,
-                                                        )}
-                                                    >
-                                                        {option.label}
-                                                    </DropdownMenuRadioItem>
-                                                ),
-                                            )}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Customer
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.customer === ''
-                                                    ? 'all'
-                                                    : tableFilters.customer
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        customer:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All customers
-                                            </DropdownMenuRadioItem>
-                                            {customerOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Project
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.project === ''
-                                                    ? 'all'
-                                                    : tableFilters.project
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        project:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All projects
-                                            </DropdownMenuRadioItem>
-                                            {projectOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <FilterSelect
+                            value={tableFilters.priority}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    priority: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[170px]"
+                        >
+                            <option value="">All priorities</option>
+                            {priorityOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
+                                >
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
+
+                        <FilterSelect
+                            value={tableFilters.service_type}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    service_type: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[210px]"
+                        >
+                            <option value="">All service types</option>
+                            {serviceTypeOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
+                                >
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
 
                     <DropdownMenu>

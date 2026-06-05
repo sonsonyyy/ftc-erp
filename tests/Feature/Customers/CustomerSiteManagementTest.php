@@ -75,7 +75,7 @@ test('site list supports custom page size', function () {
         );
 });
 
-test('site list can be filtered by customer and active status', function () {
+test('site list can be filtered by search and status', function () {
     actingAsSiteRole('Sales Admin / Business Development');
 
     $customer = Customer::factory()->create([
@@ -84,7 +84,7 @@ test('site list can be filtered by customer and active status', function () {
 
     CustomerSite::factory()->create([
         'customer_id' => $customer->getKey(),
-        'site_name' => 'North HQ',
+        'site_name' => 'HQ One',
         'is_active' => true,
     ]);
 
@@ -94,16 +94,16 @@ test('site list can be filtered by customer and active status', function () {
     ]);
 
     $this->get(route('sites.index', [
-        'customer' => $customer->getKey(),
-        'active' => 'active',
+        'search' => 'north',
+        'status' => 'active',
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('sites/index')
-            ->where('filters.customer', $customer->getKey())
-            ->where('filters.active', 'active')
+            ->where('filters.search', 'north')
+            ->where('filters.status', 'active')
             ->where('sites.total', 1)
-            ->where('sites.data.0.site_name', 'North HQ'),
+            ->where('sites.data.0.site_name', 'HQ One'),
         );
 });
 
@@ -154,8 +154,8 @@ test('site export respects the active filters', function () {
     ]);
 
     $response = $this->get(route('sites.index', [
-        'customer' => $customer->getKey(),
-        'active' => 'active',
+        'search' => 'North Fire',
+        'status' => 'active',
         'export' => 'csv',
     ]));
 

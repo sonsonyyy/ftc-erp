@@ -171,8 +171,6 @@ export type WorkOrderFormDefaults = {
 
 export type WorkOrderFilters = {
     search: string;
-    customer: number | null;
-    project: number | null;
     status: string;
     priority: string;
     service_type: string;

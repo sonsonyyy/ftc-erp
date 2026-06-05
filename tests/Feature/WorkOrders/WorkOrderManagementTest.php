@@ -74,7 +74,7 @@ test('work order page size can be customized', function () {
         );
 });
 
-test('work order list can be filtered by search customer project status priority and service type', function () {
+test('work order list can be filtered by search status priority and service type', function () {
     actingAsWorkOrderRole('Operations Admin');
 
     $alphaCustomer = Customer::factory()->create([
@@ -108,7 +108,7 @@ test('work order list can be filtered by search customer project status priority
         'customer_site_id' => $alphaSite->getKey(),
         'project_id' => $alphaProject->getKey(),
         'work_order_no' => 'WO-ALPHA-001',
-        'summary' => 'Alpha preventive maintenance',
+        'summary' => 'Preventive maintenance',
         'status' => WorkOrderStatus::Scheduled,
         'priority' => WorkOrderPriority::High,
         'service_type' => WorkOrderServiceType::PreventiveMaintenance,
@@ -127,8 +127,6 @@ test('work order list can be filtered by search customer project status priority
 
     $this->get(route('work-orders.index', [
         'search' => 'alpha',
-        'customer' => $alphaCustomer->getKey(),
-        'project' => $alphaProject->getKey(),
         'status' => WorkOrderStatus::Scheduled->value,
         'priority' => WorkOrderPriority::High->value,
         'service_type' => WorkOrderServiceType::PreventiveMaintenance->value,
@@ -137,8 +135,6 @@ test('work order list can be filtered by search customer project status priority
         ->assertInertia(fn (Assert $page) => $page
             ->component('work-orders/index')
             ->where('filters.search', 'alpha')
-            ->where('filters.customer', $alphaCustomer->getKey())
-            ->where('filters.project', $alphaProject->getKey())
             ->where('filters.status', WorkOrderStatus::Scheduled->value)
             ->where('filters.priority', WorkOrderPriority::High->value)
             ->where('filters.service_type', WorkOrderServiceType::PreventiveMaintenance->value)
@@ -200,8 +196,6 @@ test('work order export respects the active filters', function () {
 
     $response = $this->get(route('work-orders.index', [
         'search' => 'Alpha',
-        'customer' => $alphaCustomer->getKey(),
-        'project' => $alphaProject->getKey(),
         'status' => WorkOrderStatus::Scheduled->value,
         'priority' => WorkOrderPriority::High->value,
         'service_type' => WorkOrderServiceType::PreventiveMaintenance->value,
