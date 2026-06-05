@@ -160,7 +160,6 @@ export type QuotationFormDefaults = {
 
 export type QuotationFilters = {
     search: string;
-    customer: number | null;
     status: string;
     from: string | null;
     to: string | null;

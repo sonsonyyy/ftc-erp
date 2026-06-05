@@ -8,12 +8,12 @@ import {
     Pencil,
     Plus,
     Search,
-    SlidersHorizontal,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { DateRangeFilter } from '@/components/date-range-filter';
 import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { cn, cleanQueryParams, toUrl } from '@/lib/utils';
+import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
     create as quotationsCreate,
@@ -43,7 +43,6 @@ import type {
 type Props = {
     quotations: PaginatedData<QuotationListItem>;
     filters: QuotationFilters;
-    customerOptions: SelectOption[];
     statusOptions: SelectOption[];
     can: {
         create: boolean;
@@ -100,30 +99,20 @@ function statusBadgeClass(status: string): string {
 export default function QuotationsIndex({
     quotations,
     filters,
-    customerOptions,
     statusOptions,
     can,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
-        customer: filters.customer === null ? '' : String(filters.customer),
         status: filters.status,
         from: filters.from ?? '',
         to: filters.to ?? '',
         per_page: String(filters.per_page),
     });
-    const [isFiltersOpen, setIsFiltersOpen] = useState(
-        filters.customer !== null ||
-            filters.status !== '' ||
-            filters.from !== null ||
-            filters.to !== null,
-    );
 
     useEffect(() => {
         setTableFilters((currentFilters) => {
             const nextFilters = {
-                customer:
-                    filters.customer === null ? '' : String(filters.customer),
                 status: filters.status,
                 from: filters.from ?? '',
                 to: filters.to ?? '',
@@ -131,7 +120,6 @@ export default function QuotationsIndex({
             };
 
             if (
-                currentFilters.customer === nextFilters.customer &&
                 currentFilters.status === nextFilters.status &&
                 currentFilters.from === nextFilters.from &&
                 currentFilters.to === nextFilters.to &&
@@ -142,25 +130,16 @@ export default function QuotationsIndex({
 
             return nextFilters;
         });
-    }, [
-        filters.customer,
-        filters.from,
-        filters.per_page,
-        filters.status,
-        filters.to,
-    ]);
+    }, [filters.from, filters.per_page, filters.status, filters.to]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
-        const currentCustomer =
-            filters.customer === null ? '' : String(filters.customer);
         const currentFrom = filters.from ?? '';
         const currentTo = filters.to ?? '';
         const currentPerPage = String(filters.per_page);
 
         if (
             normalizedSearch === filters.search &&
-            tableFilters.customer === currentCustomer &&
             tableFilters.status === filters.status &&
             tableFilters.from === currentFrom &&
             tableFilters.to === currentTo &&
@@ -175,10 +154,6 @@ export default function QuotationsIndex({
                 toUrl(quotationsIndex()),
                 cleanQueryParams({
                     search: normalizedSearch,
-                    customer:
-                        tableFilters.customer === ''
-                            ? undefined
-                            : Number(tableFilters.customer),
                     status: tableFilters.status,
                     from: tableFilters.from || undefined,
                     to: tableFilters.to || undefined,
@@ -196,7 +171,6 @@ export default function QuotationsIndex({
 
         return () => window.clearTimeout(timeout);
     }, [
-        filters.customer,
         filters.from,
         filters.per_page,
         filters.search,
@@ -205,19 +179,9 @@ export default function QuotationsIndex({
         searchInput,
         tableFilters,
     ]);
-
-    const activeFilterCount =
-        (tableFilters.customer === '' ? 0 : 1) +
-        (tableFilters.status === '' ? 0 : 1) +
-        (tableFilters.from === '' ? 0 : 1) +
-        (tableFilters.to === '' ? 0 : 1);
     const exportHref = quotationsIndex({
         query: cleanQueryParams({
             search: searchInput.trim(),
-            customer:
-                tableFilters.customer === ''
-                    ? undefined
-                    : Number(tableFilters.customer),
             status: tableFilters.status,
             from: tableFilters.from || undefined,
             to: tableFilters.to || undefined,
@@ -251,7 +215,7 @@ export default function QuotationsIndex({
                 </div>
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         <div className="relative w-full sm:max-w-sm">
                             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -264,31 +228,49 @@ export default function QuotationsIndex({
                             />
                         </div>
 
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-9 bg-background"
-                            onClick={() =>
-                                setIsFiltersOpen(
-                                    (currentValue) => !currentValue,
-                                )
-                            }
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
                         >
-                            <SlidersHorizontal />
-                            Filters
-                            {activeFilterCount > 0 && (
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                    {activeFilterCount}
-                                </span>
-                            )}
-                            <ChevronDown
-                                className={cn(
-                                    'transition-transform',
-                                    isFiltersOpen && 'rotate-180',
-                                )}
-                            />
-                        </Button>
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
+                                >
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
+
+                        <DateRangeFilter
+                            from={tableFilters.from}
+                            to={tableFilters.to}
+                            fromLabel="Quotation from"
+                            toLabel="to"
+                            placeholder="Quotation from - to"
+                            onFromChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    from: value,
+                                }));
+                            }}
+                            onToChange={(value) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    to: value,
+                                }));
+                            }}
+                        />
                     </div>
 
                     <DropdownMenu>
@@ -314,116 +296,6 @@ export default function QuotationsIndex({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-
-                {isFiltersOpen && (
-                    <div className="grid gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-sm md:grid-cols-2 xl:grid-cols-4">
-                        <div className="space-y-1.5">
-                            <label
-                                htmlFor="quotation-filter-customer"
-                                className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase"
-                            >
-                                Customer
-                            </label>
-                            <FilterSelect
-                                id="quotation-filter-customer"
-                                value={tableFilters.customer}
-                                onChange={(event) => {
-                                    router.cancelAll();
-                                    setTableFilters((currentFilters) => ({
-                                        ...currentFilters,
-                                        customer: event.currentTarget.value,
-                                    }));
-                                }}
-                                className="w-full"
-                            >
-                                <option value="">All customers</option>
-                                {customerOptions.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={String(option.value)}
-                                    >
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </FilterSelect>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label
-                                htmlFor="quotation-filter-status"
-                                className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase"
-                            >
-                                Status
-                            </label>
-                            <FilterSelect
-                                id="quotation-filter-status"
-                                value={tableFilters.status}
-                                onChange={(event) => {
-                                    router.cancelAll();
-                                    setTableFilters((currentFilters) => ({
-                                        ...currentFilters,
-                                        status: event.currentTarget.value,
-                                    }));
-                                }}
-                                className="w-full"
-                            >
-                                <option value="">All statuses</option>
-                                {statusOptions.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={String(option.value)}
-                                    >
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </FilterSelect>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label
-                                htmlFor="quotation-filter-from"
-                                className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase"
-                            >
-                                From
-                            </label>
-                            <Input
-                                id="quotation-filter-from"
-                                type="date"
-                                value={tableFilters.from}
-                                onChange={(event) => {
-                                    router.cancelAll();
-                                    setTableFilters((currentFilters) => ({
-                                        ...currentFilters,
-                                        from: event.currentTarget.value,
-                                    }));
-                                }}
-                                className="h-9 bg-background"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label
-                                htmlFor="quotation-filter-to"
-                                className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase"
-                            >
-                                To
-                            </label>
-                            <Input
-                                id="quotation-filter-to"
-                                type="date"
-                                value={tableFilters.to}
-                                onChange={(event) => {
-                                    router.cancelAll();
-                                    setTableFilters((currentFilters) => ({
-                                        ...currentFilters,
-                                        to: event.currentTarget.value,
-                                    }));
-                                }}
-                                className="h-9 bg-background"
-                            />
-                        </div>
-                    </div>
-                )}
 
                 <CompactDataTable
                     footer={

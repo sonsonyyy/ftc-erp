@@ -40,8 +40,6 @@ class ComplianceRecordController extends Controller
 
         $search = $request->string('search')->toString();
         $status = $request->string('status')->toString();
-        $agency = $request->string('agency')->toString();
-        $assigned = $request->integer('assigned');
         $perPage = $this->resolvePerPage($request);
         $today = now();
         $canViewAlerts = $request->user()?->can('viewAny', ComplianceAlert::class) ?? false;
@@ -58,8 +56,6 @@ class ComplianceRecordController extends Controller
             ])
             ->search($search)
             ->displayStatus($status, $today)
-            ->agency($agency)
-            ->assignedTo($assigned > 0 ? $assigned : null)
             ->orderByRaw('COALESCE(due_date, expiry_date) asc nulls last')
             ->orderBy('id');
 
@@ -77,8 +73,6 @@ class ComplianceRecordController extends Controller
             'filters' => [
                 'search' => $search,
                 'status' => $status,
-                'agency' => $agency,
-                'assigned' => $assigned > 0 ? $assigned : null,
                 'per_page' => $perPage,
             ],
             'summary' => [
@@ -99,8 +93,6 @@ class ComplianceRecordController extends Controller
                     : null,
             ],
             'statusOptions' => $this->statusOptions(),
-            'agencyOptions' => $this->agencyOptions(),
-            'assignedUserOptions' => $this->assignedUserOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', ComplianceRecord::class) ?? false,
                 'view_alerts' => $canViewAlerts,

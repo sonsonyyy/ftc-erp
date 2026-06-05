@@ -2,13 +2,11 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     Archive,
     BadgeCheck,
-    ChevronDown,
     Eye,
     Pencil,
     Plus,
     Search,
     Shield,
-    SlidersHorizontal,
     UserMinus,
     Users,
 } from 'lucide-react';
@@ -16,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,17 +23,6 @@ import {
     CardDescription,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -170,10 +158,6 @@ export default function UsersIndex({
         tableFilters,
     ]);
 
-    const activeFilterCount =
-        (tableFilters.role === '' ? 0 : 1) +
-        (tableFilters.active === '' ? 0 : 1);
-
     const summaryCards = [
         {
             title: 'Total users',
@@ -257,7 +241,7 @@ export default function UsersIndex({
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         <div className="relative w-full sm:max-w-sm">
                             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -270,95 +254,49 @@ export default function UsersIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.active}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    active: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {activityOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
 
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.active === ''
-                                            ? 'all'
-                                            : tableFilters.active
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            active:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
+                        <FilterSelect
+                            value={tableFilters.role}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    role: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[220px]"
+                        >
+                            <option value="">All roles</option>
+                            {roleOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <DropdownMenuRadioItem value="all">
-                                        All statuses
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuSeparator />
-                                    {activityOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Role
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-80 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.role === ''
-                                                    ? 'all'
-                                                    : tableFilters.role
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        role:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All roles
-                                            </DropdownMenuRadioItem>
-                                            {roleOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
                 </div>
 

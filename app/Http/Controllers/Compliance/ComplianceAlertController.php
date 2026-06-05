@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Compliance;
 use App\Enums\ComplianceAlertType;
 use App\Http\Controllers\Controller;
 use App\Models\ComplianceAlert;
-use App\Models\ComplianceRecord;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,7 +26,6 @@ class ComplianceAlertController extends Controller
         $search = $request->string('search')->toString();
         $type = $request->string('type')->toString();
         $acknowledged = $request->string('acknowledged')->toString();
-        $agency = $request->string('agency')->toString();
         $perPage = $this->resolvePerPage($request);
         $operator = ComplianceAlert::query()->getConnection()->getDriverName() === 'pgsql'
             ? 'ilike'
@@ -51,11 +49,6 @@ class ComplianceAlertController extends Controller
             })
             ->type($type)
             ->acknowledged($acknowledged)
-            ->when($agency !== '', function ($query) use ($agency): void {
-                $query->whereHas('complianceRecord', function ($recordQuery) use ($agency): void {
-                    $recordQuery->where('agency', $agency);
-                });
-            })
             ->orderByRaw('acknowledged_at is not null')
             ->orderBy('scheduled_for')
             ->orderByDesc('id')
@@ -69,7 +62,6 @@ class ComplianceAlertController extends Controller
                 'search' => $search,
                 'type' => $type,
                 'acknowledged' => $acknowledged,
-                'agency' => $agency,
                 'per_page' => $perPage,
             ],
             'typeOptions' => collect(ComplianceAlertType::cases())
@@ -81,7 +73,6 @@ class ComplianceAlertController extends Controller
                 ['value' => 'unacknowledged', 'label' => 'Unacknowledged'],
                 ['value' => 'acknowledged', 'label' => 'Acknowledged'],
             ],
-            'agencyOptions' => $this->agencyOptions(),
         ]);
     }
 
@@ -136,26 +127,6 @@ class ComplianceAlertController extends Controller
                     && $alert->acknowledged_at === null,
             ],
         ];
-    }
-
-    /**
-     * Build agency filter options for compliance views.
-     *
-     * @return array<int, array{value:string,label:string}>
-     */
-    private function agencyOptions(): array
-    {
-        return ComplianceRecord::query()
-            ->select('agency')
-            ->distinct()
-            ->orderBy('agency')
-            ->pluck('agency')
-            ->filter()
-            ->values()
-            ->map(fn (string $agency) => [
-                'value' => $agency,
-                'label' => $agency,
-            ])->all();
     }
 
     /**

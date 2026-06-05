@@ -12,13 +12,13 @@ import {
     RefreshCw,
     Search,
     ShieldAlert,
-    SlidersHorizontal,
     TriangleAlert,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,12 +31,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -62,8 +56,6 @@ type Props = {
     filters: ComplianceRecordFilters;
     summary: ComplianceSummary;
     statusOptions: SelectOption[];
-    agencyOptions: SelectOption[];
-    assignedUserOptions: SelectOption[];
     can: {
         create: boolean;
         view_alerts: boolean;
@@ -117,15 +109,11 @@ export default function ComplianceRecordsIndex({
     filters,
     summary,
     statusOptions,
-    agencyOptions,
-    assignedUserOptions,
     can,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
         status: filters.status,
-        agency: filters.agency,
-        assigned: filters.assigned === null ? '' : String(filters.assigned),
         per_page: String(filters.per_page),
     });
 
@@ -133,16 +121,11 @@ export default function ComplianceRecordsIndex({
         setTableFilters((currentFilters) => {
             const nextFilters = {
                 status: filters.status,
-                agency: filters.agency,
-                assigned:
-                    filters.assigned === null ? '' : String(filters.assigned),
                 per_page: String(filters.per_page),
             };
 
             if (
                 currentFilters.status === nextFilters.status &&
-                currentFilters.agency === nextFilters.agency &&
-                currentFilters.assigned === nextFilters.assigned &&
                 currentFilters.per_page === nextFilters.per_page
             ) {
                 return currentFilters;
@@ -150,19 +133,15 @@ export default function ComplianceRecordsIndex({
 
             return nextFilters;
         });
-    }, [filters.agency, filters.assigned, filters.per_page, filters.status]);
+    }, [filters.per_page, filters.status]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
-        const currentAssigned =
-            filters.assigned === null ? '' : String(filters.assigned);
         const currentPerPage = String(filters.per_page);
 
         if (
             normalizedSearch === filters.search &&
             tableFilters.status === filters.status &&
-            tableFilters.agency === filters.agency &&
-            tableFilters.assigned === currentAssigned &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -175,11 +154,6 @@ export default function ComplianceRecordsIndex({
                 cleanQueryParams({
                     search: normalizedSearch,
                     status: tableFilters.status,
-                    agency: tableFilters.agency,
-                    assigned:
-                        tableFilters.assigned === ''
-                            ? undefined
-                            : Number(tableFilters.assigned),
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -194,8 +168,6 @@ export default function ComplianceRecordsIndex({
 
         return () => window.clearTimeout(timeout);
     }, [
-        filters.agency,
-        filters.assigned,
         filters.per_page,
         filters.search,
         filters.status,
@@ -203,20 +175,10 @@ export default function ComplianceRecordsIndex({
         tableFilters,
     ]);
 
-    const activeFilterCount =
-        (tableFilters.status === '' ? 0 : 1) +
-        (tableFilters.agency === '' ? 0 : 1) +
-        (tableFilters.assigned === '' ? 0 : 1);
-
     const exportHref = complianceRecordsIndex({
         query: cleanQueryParams({
             search: searchInput.trim(),
             status: tableFilters.status,
-            agency: tableFilters.agency,
-            assigned:
-                tableFilters.assigned === ''
-                    ? undefined
-                    : Number(tableFilters.assigned),
             export: 'csv',
         }),
     });
@@ -311,7 +273,7 @@ export default function ComplianceRecordsIndex({
                 </div>
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         <div className="relative w-full sm:max-w-sm">
                             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -324,138 +286,27 @@ export default function ComplianceRecordsIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.status}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    status: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All statuses</option>
+                            {statusOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.status === ''
-                                            ? 'all'
-                                            : tableFilters.status
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            status:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
-                                >
-                                    <DropdownMenuRadioItem value="all">
-                                        All statuses
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuSeparator />
-                                    {statusOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Agency
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.agency === ''
-                                                    ? 'all'
-                                                    : tableFilters.agency
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        agency:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All agencies
-                                            </DropdownMenuRadioItem>
-                                            {agencyOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Owner
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.assigned === ''
-                                                    ? 'all'
-                                                    : tableFilters.assigned
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        assigned:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All owners
-                                            </DropdownMenuRadioItem>
-                                            {assignedUserOptions.map(
-                                                (option) => (
-                                                    <DropdownMenuRadioItem
-                                                        key={option.value}
-                                                        value={String(
-                                                            option.value,
-                                                        )}
-                                                    >
-                                                        {option.label}
-                                                    </DropdownMenuRadioItem>
-                                                ),
-                                            )}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
 
                     <DropdownMenu>

@@ -81,7 +81,7 @@ test('quotation list supports custom page size', function () {
         );
 });
 
-test('quotation list can be filtered by search customer status and date range', function () {
+test('quotation list can be filtered by search status and date range', function () {
     actingAsQuotationRole('Sales Admin / Business Development');
 
     $alphaCustomer = Customer::factory()->create([
@@ -112,7 +112,6 @@ test('quotation list can be filtered by search customer status and date range', 
 
     $this->get(route('quotations.index', [
         'search' => 'alpha',
-        'customer' => $alphaCustomer->getKey(),
         'status' => QuotationStatus::Submitted->value,
         'from' => '2026-04-01',
         'to' => '2026-04-30',
@@ -121,7 +120,6 @@ test('quotation list can be filtered by search customer status and date range', 
         ->assertInertia(fn (Assert $page) => $page
             ->component('quotations/index')
             ->where('filters.search', 'alpha')
-            ->where('filters.customer', $alphaCustomer->getKey())
             ->where('filters.status', QuotationStatus::Submitted->value)
             ->where('filters.from', '2026-04-01')
             ->where('filters.to', '2026-04-30')
@@ -161,7 +159,6 @@ test('quotation export respects the active filters', function () {
 
     $response = $this->get(route('quotations.index', [
         'search' => 'alpha',
-        'customer' => $alphaCustomer->getKey(),
         'status' => QuotationStatus::Submitted->value,
         'from' => '2026-04-01',
         'to' => '2026-04-30',

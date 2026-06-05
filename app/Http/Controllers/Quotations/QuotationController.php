@@ -44,7 +44,6 @@ class QuotationController extends Controller
         $this->authorize('viewAny', Quotation::class);
 
         $search = $request->string('search')->toString();
-        $customerId = $request->integer('customer') ?: null;
         $status = $request->string('status')->toString();
         $from = $this->normalizeDateFilter($request->string('from')->toString());
         $to = $this->normalizeDateFilter($request->string('to')->toString());
@@ -58,7 +57,6 @@ class QuotationController extends Controller
             ])
             ->withCount('attachments')
             ->search($search)
-            ->forCustomer($customerId)
             ->status($status)
             ->betweenQuotationDates($from, $to)
             ->orderByDesc('quotation_date')
@@ -78,13 +76,11 @@ class QuotationController extends Controller
             'summary' => $this->quotationSummary(),
             'filters' => [
                 'search' => $search,
-                'customer' => $customerId,
                 'status' => $status,
                 'from' => $from,
                 'to' => $to,
                 'per_page' => $perPage,
             ],
-            'customerOptions' => $this->customerOptions(),
             'statusOptions' => $this->statusOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Quotation::class) ?? false,

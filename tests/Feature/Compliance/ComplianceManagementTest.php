@@ -71,8 +71,6 @@ test('authorized users can browse paginated compliance records with filters', fu
     $this->get(route('compliance-records.index', [
         'search' => 'alpha',
         'status' => ComplianceRecordStatus::DueSoon->value,
-        'agency' => 'SEC',
-        'assigned' => $assignee->getKey(),
         'per_page' => 5,
     ]))
         ->assertOk()
@@ -80,8 +78,6 @@ test('authorized users can browse paginated compliance records with filters', fu
             ->component('compliance-records/index')
             ->where('filters.search', 'alpha')
             ->where('filters.status', ComplianceRecordStatus::DueSoon->value)
-            ->where('filters.agency', 'SEC')
-            ->where('filters.assigned', $assignee->getKey())
             ->where('filters.per_page', 5)
             ->where('complianceRecords.total', 1)
             ->where('complianceRecords.current_page', 1)
@@ -115,8 +111,6 @@ test('compliance export respects the active filters', function () {
     $response = $this->get(route('compliance-records.index', [
         'search' => 'Alpha',
         'status' => ComplianceRecordStatus::DueSoon->value,
-        'agency' => 'SEC',
-        'assigned' => $assignee->getKey(),
         'export' => 'csv',
     ]));
 
@@ -403,7 +397,6 @@ test('authorized users can browse and acknowledge compliance alerts', function (
         'search' => 'mayor',
         'type' => ComplianceAlertType::ExpiryReminder->value,
         'acknowledged' => 'unacknowledged',
-        'agency' => 'Mayor\'s Office',
         'per_page' => 5,
     ]))
         ->assertOk()
@@ -412,7 +405,6 @@ test('authorized users can browse and acknowledge compliance alerts', function (
             ->where('filters.search', 'mayor')
             ->where('filters.type', ComplianceAlertType::ExpiryReminder->value)
             ->where('filters.acknowledged', 'unacknowledged')
-            ->where('filters.agency', 'Mayor\'s Office')
             ->where('filters.per_page', 5)
             ->where('alerts.total', 1)
             ->where('alerts.data.0.id', $alert->getKey()),

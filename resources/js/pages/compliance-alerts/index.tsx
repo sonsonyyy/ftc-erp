@@ -1,28 +1,11 @@
 import { Head, router } from '@inertiajs/react';
-import {
-    BellRing,
-    ChevronDown,
-    Eye,
-    Search,
-    SlidersHorizontal,
-} from 'lucide-react';
+import { BellRing, Eye, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
+import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -46,7 +29,6 @@ type Props = {
     filters: ComplianceAlertFilters;
     typeOptions: SelectOption[];
     acknowledgementOptions: SelectOption[];
-    agencyOptions: SelectOption[];
 };
 
 const perPageOptions = ['5', '10', '15', '25'];
@@ -79,13 +61,11 @@ export default function ComplianceAlertsIndex({
     filters,
     typeOptions,
     acknowledgementOptions,
-    agencyOptions,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
         type: filters.type,
         acknowledged: filters.acknowledged,
-        agency: filters.agency,
         per_page: String(filters.per_page),
     });
 
@@ -94,14 +74,12 @@ export default function ComplianceAlertsIndex({
             const nextFilters = {
                 type: filters.type,
                 acknowledged: filters.acknowledged,
-                agency: filters.agency,
                 per_page: String(filters.per_page),
             };
 
             if (
                 currentFilters.type === nextFilters.type &&
                 currentFilters.acknowledged === nextFilters.acknowledged &&
-                currentFilters.agency === nextFilters.agency &&
                 currentFilters.per_page === nextFilters.per_page
             ) {
                 return currentFilters;
@@ -109,7 +87,7 @@ export default function ComplianceAlertsIndex({
 
             return nextFilters;
         });
-    }, [filters.acknowledged, filters.agency, filters.per_page, filters.type]);
+    }, [filters.acknowledged, filters.per_page, filters.type]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
@@ -119,7 +97,6 @@ export default function ComplianceAlertsIndex({
             normalizedSearch === filters.search &&
             tableFilters.type === filters.type &&
             tableFilters.acknowledged === filters.acknowledged &&
-            tableFilters.agency === filters.agency &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -133,7 +110,6 @@ export default function ComplianceAlertsIndex({
                     search: normalizedSearch,
                     type: tableFilters.type,
                     acknowledged: tableFilters.acknowledged,
-                    agency: tableFilters.agency,
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -149,18 +125,12 @@ export default function ComplianceAlertsIndex({
         return () => window.clearTimeout(timeout);
     }, [
         filters.acknowledged,
-        filters.agency,
         filters.per_page,
         filters.search,
         filters.type,
         searchInput,
         tableFilters,
     ]);
-
-    const activeFilterCount =
-        (tableFilters.type === '' ? 0 : 1) +
-        (tableFilters.acknowledged === '' ? 0 : 1) +
-        (tableFilters.agency === '' ? 0 : 1);
 
     return (
         <>
@@ -178,7 +148,7 @@ export default function ComplianceAlertsIndex({
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         <div className="relative w-full sm:max-w-sm">
                             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -191,124 +161,49 @@ export default function ComplianceAlertsIndex({
                             />
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-9 bg-background"
+                        <FilterSelect
+                            value={tableFilters.type}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    type: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[220px]"
+                        >
+                            <option value="">All alert types</option>
+                            {typeOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <SlidersHorizontal />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                    <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
 
-                            <DropdownMenuContent align="start" className="w-56">
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.type === ''
-                                            ? 'all'
-                                            : tableFilters.type
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            type: value === 'all' ? '' : value,
-                                        }));
-                                    }}
+                        <FilterSelect
+                            value={tableFilters.acknowledged}
+                            onChange={(event) => {
+                                router.cancelAll();
+                                setTableFilters((currentFilters) => ({
+                                    ...currentFilters,
+                                    acknowledged: event.currentTarget.value,
+                                }));
+                            }}
+                            className="w-full sm:w-[180px]"
+                        >
+                            <option value="">All states</option>
+                            {acknowledgementOptions.map((option) => (
+                                <option
+                                    key={option.value}
+                                    value={String(option.value)}
                                 >
-                                    <DropdownMenuRadioItem value="all">
-                                        All alert types
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuSeparator />
-                                    {typeOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-
-                                <DropdownMenuSeparator />
-                                <DropdownMenuRadioGroup
-                                    value={
-                                        tableFilters.acknowledged === ''
-                                            ? 'all'
-                                            : tableFilters.acknowledged
-                                    }
-                                    onValueChange={(value) => {
-                                        router.cancelAll();
-                                        setTableFilters((currentFilters) => ({
-                                            ...currentFilters,
-                                            acknowledged:
-                                                value === 'all' ? '' : value,
-                                        }));
-                                    }}
-                                >
-                                    <DropdownMenuRadioItem value="all">
-                                        All states
-                                    </DropdownMenuRadioItem>
-                                    <DropdownMenuSeparator />
-                                    {acknowledgementOptions.map((option) => (
-                                        <DropdownMenuRadioItem
-                                            key={option.value}
-                                            value={String(option.value)}
-                                        >
-                                            {option.label}
-                                        </DropdownMenuRadioItem>
-                                    ))}
-                                </DropdownMenuRadioGroup>
-
-                                <DropdownMenuSeparator />
-                                <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                        Agency
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="max-h-80 w-72 overflow-y-auto">
-                                        <DropdownMenuRadioGroup
-                                            value={
-                                                tableFilters.agency === ''
-                                                    ? 'all'
-                                                    : tableFilters.agency
-                                            }
-                                            onValueChange={(value) => {
-                                                router.cancelAll();
-                                                setTableFilters(
-                                                    (currentFilters) => ({
-                                                        ...currentFilters,
-                                                        agency:
-                                                            value === 'all'
-                                                                ? ''
-                                                                : value,
-                                                    }),
-                                                );
-                                            }}
-                                        >
-                                            <DropdownMenuRadioItem value="all">
-                                                All agencies
-                                            </DropdownMenuRadioItem>
-                                            {agencyOptions.map((option) => (
-                                                <DropdownMenuRadioItem
-                                                    key={option.value}
-                                                    value={String(option.value)}
-                                                >
-                                                    {option.label}
-                                                </DropdownMenuRadioItem>
-                                            ))}
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuSubContent>
-                                </DropdownMenuSub>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </FilterSelect>
                     </div>
                 </div>
 

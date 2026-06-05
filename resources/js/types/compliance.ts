@@ -162,8 +162,6 @@ export type ComplianceRecordDetail = {
 export type ComplianceRecordFilters = {
     search: string;
     status: string;
-    agency: string;
-    assigned: number | null;
     per_page: number;
 };
 
@@ -201,7 +199,6 @@ export type ComplianceAlertFilters = {
     search: string;
     type: string;
     acknowledged: string;
-    agency: string;
     per_page: number;
 };
 
