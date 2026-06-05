@@ -11,6 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('attachment_links')) {
+            if (! Schema::hasIndex('attachment_links', ['attachment_id', 'attachable_type', 'attachable_id'], 'unique')) {
+                Schema::table('attachment_links', function (Blueprint $table) {
+                    $table->unique(['attachment_id', 'attachable_type', 'attachable_id']);
+                });
+            }
+
+            return;
+        }
+
         Schema::create('attachment_links', function (Blueprint $table) {
             $table->id();
             $table->foreignId('attachment_id')->constrained()->cascadeOnDelete();
