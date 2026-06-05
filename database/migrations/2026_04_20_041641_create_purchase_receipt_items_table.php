@@ -6,11 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private const UNIQUE_INDEX_NAME = 'pr_items_receipt_order_unique';
+
     /**
      * Run the migrations.
      */
     public function up(): void
     {
+        if (Schema::hasTable('purchase_receipt_items')) {
+            if (! Schema::hasIndex('purchase_receipt_items', ['purchase_receipt_id', 'purchase_order_item_id'], 'unique')) {
+                Schema::table('purchase_receipt_items', function (Blueprint $table) {
+                    $table->unique(
+                        ['purchase_receipt_id', 'purchase_order_item_id'],
+                        self::UNIQUE_INDEX_NAME,
+                    );
+                });
+            }
+
+            return;
+        }
+
         Schema::create('purchase_receipt_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('purchase_receipt_id')->constrained('purchase_receipts')->cascadeOnDelete();
@@ -21,7 +36,10 @@ return new class extends Migration
             $table->text('remarks')->nullable();
             $table->timestamps();
 
-            $table->unique(['purchase_receipt_id', 'purchase_order_item_id']);
+            $table->unique(
+                ['purchase_receipt_id', 'purchase_order_item_id'],
+                self::UNIQUE_INDEX_NAME,
+            );
         });
     }
 
