@@ -38,7 +38,7 @@ export function DataTableRowActions({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="size-8 rounded-lg text-muted-foreground"
+                    className="size-8 rounded-md text-muted-foreground"
                     aria-label={label}
                 >
                     <MoreHorizontal />

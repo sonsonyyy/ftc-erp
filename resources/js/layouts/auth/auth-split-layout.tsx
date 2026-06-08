@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ClipboardList, FileText, Package, ShieldCheck } from 'lucide-react';
-import AppLogoIcon from '@/components/app-logo-icon';
+import AppLogo from '@/components/app-logo';
+import { FtcLogoImage } from '@/components/ftc-logo-image';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -19,14 +20,16 @@ export default function AuthSplitLayout({
                     alt="Fire protection operations overview"
                     className="absolute inset-0 h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-linear-to-b from-black/20 via-black/10 to-black/75" />
+                <div className="absolute inset-0 bg-linear-to-b from-emerald-950/15 via-emerald-950/20 to-emerald-950/82" />
                 <div className="relative z-10 flex h-full flex-col justify-between p-8 text-white xl:p-10">
                     <div className="flex items-center justify-start">
                         <Link
                             href={home()}
-                            className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-[13px] font-medium backdrop-blur"
+                            className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-emerald-950/30 px-4 py-2 text-[13px] font-medium backdrop-blur"
                         >
-                            <AppLogoIcon className="size-5 fill-current text-white" />
+                            <div className="flex size-8 items-center justify-center overflow-hidden rounded-lg border border-white/20 bg-white/96 p-0.5 shadow-sm">
+                                <FtcLogoImage />
+                            </div>
                             <span>{name}</span>
                         </Link>
                     </div>
@@ -47,7 +50,7 @@ export default function AuthSplitLayout({
                             </p>
                         </div>
                         <div className="grid gap-3 text-[13px] text-white/82 sm:grid-cols-2">
-                            <div className="rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-sm">
+                            <div className="rounded-lg border border-white/12 bg-emerald-950/20 p-4 backdrop-blur-sm">
                                 <div className="flex items-start gap-3">
                                     <FileText className="mt-0.5 size-4 shrink-0 text-white/80" />
                                     <span>
@@ -55,7 +58,7 @@ export default function AuthSplitLayout({
                                     </span>
                                 </div>
                             </div>
-                            <div className="rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-sm">
+                            <div className="rounded-lg border border-white/12 bg-emerald-950/20 p-4 backdrop-blur-sm">
                                 <div className="flex items-start gap-3">
                                     <ClipboardList className="mt-0.5 size-4 shrink-0 text-white/80" />
                                     <span>
@@ -63,7 +66,7 @@ export default function AuthSplitLayout({
                                     </span>
                                 </div>
                             </div>
-                            <div className="rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-sm">
+                            <div className="rounded-lg border border-white/12 bg-emerald-950/20 p-4 backdrop-blur-sm">
                                 <div className="flex items-start gap-3">
                                     <Package className="mt-0.5 size-4 shrink-0 text-white/80" />
                                     <span>
@@ -72,7 +75,7 @@ export default function AuthSplitLayout({
                                     </span>
                                 </div>
                             </div>
-                            <div className="rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-sm">
+                            <div className="rounded-lg border border-white/12 bg-emerald-950/20 p-4 backdrop-blur-sm">
                                 <div className="flex items-start gap-3">
                                     <ShieldCheck className="mt-0.5 size-4 shrink-0 text-white/80" />
                                     <span>
@@ -91,12 +94,7 @@ export default function AuthSplitLayout({
                         href={home()}
                         className="mb-8 inline-flex items-center gap-3 lg:hidden"
                     >
-                        <div className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-                            <AppLogoIcon className="size-6 fill-current" />
-                        </div>
-                        <span className="text-sm font-semibold tracking-tight">
-                            {name}
-                        </span>
+                        <AppLogo showSubtitle={false} />
                     </Link>
 
                     <div className="space-y-5">

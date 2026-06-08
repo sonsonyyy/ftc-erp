@@ -203,7 +203,7 @@ export function IndexFiltersCard({
 
     return (
         <div className="space-y-3">
-            <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-card px-4 py-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
                     <div className="w-full sm:max-w-sm">
                         {renderPrimaryField()}
@@ -225,7 +225,7 @@ export function IndexFiltersCard({
                                 <SlidersHorizontal />
                                 {title}
                                 {hasActiveFilters && (
-                                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                    <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                                         {resolvedActiveFilterCount}
                                     </span>
                                 )}
@@ -280,7 +280,7 @@ export function IndexFiltersCard({
             </div>
 
             {advancedFields.length > 0 && isAdvancedOpen && (
-                <div className="rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+                <div className="rounded-lg border border-border/70 bg-card px-4 py-3 shadow-sm">
                     {description && (
                         <p className="mb-3 text-[13px] text-muted-foreground">
                             {description}

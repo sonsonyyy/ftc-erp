@@ -67,7 +67,6 @@ export function NavMain({ primaryItems = [], sections = [] }: NavMainProps) {
         <>
             {hasPrimaryItems && (
                 <SidebarGroup className="px-2 py-0">
-                    <SidebarGroupLabel>Workspace</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {primaryItems.map((item) => (
@@ -98,7 +97,7 @@ export function NavMain({ primaryItems = [], sections = [] }: NavMainProps) {
 
             {hasSections && (
                 <SidebarGroup className="px-2 py-0">
-                    <SidebarGroupLabel>ERP Modules</SidebarGroupLabel>
+                    <SidebarGroupLabel>Modules</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {sections.map((section) => {

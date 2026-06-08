@@ -69,7 +69,7 @@ export function DataTablePaginationFooter<T>({
                                     variant="outline"
                                     size="sm"
                                     disabled
-                                    className="h-8 min-w-8 rounded-lg px-2.5 text-muted-foreground"
+                                    className="h-8 min-w-8 rounded-md px-2.5 text-muted-foreground"
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}
@@ -82,7 +82,7 @@ export function DataTablePaginationFooter<T>({
                                 key={`${href}-${index}`}
                                 variant={link.active ? 'default' : 'outline'}
                                 size="sm"
-                                className="h-8 min-w-8 rounded-lg px-2.5"
+                                className="h-8 min-w-8 rounded-md px-2.5"
                                 asChild
                             >
                                 <Link

@@ -50,7 +50,7 @@ export function FormSteps({
             {items.map((item) => (
                 <div
                     key={item.step}
-                    className="rounded-xl border bg-muted/10 px-3 py-2.5"
+                    className="rounded-lg border bg-muted/10 px-3 py-2.5"
                 >
                     <p className="text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
                         Step {item.step}
@@ -86,7 +86,7 @@ export function FormSectionCard({
         <Card className={cn('gap-3 py-4', className)}>
             <CardHeader className="space-y-1 px-4 pb-0">
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+                    <span className="rounded-md border px-2 py-0.5 text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
                         Step {step}
                     </span>
                     <CardTitle className="text-[15px]">{title}</CardTitle>

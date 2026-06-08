@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import AppLogoIcon from '@/components/app-logo-icon';
+import { FtcLogoImage } from '@/components/ftc-logo-image';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -17,8 +17,8 @@ export default function AuthSimpleLayout({
                             href={home()}
                             className="flex flex-col items-center gap-2 font-medium"
                         >
-                            <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                                <AppLogoIcon className="size-9 fill-current text-[var(--foreground)] dark:text-white" />
+                            <div className="mb-1 flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-emerald-100 bg-white p-1 shadow-[0_14px_28px_-22px_rgba(14,83,51,0.35)]">
+                                <FtcLogoImage />
                             </div>
                             <span className="sr-only">{title}</span>
                         </Link>
