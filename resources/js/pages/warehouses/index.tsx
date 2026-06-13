@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Archive, Eye, Pencil, Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
@@ -129,17 +130,11 @@ export default function WarehousesIndex({ warehouses, filters, can }: Props) {
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
                     <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-                        <div className="relative w-full sm:max-w-sm">
-                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                value={searchInput}
-                                onChange={(event) =>
-                                    setSearchInput(event.currentTarget.value)
-                                }
-                                placeholder="Search warehouses"
-                                className="h-9 pl-9"
-                            />
-                        </div>
+                        <ClearableSearchInput
+                            value={searchInput}
+                            onChange={setSearchInput}
+                            placeholder="Search warehouses"
+                        />
                     </div>
                 </div>
 
@@ -234,6 +229,7 @@ export default function WarehousesIndex({ warehouses, filters, can }: Props) {
                                     <td className="text-right">
                                         <div className="flex justify-end">
                                             <DataTableRowActions
+                                                resourceLabel="warehouse"
                                                 items={[
                                                     ...(warehouse.can.view
                                                         ? [

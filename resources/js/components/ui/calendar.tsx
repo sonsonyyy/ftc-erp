@@ -27,20 +27,21 @@ function Calendar({
 
   return (
     <DayPicker
+      navLayout="around"
       showOutsideDays={showOutsideDays}
       className={cn(
-        "bg-background p-3 [--cell-size:2.25rem] sm:[--cell-size:2.5rem]",
+        "bg-background p-4 [--cell-size:2.25rem] sm:[--cell-size:2.5rem]",
         className
       )}
       classNames={{
         [UI.Root]: cn("w-fit", defaultClassNames[UI.Root]),
         [UI.Months]: cn(
-          "flex flex-col gap-4 sm:flex-row sm:gap-6",
+          "flex flex-col gap-4 sm:flex-row sm:gap-4",
           defaultClassNames[UI.Months]
         ),
-        [UI.Month]: cn("space-y-4", defaultClassNames[UI.Month]),
+        [UI.Month]: cn("relative space-y-4", defaultClassNames[UI.Month]),
         [UI.MonthCaption]: cn(
-          "relative flex h-7 items-center justify-center px-8",
+          "relative flex h-10 items-center justify-center px-10",
           defaultClassNames[UI.MonthCaption]
         ),
         [UI.CaptionLabel]: cn(
@@ -48,27 +49,29 @@ function Calendar({
           defaultClassNames[UI.CaptionLabel]
         ),
         [UI.Nav]: cn(
-          "absolute inset-x-0 top-0 flex items-center justify-between",
+          "hidden",
           defaultClassNames[UI.Nav]
         ),
         [UI.PreviousMonthButton]: cn(
           buttonVariants({ variant: "ghost", size: "icon" }),
-          "size-7 rounded-md bg-transparent p-0 opacity-70 hover:opacity-100",
+          "absolute top-0 left-0 z-20 size-10 rounded-md bg-transparent p-0 opacity-100 hover:bg-muted",
           defaultClassNames[UI.PreviousMonthButton]
         ),
         [UI.NextMonthButton]: cn(
           buttonVariants({ variant: "ghost", size: "icon" }),
-          "size-7 rounded-md bg-transparent p-0 opacity-70 hover:opacity-100",
+          "absolute top-0 right-0 z-20 size-10 rounded-md bg-transparent p-0 opacity-100 hover:bg-muted",
           defaultClassNames[UI.NextMonthButton]
         ),
+        [UI.MonthGrid]: cn("w-full border-collapse", defaultClassNames[UI.MonthGrid]),
         [UI.Weekdays]: cn("flex", defaultClassNames[UI.Weekdays]),
         [UI.Weekday]: cn(
           "w-(--cell-size) rounded-md text-[0.8rem] font-normal text-muted-foreground",
           defaultClassNames[UI.Weekday]
         ),
-        [UI.Week]: cn("mt-1 flex w-full", defaultClassNames[UI.Week]),
+        [UI.Weeks]: cn("mt-2 flex flex-col gap-1", defaultClassNames[UI.Weeks]),
+        [UI.Week]: cn("flex w-full", defaultClassNames[UI.Week]),
         [UI.Day]: cn(
-          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
+          "relative size-(--cell-size) overflow-hidden p-0 text-center text-sm focus-within:relative focus-within:z-20",
           isRangeMode
             ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
             : "[&:has([aria-selected])]:rounded-md",
@@ -76,24 +79,24 @@ function Calendar({
         ),
         [UI.DayButton]: cn(
           buttonVariants({ variant: "ghost", size: "icon" }),
-          "size-(--cell-size) p-0 font-normal aria-selected:opacity-100",
+          "size-(--cell-size) rounded-md p-0 font-normal aria-selected:opacity-100",
           defaultClassNames[UI.DayButton]
         ),
+        [SelectionState.selected]: cn(
+          "[&_button]:rounded-md [&_button]:bg-primary [&_button]:text-primary-foreground [&_button:hover]:bg-primary [&_button:focus]:bg-primary",
+          defaultClassNames[SelectionState.selected]
+        ),
         [SelectionState.range_start]: cn(
-          "day-range-start rounded-l-md bg-accent",
+          "day-range-start rounded-l-md bg-primary/15 [&_button]:rounded-md [&_button]:bg-primary [&_button]:text-primary-foreground [&_button:hover]:bg-primary [&_button:focus]:bg-primary",
           defaultClassNames[SelectionState.range_start]
         ),
-        [SelectionState.range_end]: cn(
-          "day-range-end rounded-r-md bg-accent",
-          defaultClassNames[SelectionState.range_end]
-        ),
         [SelectionState.range_middle]: cn(
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+          "bg-primary/15 text-foreground [&_button]:rounded-none [&_button]:bg-transparent [&_button]:text-foreground [&_button:hover]:bg-transparent [&_button:focus]:bg-transparent",
           defaultClassNames[SelectionState.range_middle]
         ),
-        [SelectionState.selected]: cn(
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-          defaultClassNames[SelectionState.selected]
+        [SelectionState.range_end]: cn(
+          "day-range-end rounded-r-md bg-primary/15 [&_button]:rounded-md [&_button]:bg-primary [&_button]:text-primary-foreground [&_button:hover]:bg-primary [&_button:focus]:bg-primary",
+          defaultClassNames[SelectionState.range_end]
         ),
         [DayFlag.today]: cn(
           "bg-accent text-accent-foreground",

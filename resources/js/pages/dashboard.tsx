@@ -635,16 +635,18 @@ export default function Dashboard({ dashboard }: Props) {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-1.5">
-                                    {dashboard.work_orders.statuses.map(
-                                        (item) => (
+                                    {dashboard.work_orders.statuses
+                                        .filter(
+                                            (item) => item.key !== 'cancelled',
+                                        )
+                                        .map((item) => (
                                             <StatusTile
                                                 key={item.key}
                                                 label={item.label}
                                                 value={String(item.count)}
                                                 className="bg-background/94"
                                             />
-                                        ),
-                                    )}
+                                        ))}
                                 </div>
 
                                 <div className="flex flex-wrap gap-1.5 border-t pt-2">
@@ -1103,6 +1105,7 @@ export default function Dashboard({ dashboard }: Props) {
                                     <TableRow className="hover:bg-transparent">
                                         <TableHead>Item</TableHead>
                                         <TableHead>Category</TableHead>
+                                        <TableHead>Location</TableHead>
                                         <TableHead className="text-right">
                                             On hand
                                         </TableHead>
@@ -1112,7 +1115,6 @@ export default function Dashboard({ dashboard }: Props) {
                                         <TableHead className="text-right">
                                             Shortage
                                         </TableHead>
-                                        <TableHead>Location</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -1139,6 +1141,10 @@ export default function Dashboard({ dashboard }: Props) {
                                                     {item.category ??
                                                         'Uncategorized'}
                                                 </TableCell>
+                                                <TableCell className="text-muted-foreground">
+                                                    {item.location ??
+                                                        'No location'}
+                                                </TableCell>
                                                 <TableCell className="text-right text-muted-foreground">
                                                     {formatMetricQuantity(
                                                         item.on_hand,
@@ -1156,10 +1162,6 @@ export default function Dashboard({ dashboard }: Props) {
                                                         item.shortage,
                                                     )}{' '}
                                                     {item.unit}
-                                                </TableCell>
-                                                <TableCell className="text-muted-foreground">
-                                                    {item.location ??
-                                                        'No location'}
                                                 </TableCell>
                                             </TableRow>
                                         ))

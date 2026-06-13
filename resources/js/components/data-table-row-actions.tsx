@@ -22,11 +22,32 @@ type ActionItem = {
 type Props = {
     items: ActionItem[];
     label?: string;
+    resourceLabel?: string;
 };
+
+function normalizeActionLabel(label: string, resourceLabel?: string): string {
+    if (!resourceLabel) {
+        return label;
+    }
+
+    const normalizedResourceLabel = resourceLabel.trim().toLowerCase();
+
+    switch (label) {
+        case 'Open':
+            return `Open ${normalizedResourceLabel}`;
+        case 'Edit':
+            return `Edit ${normalizedResourceLabel}`;
+        case 'Archive':
+            return `Archive ${normalizedResourceLabel}`;
+        default:
+            return label;
+    }
+}
 
 export function DataTableRowActions({
     items,
     label = 'Open row actions',
+    resourceLabel,
 }: Props) {
     if (items.length === 0) {
         return null;
@@ -55,7 +76,10 @@ export function DataTableRowActions({
                                 <DropdownMenuItem asChild>
                                     <Link href={item.href}>
                                         <Icon />
-                                        {item.label}
+                                        {normalizeActionLabel(
+                                            item.label,
+                                            resourceLabel,
+                                        )}
                                     </Link>
                                 </DropdownMenuItem>
 
@@ -75,7 +99,10 @@ export function DataTableRowActions({
                                 onSelect={item.onSelect}
                             >
                                 <Icon />
-                                {item.label}
+                                {normalizeActionLabel(
+                                    item.label,
+                                    resourceLabel,
+                                )}
                             </DropdownMenuItem>
 
                             {index < items.length - 1 && (

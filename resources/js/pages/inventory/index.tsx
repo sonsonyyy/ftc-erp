@@ -2,17 +2,14 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     Archive,
     Building2,
-    ChevronDown,
-    Download,
-    Ellipsis,
     Eye,
     Package,
     Pencil,
     Plus,
-    Search,
     TriangleAlert,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
@@ -25,13 +22,6 @@ import {
     CardDescription,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -215,7 +205,7 @@ export default function InventoryIndex({
             <Head title="Inventory Items" />
 
             <div className="app-page flex flex-1 flex-col gap-6">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div className="flex flex-col gap-4">
                     <div className="space-y-1.5">
                         <h1 className="text-2xl font-semibold tracking-tight">
                             Inventory Items
@@ -224,15 +214,6 @@ export default function InventoryIndex({
                             Company-owned stock records with reorder visibility.
                         </p>
                     </div>
-
-                    {can.create && (
-                        <Button asChild>
-                            <Link href={inventoryCreate()}>
-                                <Plus />
-                                New item
-                            </Link>
-                        </Button>
-                    )}
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-3">
@@ -267,17 +248,11 @@ export default function InventoryIndex({
 
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-                        <div className="relative w-full sm:max-w-sm">
-                            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                value={searchInput}
-                                onChange={(event) =>
-                                    setSearchInput(event.currentTarget.value)
-                                }
-                                placeholder="Search inventory items"
-                                className="h-9 pl-9"
-                            />
-                        </div>
+                        <ClearableSearchInput
+                            value={searchInput}
+                            onChange={setSearchInput}
+                            placeholder="Search inventory items"
+                        />
 
                         <FilterSelect
                             value={tableFilters.status}
@@ -324,28 +299,14 @@ export default function InventoryIndex({
                         </FilterSelect>
                     </div>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-9 bg-background"
-                            >
-                                <Ellipsis />
-                                Actions
-                                <ChevronDown />
-                            </Button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem asChild>
-                                <a href={toUrl(exportHref)}>
-                                    <Download />
-                                    Export CSV
-                                </a>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    {can.create ? (
+                        <Button asChild className="lg:shrink-0">
+                            <Link href={inventoryCreate()}>
+                                <Plus />
+                                New item
+                            </Link>
+                        </Button>
+                    ) : null}
                 </div>
 
                 <CompactDataTable
@@ -456,6 +417,7 @@ export default function InventoryIndex({
                                     <td className="text-right">
                                         <div className="flex justify-end">
                                             <DataTableRowActions
+                                                resourceLabel="inventory item"
                                                 items={[
                                                     ...(inventoryItem.can.view
                                                         ? [

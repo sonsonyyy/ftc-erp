@@ -1,21 +1,25 @@
 import * as React from 'react';
 import {
-    SelectInput,
-    type SelectInputProps,
-} from '@/components/ui/select-input';
+    FilterCombobox,
+    type FilterComboboxChangeEvent,
+} from '@/components/filter-combobox';
 
-type FilterSelectProps = Omit<SelectInputProps, 'children'> & {
+type FilterSelectProps = {
+    id?: string;
+    value?: string | number | readonly string[] | undefined;
+    defaultValue?: string | number | readonly string[] | undefined;
+    name?: string;
+    disabled?: boolean;
+    required?: boolean;
+    className?: string;
+    placeholder?: string;
     children: React.ReactNode;
+    onChange?: (event: FilterComboboxChangeEvent) => void;
+    'aria-describedby'?: string;
+    'aria-invalid'?: boolean | 'true' | 'false';
+    'aria-label'?: string;
 };
 
-export function FilterSelect({
-    className,
-    children,
-    ...props
-}: FilterSelectProps) {
-    return (
-        <SelectInput className={className} {...props}>
-            {children}
-        </SelectInput>
-    );
+export function FilterSelect({ children, ...props }: FilterSelectProps) {
+    return <FilterCombobox {...props}>{children}</FilterCombobox>;
 }

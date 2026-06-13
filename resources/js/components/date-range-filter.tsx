@@ -1,6 +1,6 @@
 'use client';
 
-import { format, isValid, parseISO } from 'date-fns';
+import { format, isSameDay, isValid, parseISO } from 'date-fns';
 import { CalendarIcon, X } from 'lucide-react';
 import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
@@ -59,11 +59,13 @@ export function DateRangeFilter({
     onFromChange,
     onToChange,
     className,
-    placeholder,
 }: DateRangeFilterProps) {
     const [open, setOpen] = React.useState(false);
+    const [draftRange, setDraftRange] = React.useState<DateRange | undefined>(
+        undefined,
+    );
 
-    const selectedRange = React.useMemo<DateRange | undefined>(() => {
+    const committedRange = React.useMemo<DateRange | undefined>(() => {
         const fromDate = parseDateValue(from);
         const toDate = parseDateValue(to);
 
@@ -77,21 +79,48 @@ export function DateRangeFilter({
         };
     }, [from, to]);
 
-    const buttonLabel =
-        formatRangeLabel(selectedRange) ??
-        placeholder ??
-        `${fromLabel} - ${toLabel}`;
+    React.useEffect(() => {
+        if (!open) {
+            setDraftRange(committedRange);
+        }
+    }, [committedRange, open]);
+
+    const selectedRange = open ? draftRange : committedRange;
+    const buttonLabel = formatRangeLabel(selectedRange) ?? 'Select date range';
+    const canClear = Boolean(committedRange?.from);
 
     function handleSelect(nextRange: DateRange | undefined): void {
-        onFromChange(nextRange?.from ? formatDateValue(nextRange.from) : '');
-        onToChange(nextRange?.to ? formatDateValue(nextRange.to) : '');
+        if (!nextRange?.from && !nextRange?.to) {
+            clearSelection();
+
+            return;
+        }
+
+        if (
+            !selectedRange?.from &&
+            nextRange?.from &&
+            nextRange?.to &&
+            isSameDay(nextRange.from, nextRange.to)
+        ) {
+            setDraftRange({
+                from: nextRange.from,
+                to: undefined,
+            });
+
+            return;
+        }
+
+        setDraftRange(nextRange);
 
         if (nextRange?.from && nextRange?.to) {
+            onFromChange(formatDateValue(nextRange.from));
+            onToChange(formatDateValue(nextRange.to));
             setOpen(false);
         }
     }
 
     function clearSelection(): void {
+        setDraftRange(undefined);
         onFromChange('');
         onToChange('');
         setOpen(false);
@@ -100,43 +129,54 @@ export function DateRangeFilter({
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button
-                    variant="outline"
-                    size="default"
-                    data-empty={!selectedRange?.from}
-                    className={cn(
-                        'h-9 w-full justify-start bg-background text-left font-normal data-[empty=true]:text-muted-foreground sm:w-[280px]',
-                        className,
-                    )}
-                >
-                    <CalendarIcon className="size-4" />
-                    <span className="truncate">{buttonLabel}</span>
-                </Button>
-            </PopoverTrigger>
+                <div className={cn('relative w-full sm:w-[280px]', className)}>
+                    <Button
+                        variant="outline"
+                        size="default"
+                        data-empty={!selectedRange?.from}
+                        className={cn(
+                            'h-9 w-full justify-start bg-background pr-9 text-left leading-normal font-normal data-[empty=true]:text-muted-foreground',
+                            canClear && 'pr-10',
+                        )}
+                        aria-label={`${fromLabel} ${toLabel}`.trim()}
+                    >
+                        <CalendarIcon className="size-4" />
+                        <span className="truncate leading-normal">
+                            {buttonLabel}
+                        </span>
+                    </Button>
 
-            <PopoverContent align="start" className="w-auto p-0">
-                <Calendar
-                    mode="range"
-                    defaultMonth={selectedRange?.from}
-                    selected={selectedRange}
-                    onSelect={handleSelect}
-                    numberOfMonths={2}
-                />
-
-                {selectedRange?.from ? (
-                    <div className="flex justify-end border-t px-3 py-2">
+                    {canClear ? (
                         <Button
                             type="button"
                             variant="ghost"
-                            size="sm"
-                            onClick={clearSelection}
-                            className="h-7 px-2 text-xs"
+                            size="icon"
+                            onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                clearSelection();
+                            }}
+                            className="absolute top-1/2 right-1 size-7 -translate-y-1/2 rounded-md text-muted-foreground"
+                            aria-label="Clear date range"
                         >
-                            <X className="size-3.5" />
-                            Clear
+                            <X className="size-4" />
                         </Button>
-                    </div>
-                ) : null}
+                    ) : null}
+                </div>
+            </PopoverTrigger>
+
+            <PopoverContent
+                align="start"
+                className="w-auto overflow-hidden p-0"
+            >
+                <Calendar
+                    mode="range"
+                    defaultMonth={selectedRange?.from ?? committedRange?.from}
+                    selected={selectedRange}
+                    onSelect={handleSelect}
+                    numberOfMonths={2}
+                    className="p-3"
+                />
             </PopoverContent>
         </Popover>
     );
