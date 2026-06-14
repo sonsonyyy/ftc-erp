@@ -29,7 +29,6 @@ type Props = {
     filters: WorkOrderFilters;
     statusOptions: SelectOption[];
     priorityOptions: SelectOption[];
-    serviceTypeOptions: SelectOption[];
     can: {
         create: boolean;
     };
@@ -90,14 +89,12 @@ export default function WorkOrdersIndex({
     filters,
     statusOptions,
     priorityOptions,
-    serviceTypeOptions,
     can,
 }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
         status: filters.status,
         priority: filters.priority,
-        service_type: filters.service_type,
         per_page: String(filters.per_page),
     });
 
@@ -106,14 +103,12 @@ export default function WorkOrdersIndex({
             const nextFilters = {
                 status: filters.status,
                 priority: filters.priority,
-                service_type: filters.service_type,
                 per_page: String(filters.per_page),
             };
 
             if (
                 currentFilters.status === nextFilters.status &&
                 currentFilters.priority === nextFilters.priority &&
-                currentFilters.service_type === nextFilters.service_type &&
                 currentFilters.per_page === nextFilters.per_page
             ) {
                 return currentFilters;
@@ -121,12 +116,7 @@ export default function WorkOrdersIndex({
 
             return nextFilters;
         });
-    }, [
-        filters.per_page,
-        filters.priority,
-        filters.service_type,
-        filters.status,
-    ]);
+    }, [filters.per_page, filters.priority, filters.status]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
@@ -136,7 +126,6 @@ export default function WorkOrdersIndex({
             normalizedSearch === filters.search &&
             tableFilters.status === filters.status &&
             tableFilters.priority === filters.priority &&
-            tableFilters.service_type === filters.service_type &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -150,7 +139,6 @@ export default function WorkOrdersIndex({
                     search: normalizedSearch,
                     status: tableFilters.status,
                     priority: tableFilters.priority,
-                    service_type: tableFilters.service_type,
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -168,7 +156,6 @@ export default function WorkOrdersIndex({
         filters.per_page,
         filters.priority,
         filters.search,
-        filters.service_type,
         filters.status,
         searchInput,
         tableFilters,
@@ -178,7 +165,6 @@ export default function WorkOrdersIndex({
             search: searchInput.trim(),
             status: tableFilters.status,
             priority: tableFilters.priority,
-            service_type: tableFilters.service_type,
             export: 'csv',
         }),
     });
@@ -202,7 +188,7 @@ export default function WorkOrdersIndex({
                         <ClearableSearchInput
                             value={searchInput}
                             onChange={setSearchInput}
-                            placeholder="Search work orders, customers, or projects"
+                            placeholder="Search wo, customers, or projects"
                         />
 
                         <FilterSelect
@@ -248,28 +234,6 @@ export default function WorkOrdersIndex({
                                 </option>
                             ))}
                         </FilterSelect>
-
-                        <FilterSelect
-                            value={tableFilters.service_type}
-                            onChange={(event) => {
-                                router.cancelAll();
-                                setTableFilters((currentFilters) => ({
-                                    ...currentFilters,
-                                    service_type: event.currentTarget.value,
-                                }));
-                            }}
-                            className="w-full sm:w-[210px]"
-                        >
-                            <option value="">All service types</option>
-                            {serviceTypeOptions.map((option) => (
-                                <option
-                                    key={option.value}
-                                    value={String(option.value)}
-                                >
-                                    {option.label}
-                                </option>
-                            ))}
-                        </FilterSelect>
                     </div>
 
                     {can.create ? (
@@ -301,8 +265,9 @@ export default function WorkOrdersIndex({
                     <table>
                         <thead>
                             <tr>
-                                <th>Work order</th>
+                                <th>Number</th>
                                 <th>Customer / site</th>
+                                <th>Type</th>
                                 <th>Schedule</th>
                                 <th>Priority</th>
                                 <th>Status</th>
@@ -315,7 +280,7 @@ export default function WorkOrdersIndex({
                             {workOrders.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={7}
+                                        colSpan={8}
                                         className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No work orders matched the current
@@ -326,20 +291,10 @@ export default function WorkOrdersIndex({
 
                             {workOrders.data.map((workOrder) => (
                                 <tr key={workOrder.id}>
-                                    <td>
-                                        <div className="space-y-0.5">
-                                            <p className="max-w-[16rem] truncate font-semibold text-foreground">
-                                                {workOrder.work_order_no}
-                                            </p>
-                                            <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
-                                                {[
-                                                    workOrder.summary,
-                                                    workOrder.service_type_label,
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' • ')}
-                                            </p>
-                                        </div>
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[10rem] truncate">
+                                            {workOrder.work_order_no}
+                                        </p>
                                     </td>
 
                                     <td>
@@ -356,10 +311,16 @@ export default function WorkOrdersIndex({
                                                     workOrder.site.site_name,
                                                 ]
                                                     .filter(Boolean)
-                                                    .join(' • ') ||
+                                                    .join(' - ') ||
                                                     'No site linked'}
                                             </p>
                                         </div>
+                                    </td>
+
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[14rem] truncate">
+                                            {workOrder.service_type_label}
+                                        </p>
                                     </td>
 
                                     <td className="text-[13px] text-muted-foreground">

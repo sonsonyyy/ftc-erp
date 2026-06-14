@@ -204,6 +204,7 @@ export default function CustomersIndex({
                     <table>
                         <thead>
                             <tr>
+                                <th>Number</th>
                                 <th>Customer</th>
                                 <th>Contact</th>
                                 <th>Status</th>
@@ -217,7 +218,7 @@ export default function CustomersIndex({
                             {customers.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={6}
+                                        colSpan={7}
                                         className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No customers matched the current
@@ -228,19 +229,20 @@ export default function CustomersIndex({
 
                             {customers.data.map((customer) => (
                                 <tr key={customer.id}>
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[10rem] truncate">
+                                            {customer.customer_code}
+                                        </p>
+                                    </td>
+
                                     <td>
                                         <div className="space-y-0.5">
                                             <p className="max-w-[20rem] truncate font-semibold text-foreground">
                                                 {customer.company_name}
                                             </p>
                                             <p className="max-w-[20rem] truncate text-[13px] text-muted-foreground">
-                                                {[
-                                                    customer.customer_code,
-                                                    customer.trade_name,
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' • ') ||
-                                                    customer.customer_code}
+                                                {customer.trade_name ??
+                                                    'No trade name'}
                                             </p>
                                         </div>
                                     </td>

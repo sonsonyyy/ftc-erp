@@ -270,8 +270,9 @@ export default function QuotationsIndex({
                     <table>
                         <thead>
                             <tr>
-                                <th>Quotation</th>
+                                <th>Number</th>
                                 <th>Customer / site</th>
+                                <th>Subject</th>
                                 <th>Dates</th>
                                 <th className="text-right">Amount</th>
                                 <th>Status</th>
@@ -284,7 +285,7 @@ export default function QuotationsIndex({
                             {quotations.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={7}
+                                        colSpan={8}
                                         className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No quotations matched the current
@@ -295,15 +296,10 @@ export default function QuotationsIndex({
 
                             {quotations.data.map((quotation) => (
                                 <tr key={quotation.id}>
-                                    <td>
-                                        <div className="space-y-0.5">
-                                            <p className="max-w-[18rem] truncate font-semibold text-foreground">
-                                                {quotation.quotation_no}
-                                            </p>
-                                            <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
-                                                {quotation.subject}
-                                            </p>
-                                        </div>
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[10rem] truncate">
+                                            {quotation.quotation_no}
+                                        </p>
                                     </td>
 
                                     <td>
@@ -320,10 +316,16 @@ export default function QuotationsIndex({
                                                     quotation.site.site_name,
                                                 ]
                                                     .filter(Boolean)
-                                                    .join(' • ') ||
+                                                    .join(' - ') ||
                                                     'No site linked'}
                                             </p>
                                         </div>
+                                    </td>
+
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[18rem] truncate">
+                                            {quotation.subject}
+                                        </p>
                                     </td>
 
                                     <td className="text-[13px] text-muted-foreground">

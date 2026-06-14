@@ -55,6 +55,8 @@ test('authorized users can browse paginated quotations', function () {
             ->where('quotations.current_page', 1)
             ->where('quotations.per_page', 15)
             ->has('quotations.data', 15)
+            ->has('quotations.data.0.quotation_no')
+            ->has('quotations.data.0.subject')
             ->where('summary.total_quotations', 16)
             ->where('summary.pending_quotations', 0)
             ->where('summary.awarded_quotations', 0)

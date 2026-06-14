@@ -203,9 +203,10 @@ export default function SitesIndex({
                     <table>
                         <thead>
                             <tr>
-                                <th>Site</th>
+                                <th>Number</th>
+                                <th>Site / contact person</th>
                                 <th>Customer</th>
-                                <th>Contact</th>
+                                <th>Mobile / email</th>
                                 <th>Location</th>
                                 <th>Status</th>
                                 <th className="text-right">Attachments</th>
@@ -217,7 +218,7 @@ export default function SitesIndex({
                             {sites.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={7}
+                                        colSpan={8}
                                         className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No sites matched the current filters.
@@ -227,19 +228,20 @@ export default function SitesIndex({
 
                             {sites.data.map((site) => (
                                 <tr key={site.id}>
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[10rem] truncate">
+                                            {site.site_code ?? 'No site code'}
+                                        </p>
+                                    </td>
+
                                     <td>
                                         <div className="space-y-0.5">
                                             <p className="max-w-[18rem] truncate font-semibold text-foreground">
                                                 {site.site_name}
                                             </p>
                                             <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
-                                                {[
-                                                    site.site_code,
-                                                    site.contact_person,
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' • ') ||
-                                                    'No site code'}
+                                                {site.contact_person ??
+                                                    'Not set'}
                                             </p>
                                         </div>
                                     </td>

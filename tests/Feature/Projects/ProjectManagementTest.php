@@ -47,6 +47,9 @@ test('authorized users can browse paginated projects', function () {
             ->where('projects.total', 16)
             ->where('projects.current_page', 1)
             ->has('projects.data', 15)
+            ->has('projects.data.0.project_no')
+            ->has('projects.data.0.title')
+            ->has('projects.data.0.project_type')
             ->where('summary.total_projects', 16)
             ->where('filters.per_page', 15)
             ->where('can.create', true),

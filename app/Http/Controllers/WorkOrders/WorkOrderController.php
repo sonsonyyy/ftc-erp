@@ -54,7 +54,6 @@ class WorkOrderController extends Controller
         $search = $request->string('search')->toString();
         $status = $request->string('status')->toString();
         $priority = $request->string('priority')->toString();
-        $serviceType = $request->string('service_type')->toString();
         $perPage = $this->resolvePerPage($request);
 
         $query = WorkOrder::query()
@@ -68,7 +67,6 @@ class WorkOrderController extends Controller
             ->search($search)
             ->status($status)
             ->priority($priority)
-            ->serviceType($serviceType)
             ->orderByDesc('scheduled_date')
             ->orderByDesc('id');
 
@@ -88,12 +86,10 @@ class WorkOrderController extends Controller
                 'search' => $search,
                 'status' => $status,
                 'priority' => $priority,
-                'service_type' => $serviceType,
                 'per_page' => $perPage,
             ],
             'statusOptions' => $this->statusOptions(),
             'priorityOptions' => $this->priorityOptions(),
-            'serviceTypeOptions' => $this->serviceTypeOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', WorkOrder::class) ?? false,
             ],

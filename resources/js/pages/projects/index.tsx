@@ -222,8 +222,9 @@ export default function ProjectsIndex({
                     <table>
                         <thead>
                             <tr>
-                                <th>Project</th>
+                                <th>Number</th>
                                 <th>Customer / site</th>
+                                <th>Title / type</th>
                                 <th>Dates</th>
                                 <th>Status</th>
                                 <th className="text-right">Work orders</th>
@@ -236,7 +237,7 @@ export default function ProjectsIndex({
                             {projects.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={7}
+                                        colSpan={8}
                                         className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No projects matched the current filters.
@@ -246,38 +247,35 @@ export default function ProjectsIndex({
 
                             {projects.data.map((project) => (
                                 <tr key={project.id}>
+                                    <td className="text-[13px] text-muted-foreground">
+                                        <p className="max-w-[10rem] truncate">
+                                            {project.project_no}
+                                        </p>
+                                    </td>
+
                                     <td>
-                                        <div className="space-y-0.5">
-                                            <p className="max-w-[16rem] truncate font-semibold text-foreground">
-                                                {project.project_no}
-                                            </p>
-                                            <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
-                                                {[
-                                                    project.title,
-                                                    project.project_type,
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' • ')}
-                                            </p>
-                                        </div>
+                                        <p className="max-w-[18rem] truncate font-medium text-foreground">
+                                            {project.customer.company_name ??
+                                                'Unlinked customer'}
+                                        </p>
+                                        <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
+                                            {[
+                                                project.customer.customer_code,
+                                                project.site.site_name,
+                                            ]
+                                                .filter(Boolean)
+                                                .join(' - ') ||
+                                                'No site linked'}
+                                        </p>
                                     </td>
 
                                     <td>
                                         <div className="space-y-0.5">
                                             <p className="max-w-[18rem] truncate font-medium text-foreground">
-                                                {project.customer
-                                                    .company_name ??
-                                                    'Unlinked customer'}
+                                                {project.title}
                                             </p>
                                             <p className="max-w-[18rem] truncate text-[13px] text-muted-foreground">
-                                                {[
-                                                    project.customer
-                                                        .customer_code,
-                                                    project.site.site_name,
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' • ') ||
-                                                    'No site linked'}
+                                                {project.project_type}
                                             </p>
                                         </div>
                                     </td>

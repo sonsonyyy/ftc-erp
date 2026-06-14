@@ -173,7 +173,6 @@ export type WorkOrderFilters = {
     search: string;
     status: string;
     priority: string;
-    service_type: string;
     per_page: number;
 };
 

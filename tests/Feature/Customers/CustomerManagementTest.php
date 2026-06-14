@@ -53,6 +53,8 @@ test('authorized users can browse paginated customers', function () {
             ->where('customers.current_page', 1)
             ->where('customers.per_page', 15)
             ->has('customers.data', 15)
+            ->has('customers.data.0.customer_code')
+            ->has('customers.data.0.trade_name')
             ->where('summary.total_customers', 16)
             ->where('summary.active_customers', 16)
             ->where('summary.inactive_customers', 0)

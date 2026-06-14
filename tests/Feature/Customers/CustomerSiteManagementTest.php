@@ -49,6 +49,8 @@ test('authorized users can browse paginated sites', function () {
             ->where('sites.current_page', 1)
             ->where('sites.per_page', 15)
             ->has('sites.data', 15)
+            ->has('sites.data.0.site_code')
+            ->has('sites.data.0.contact_person')
             ->where('summary.total_sites', 16)
             ->where('summary.active_sites', 12)
             ->where('summary.inactive_sites', 4)
@@ -113,14 +115,22 @@ test('site list search is case insensitive', function () {
     $customer = Customer::factory()->create([
         'company_name' => 'North Fire',
     ]);
+    $otherCustomer = Customer::factory()->create([
+        'company_name' => 'South Fire',
+    ]);
 
     CustomerSite::factory()->create([
         'customer_id' => $customer->getKey(),
         'site_name' => 'North HQ',
+        'city' => 'Quezon City',
+        'province' => 'Metro Manila',
     ]);
 
     CustomerSite::factory()->create([
+        'customer_id' => $otherCustomer->getKey(),
         'site_name' => 'South Branch',
+        'city' => 'Pasig',
+        'province' => 'Metro Manila',
     ]);
 
     $this->get(route('sites.index', [

@@ -53,7 +53,10 @@ test('authorized users can browse paginated work orders', function () {
             ->where('workOrders.total', 16)
             ->where('workOrders.current_page', 1)
             ->has('workOrders.data', 15)
+            ->has('workOrders.data.0.service_type_label')
             ->where('summary.total_work_orders', 16)
+            ->missing('filters.service_type')
+            ->missing('serviceTypeOptions')
             ->where('filters.per_page', 15)
             ->where('can.create', true),
         );
@@ -74,7 +77,7 @@ test('work order page size can be customized', function () {
         );
 });
 
-test('work order list can be filtered by search status priority and service type', function () {
+test('work order list can be filtered by search status and priority', function () {
     actingAsWorkOrderRole('Operations Admin');
 
     $alphaCustomer = Customer::factory()->create([
@@ -129,7 +132,6 @@ test('work order list can be filtered by search status priority and service type
         'search' => 'alpha',
         'status' => WorkOrderStatus::Scheduled->value,
         'priority' => WorkOrderPriority::High->value,
-        'service_type' => WorkOrderServiceType::PreventiveMaintenance->value,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -137,7 +139,7 @@ test('work order list can be filtered by search status priority and service type
             ->where('filters.search', 'alpha')
             ->where('filters.status', WorkOrderStatus::Scheduled->value)
             ->where('filters.priority', WorkOrderPriority::High->value)
-            ->where('filters.service_type', WorkOrderServiceType::PreventiveMaintenance->value)
+            ->missing('filters.service_type')
             ->where('workOrders.total', 1)
             ->where('workOrders.data.0.work_order_no', 'WO-ALPHA-001'),
         );
@@ -198,7 +200,6 @@ test('work order export respects the active filters', function () {
         'search' => 'Alpha',
         'status' => WorkOrderStatus::Scheduled->value,
         'priority' => WorkOrderPriority::High->value,
-        'service_type' => WorkOrderServiceType::PreventiveMaintenance->value,
         'export' => 'csv',
     ]));
 
