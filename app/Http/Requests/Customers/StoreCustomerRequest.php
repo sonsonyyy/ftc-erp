@@ -2,10 +2,8 @@
 
 namespace App\Http\Requests\Customers;
 
-use App\Enums\CustomerStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreCustomerRequest extends FormRequest
 {
@@ -31,7 +29,6 @@ class StoreCustomerRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:255'],
             'billing_address' => ['nullable', 'string', 'max:2000'],
-            'status' => ['required', Rule::enum(CustomerStatus::class)],
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
     }

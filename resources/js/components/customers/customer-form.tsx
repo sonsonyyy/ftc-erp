@@ -14,8 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { CustomerDetail, SelectOption } from '@/types';
-import { SelectInput } from '@/components/ui/select-input';
+import type { CustomerDetail } from '@/types';
 
 type CustomerFormData = {
     company_name: string;
@@ -24,13 +23,11 @@ type CustomerFormData = {
     phone: string;
     email: string;
     billing_address: string;
-    status: string;
     notes: string;
 };
 
 type Props = {
     customer?: CustomerDetail;
-    statusOptions: SelectOption[];
     title: string;
     description: string;
     cancelHref: NonNullable<InertiaLinkProps['href']>;
@@ -38,7 +35,6 @@ type Props = {
 
 export function CustomerForm({
     customer,
-    statusOptions,
     title,
     description,
     cancelHref,
@@ -52,7 +48,6 @@ export function CustomerForm({
         phone: customer?.phone ?? '',
         email: customer?.email ?? '',
         billing_address: customer?.billing_address ?? '',
-        status: customer?.status ?? String(statusOptions[0]?.value ?? 'active'),
         notes: customer?.notes ?? '',
     });
 
@@ -97,13 +92,13 @@ export function CustomerForm({
             <form
                 onSubmit={submit}
                 className="grid gap-6 lg:grid-cols-[2fr_1fr]"
+                autoComplete="off"
             >
                 <Card>
                     <CardHeader>
                         <CardTitle>Customer details</CardTitle>
                         <CardDescription>
-                            Capture the primary customer record used across
-                            sales and operations.
+                            Capture the primary customer record used across sales and operations.
                         </CardDescription>
                     </CardHeader>
 
@@ -119,38 +114,10 @@ export function CustomerForm({
                                     readOnly
                                     aria-readonly="true"
                                     className="bg-muted/30"
+                                    autoComplete="off"
                                 />
                             </div>
                         ) : null}
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="status">
-                                Status{' '}
-                                <span className="text-destructive">*</span>
-                            </Label>
-                            <SelectInput
-                                id="status"
-                                value={form.data.status}
-                                required
-                                aria-invalid={Boolean(form.errors.status)}
-                                onChange={(event) =>
-                                    setField(
-                                        'status',
-                                        event.currentTarget.value,
-                                    )
-                                }
-                            >
-                                {statusOptions.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </SelectInput>
-                            <InputError message={form.errors.status} />
-                        </div>
 
                         <div className="grid gap-2 md:col-span-2">
                             <Label htmlFor="company_name">
@@ -169,6 +136,7 @@ export function CustomerForm({
                                     )
                                 }
                                 placeholder="ABC Fire Protection Services, Inc."
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.company_name} />
                         </div>
@@ -186,6 +154,7 @@ export function CustomerForm({
                                     )
                                 }
                                 placeholder="ABC Fire"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.trade_name} />
                         </div>
@@ -200,6 +169,7 @@ export function CustomerForm({
                                     setField('tin', event.currentTarget.value)
                                 }
                                 placeholder="000-000-000-000"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.tin} />
                         </div>
@@ -214,6 +184,7 @@ export function CustomerForm({
                                     setField('phone', event.currentTarget.value)
                                 }
                                 placeholder="(02) 8123 4567"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.phone} />
                         </div>
@@ -229,6 +200,7 @@ export function CustomerForm({
                                     setField('email', event.currentTarget.value)
                                 }
                                 placeholder="billing@example.com"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.email} />
                         </div>
@@ -250,6 +222,7 @@ export function CustomerForm({
                                     )
                                 }
                                 placeholder="Enter billing address"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.billing_address} />
                         </div>
@@ -264,6 +237,7 @@ export function CustomerForm({
                                     setField('notes', event.currentTarget.value)
                                 }
                                 placeholder="Internal notes about this customer"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.notes} />
                         </div>
@@ -274,8 +248,7 @@ export function CustomerForm({
                     <CardHeader>
                         <CardTitle>Actions</CardTitle>
                         <CardDescription>
-                            Save now and manage sites or attachments from the
-                            detail page.
+                            Save the customer record to continue.
                         </CardDescription>
                     </CardHeader>
 

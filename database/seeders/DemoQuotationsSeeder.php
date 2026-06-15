@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Enums\QuotationStatus;
-use App\Models\Customer;
-use App\Models\CustomerSite;
 use App\Models\Quotation;
 use App\Models\QuotationStatusLog;
 use App\Models\User;
@@ -21,8 +19,8 @@ class DemoQuotationsSeeder extends Seeder
         $quotations = [
             [
                 'quotation_no' => 'QTN-2026-0001',
-                'customer_code' => 'CUST-10001',
-                'site_code' => 'SITE-10001',
+                'customer_alias' => 'metrobuild',
+                'site_alias' => 'metrobuild_makati_corporate_center',
                 'subject' => 'Tower A sprinkler retrofit and alarm device replacement',
                 'quotation_date' => '2026-01-08',
                 'valid_until' => '2026-02-07',
@@ -56,8 +54,8 @@ class DemoQuotationsSeeder extends Seeder
             ],
             [
                 'quotation_no' => 'QTN-2026-0002',
-                'customer_code' => 'CUST-10002',
-                'site_code' => 'SITE-10003',
+                'customer_alias' => 'harbor_view',
+                'site_alias' => 'harbor_view_pasig_east_tower',
                 'subject' => 'Basement pump room upgrade and zone monitoring improvements',
                 'quotation_date' => '2026-02-04',
                 'valid_until' => '2026-03-05',
@@ -85,8 +83,8 @@ class DemoQuotationsSeeder extends Seeder
             ],
             [
                 'quotation_no' => 'QTN-2026-0003',
-                'customer_code' => 'CUST-10003',
-                'site_code' => 'SITE-10004',
+                'customer_alias' => 'san_isidro_medical',
+                'site_alias' => 'san_isidro_main_hospital_campus',
                 'subject' => 'Annual fire alarm preventive maintenance contract',
                 'quotation_date' => '2026-02-18',
                 'valid_until' => '2026-03-20',
@@ -109,8 +107,8 @@ class DemoQuotationsSeeder extends Seeder
             ],
             [
                 'quotation_no' => 'QTN-2026-0004',
-                'customer_code' => 'CUST-10004',
-                'site_code' => 'SITE-10006',
+                'customer_alias' => 'northpoint_foods',
+                'site_alias' => 'northpoint_bulacan_cold_storage_plant',
                 'subject' => 'Warehouse detection panel replacement and cable rectification',
                 'quotation_date' => '2026-03-12',
                 'valid_until' => '2026-04-11',
@@ -128,8 +126,8 @@ class DemoQuotationsSeeder extends Seeder
             ],
             [
                 'quotation_no' => 'QTN-2026-0005',
-                'customer_code' => 'CUST-10001',
-                'site_code' => 'SITE-10002',
+                'customer_alias' => 'metrobuild',
+                'site_alias' => 'metrobuild_laguna_fabrication_yard',
                 'subject' => 'Fabrication yard fire pump controller and hydrant repairs',
                 'quotation_date' => '2026-01-20',
                 'valid_until' => '2026-02-19',
@@ -163,8 +161,8 @@ class DemoQuotationsSeeder extends Seeder
             ],
             [
                 'quotation_no' => 'QTN-2026-0006',
-                'customer_code' => 'CUST-10003',
-                'site_code' => 'SITE-10005',
+                'customer_alias' => 'san_isidro_medical',
+                'site_alias' => 'san_isidro_annex_diagnostic_wing',
                 'subject' => 'Clean agent room restoration and follow-up service visit',
                 'quotation_date' => '2026-02-28',
                 'valid_until' => '2026-03-30',
@@ -204,8 +202,8 @@ class DemoQuotationsSeeder extends Seeder
             $quotation = Quotation::query()->updateOrCreate(
                 ['quotation_no' => $demoQuotation['quotation_no']],
                 [
-                    'customer_id' => $this->customerId($demoQuotation['customer_code']),
-                    'customer_site_id' => $this->siteId($demoQuotation['site_code']),
+                    'customer_id' => $this->customerId($demoQuotation['customer_alias']),
+                    'customer_site_id' => $this->siteId($demoQuotation['site_alias']),
                     'subject' => $demoQuotation['subject'],
                     'quotation_date' => $demoQuotation['quotation_date'],
                     'valid_until' => $demoQuotation['valid_until'],
@@ -244,30 +242,14 @@ class DemoQuotationsSeeder extends Seeder
         }
     }
 
-    private function customerId(string $customerCode): int
+    private function customerId(string $customerAlias): int
     {
-        $customerId = Customer::query()
-            ->where('customer_code', $customerCode)
-            ->value('id');
-
-        if ($customerId === null) {
-            throw new RuntimeException("Customer [{$customerCode}] was not found while seeding quotations.");
-        }
-
-        return (int) $customerId;
+        return DemoCustomersAndSitesSeeder::customerId($customerAlias);
     }
 
-    private function siteId(string $siteCode): int
+    private function siteId(string $siteAlias): int
     {
-        $siteId = CustomerSite::query()
-            ->where('site_code', $siteCode)
-            ->value('id');
-
-        if ($siteId === null) {
-            throw new RuntimeException("Site [{$siteCode}] was not found while seeding quotations.");
-        }
-
-        return (int) $siteId;
+        return DemoCustomersAndSitesSeeder::siteId($siteAlias);
     }
 
     private function userId(string $email): int

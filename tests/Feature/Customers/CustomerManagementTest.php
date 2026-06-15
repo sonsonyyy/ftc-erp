@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\CustomerStatus;
 use App\Models\Attachment;
 use App\Models\Customer;
 use App\Models\CustomerSite;
@@ -35,10 +34,12 @@ function actingAsRole(string $roleName): User
 }
 
 test('authorized users can browse paginated customers', function () {
-    actingAsRole('Sales Admin / Business Development');
+    Carbon::setTestNow('2026-06-15 10:00:00');
+
+    $user = actingAsRole('Sales Admin / Business Development');
 
     $customers = Customer::factory()->count(16)->create([
-        'status' => CustomerStatus::Active,
+        'created_by' => $user->getKey(),
     ]);
 
     CustomerSite::factory()->count(4)->sequence(
@@ -56,12 +57,11 @@ test('authorized users can browse paginated customers', function () {
             ->where('customers.per_page', 15)
             ->has('customers.data', 15)
             ->has('customers.data.0.customer_code')
+            ->has('customers.data.0.created_by')
+            ->has('customers.data.0.date_created')
             ->has('customers.data.0.trade_name')
-            ->where('summary.total_customers', 16)
-            ->where('summary.active_customers', 16)
-            ->where('summary.inactive_customers', 0)
-            ->where('summary.total_sites', 4)
             ->where('filters.per_page', 15)
+            ->missing('filters.status')
             ->where('can.create', true),
         );
 });
@@ -83,53 +83,51 @@ test('customer list supports custom page size', function () {
         );
 });
 
-test('customer list can be filtered by search and status', function () {
-    actingAsRole('Sales Admin / Business Development');
+test('customer list can be filtered by search', function () {
+    $user = actingAsRole('Sales Admin / Business Development');
 
     Customer::factory()->create([
         'customer_code' => 'CUST-ALPHA',
         'company_name' => 'Alpha Fire Systems',
-        'status' => CustomerStatus::Active,
+        'created_by' => $user->getKey(),
     ]);
 
     Customer::factory()->create([
         'customer_code' => 'CUST-BETA',
         'company_name' => 'Beta Safety Corp',
-        'status' => CustomerStatus::Inactive,
+        'created_by' => $user->getKey(),
     ]);
 
     $this->get(route('customers.index', [
         'search' => 'alpha',
-        'status' => CustomerStatus::Active->value,
     ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('customers/index')
             ->where('filters.search', 'alpha')
-            ->where('filters.status', CustomerStatus::Active->value)
+            ->missing('filters.status')
             ->where('customers.total', 1)
             ->where('customers.data.0.company_name', 'Alpha Fire Systems'),
         );
 });
 
 test('customer export respects the active filters', function () {
-    actingAsRole('Sales Admin / Business Development');
+    $user = actingAsRole('Sales Admin / Business Development');
 
     Customer::factory()->create([
         'customer_code' => 'CUST-ALPHA',
         'company_name' => 'Alpha Fire Systems',
-        'status' => CustomerStatus::Active,
+        'created_by' => $user->getKey(),
     ]);
 
     Customer::factory()->create([
         'customer_code' => 'CUST-BETA',
         'company_name' => 'Beta Safety Corp',
-        'status' => CustomerStatus::Inactive,
+        'created_by' => $user->getKey(),
     ]);
 
     $response = $this->get(route('customers.index', [
         'search' => 'Alpha',
-        'status' => CustomerStatus::Active->value,
         'export' => 'csv',
     ]));
 
@@ -137,12 +135,14 @@ test('customer export respects the active filters', function () {
         ->assertHeader('content-type', 'text/csv; charset=UTF-8');
 
     expect($response->streamedContent())
+        ->toContain('Created By')
         ->toContain('Alpha Fire Systems')
-        ->not->toContain('Beta Safety Corp');
+        ->not->toContain('Beta Safety Corp')
+        ->not->toContain('Status');
 });
 
 test('authorized users can create customers', function () {
-    actingAsRole('Sales Admin / Business Development');
+    $user = actingAsRole('Sales Admin / Business Development');
     Carbon::setTestNow('2026-06-14 09:00:00');
 
     $response = $this->post(route('customers.store'), [
@@ -152,19 +152,20 @@ test('authorized users can create customers', function () {
         'phone' => '09170000001',
         'email' => 'prime@example.com',
         'billing_address' => '123 Main Street',
-        'status' => CustomerStatus::Active->value,
         'notes' => 'Priority account',
     ]);
 
     $customer = Customer::query()->firstOrFail();
 
-    $response->assertRedirect(route('customers.show', $customer));
+    $response->assertRedirect(route('sites.create', [
+        'customer' => $customer->getKey(),
+    ]));
 
     $this->assertDatabaseHas('customers', [
         'id' => $customer->getKey(),
         'customer_code' => 'CUST-0626-0001',
+        'created_by' => $user->getKey(),
         'company_name' => 'Prime Fire Solutions',
-        'status' => CustomerStatus::Active->value,
     ]);
 });
 
@@ -174,12 +175,10 @@ test('customer validation errors are returned', function () {
     $this->from(route('customers.create'))
         ->post(route('customers.store'), [
             'company_name' => '',
-            'status' => 'invalid-status',
         ])
         ->assertRedirect(route('customers.create'))
         ->assertSessionHasErrors([
             'company_name',
-            'status',
         ]);
 });
 
@@ -189,7 +188,6 @@ test('users without permissions cannot create customers', function () {
     $this->actingAs($user)
         ->post(route('customers.store'), [
             'company_name' => 'Unauthorized Customer',
-            'status' => CustomerStatus::Active->value,
         ])
         ->assertForbidden();
 });
@@ -207,14 +205,35 @@ test('authorized users can update customers', function () {
         'phone' => '09171111111',
         'email' => 'updated@example.com',
         'billing_address' => 'Updated address',
-        'status' => CustomerStatus::Inactive->value,
         'notes' => 'Updated note',
     ])
         ->assertRedirect(route('customers.show', $customer));
 
     expect($customer->refresh()->company_name)->toBe('Updated Fire Protection');
-    expect($customer->status)->toBe(CustomerStatus::Inactive);
     expect($customer->customer_code)->not->toBe('CUST-9999-OVERRIDE');
+});
+
+test('customer list excludes archived records', function () {
+    $user = actingAsRole('Sales Admin / Business Development');
+
+    Customer::factory()->create([
+        'company_name' => 'Visible Customer',
+        'created_by' => $user->getKey(),
+    ]);
+
+    $archivedCustomer = Customer::factory()->create([
+        'company_name' => 'Archived Customer',
+        'created_by' => $user->getKey(),
+    ]);
+    $archivedCustomer->delete();
+
+    $this->get(route('customers.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('customers/index')
+            ->where('customers.total', 1)
+            ->where('customers.data.0.company_name', 'Visible Customer'),
+        );
 });
 
 test('authorized users can archive customers without linked sites', function () {

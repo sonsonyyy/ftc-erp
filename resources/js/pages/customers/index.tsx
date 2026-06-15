@@ -5,8 +5,6 @@ import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
-import { FilterSelect } from '@/components/filter-select';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -17,16 +15,14 @@ import {
     index as customersIndex,
     show as customersShow,
 } from '@/routes/customers';
-import type { CustomerListItem, PaginatedData, SelectOption } from '@/types';
+import type { CustomerListItem, PaginatedData } from '@/types';
 
 type Props = {
     customers: PaginatedData<CustomerListItem>;
     filters: {
         search: string;
-        status: string;
         per_page: number;
     };
-    statusOptions: SelectOption[];
     can: {
         create: boolean;
     };
@@ -45,41 +41,25 @@ const customerBreadcrumbs = [
 
 const perPageOptions = ['5', '10', '15', '25'];
 
-function statusBadgeClass(status: string): string {
-    return status === 'active'
-        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-        : 'border-slate-200 bg-slate-100 text-slate-700';
-}
-
-export default function CustomersIndex({
-    customers,
-    filters,
-    statusOptions,
-    can,
-}: Props) {
+export default function CustomersIndex({ customers, filters, can }: Props) {
     const [searchInput, setSearchInput] = useState(filters.search);
     const [tableFilters, setTableFilters] = useState({
-        status: filters.status,
         per_page: String(filters.per_page),
     });
 
     useEffect(() => {
         setTableFilters((currentFilters) => {
             const nextFilters = {
-                status: filters.status,
                 per_page: String(filters.per_page),
             };
 
-            if (
-                currentFilters.status === nextFilters.status &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
+            if (currentFilters.per_page === nextFilters.per_page) {
                 return currentFilters;
             }
 
             return nextFilters;
         });
-    }, [filters.per_page, filters.status]);
+    }, [filters.per_page]);
 
     useEffect(() => {
         const normalizedSearch = searchInput.trim();
@@ -87,7 +67,6 @@ export default function CustomersIndex({
 
         if (
             normalizedSearch === filters.search &&
-            tableFilters.status === filters.status &&
             tableFilters.per_page === currentPerPage
         ) {
             return;
@@ -99,7 +78,6 @@ export default function CustomersIndex({
                 toUrl(customersIndex()),
                 cleanQueryParams({
                     search: normalizedSearch,
-                    status: tableFilters.status,
                     per_page: Number(tableFilters.per_page),
                     page: 1,
                 }),
@@ -113,18 +91,11 @@ export default function CustomersIndex({
         }, 300);
 
         return () => window.clearTimeout(timeout);
-    }, [
-        filters.per_page,
-        filters.search,
-        filters.status,
-        searchInput,
-        tableFilters,
-    ]);
+    }, [filters.per_page, filters.search, searchInput, tableFilters]);
 
     const exportHref = customersIndex({
         query: cleanQueryParams({
             search: searchInput.trim(),
-            status: tableFilters.status,
             export: 'csv',
         }),
     });
@@ -151,28 +122,6 @@ export default function CustomersIndex({
                             onChange={setSearchInput}
                             placeholder="Search customers"
                         />
-
-                        <FilterSelect
-                            value={tableFilters.status}
-                            onChange={(event) => {
-                                router.cancelAll();
-                                setTableFilters((currentFilters) => ({
-                                    ...currentFilters,
-                                    status: event.currentTarget.value,
-                                }));
-                            }}
-                            className="w-full sm:w-[180px]"
-                        >
-                            <option value="">All statuses</option>
-                            {statusOptions.map((option) => (
-                                <option
-                                    key={option.value}
-                                    value={String(option.value)}
-                                >
-                                    {option.label}
-                                </option>
-                            ))}
-                        </FilterSelect>
                     </div>
 
                     {can.create ? (
@@ -207,7 +156,12 @@ export default function CustomersIndex({
                                 <th>Number</th>
                                 <th>Customer</th>
                                 <th>Contact</th>
-                                <th>Status</th>
+                                <th className="min-w-[11rem] whitespace-nowrap">
+                                    Created by
+                                </th>
+                                <th className="min-w-[10rem] whitespace-nowrap">
+                                    Date created
+                                </th>
                                 <th className="text-right">Sites</th>
                                 <th className="text-right">Attachments</th>
                                 <th className="text-right">Actions</th>
@@ -218,7 +172,7 @@ export default function CustomersIndex({
                             {customers.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={7}
+                                        colSpan={8}
                                         className="py-10 text-center text-sm text-muted-foreground"
                                     >
                                         No customers matched the current
@@ -268,15 +222,16 @@ export default function CustomersIndex({
                                         </div>
                                     </td>
 
-                                    <td>
-                                        <Badge
-                                            variant="outline"
-                                            className={statusBadgeClass(
-                                                customer.status,
-                                            )}
-                                        >
-                                            {customer.status_label}
-                                        </Badge>
+                                    <td className="min-w-[11rem]">
+                                        <p className="max-w-[12rem] truncate text-[13px] text-muted-foreground">
+                                            {customer.created_by ?? 'Unknown'}
+                                        </p>
+                                    </td>
+
+                                    <td className="min-w-[10rem]">
+                                        <p className="text-[13px] whitespace-nowrap text-muted-foreground">
+                                            {customer.date_created ?? 'Unknown'}
+                                        </p>
                                     </td>
 
                                     <td className="text-right font-medium tabular-nums">

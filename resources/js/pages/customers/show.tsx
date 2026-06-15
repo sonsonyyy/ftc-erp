@@ -22,16 +22,9 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import type { CustomerDetail } from '@/types';
-
 type Props = {
     customer: CustomerDetail;
 };
-
-function statusBadgeClass(status: string): string {
-    return status === 'active'
-        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-        : 'border-slate-200 bg-slate-100 text-slate-700';
-}
 
 export default function CustomersShow({ customer }: Props) {
     const sites = customer.sites ?? [];
@@ -44,17 +37,9 @@ export default function CustomersShow({ customer }: Props) {
             <div className="app-page flex flex-1 flex-col gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <h1 className="text-2xl font-semibold tracking-tight">
-                                {customer.company_name}
-                            </h1>
-                            <Badge
-                                variant="outline"
-                                className={statusBadgeClass(customer.status)}
-                            >
-                                {customer.status_label}
-                            </Badge>
-                        </div>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            {customer.company_name}
+                        </h1>
 
                         <p className="text-sm text-muted-foreground">
                             {customer.customer_code}

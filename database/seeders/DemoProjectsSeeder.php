@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Enums\ProjectStatus;
-use App\Models\Customer;
-use App\Models\CustomerSite;
 use App\Models\Project;
 use App\Models\ProjectAssignment;
 use App\Models\ProjectStatusLog;
@@ -24,8 +22,8 @@ class DemoProjectsSeeder extends Seeder
             [
                 'project_no' => 'PRJ-2026-0001',
                 'quotation_no' => 'QTN-2026-0001',
-                'customer_code' => 'CUST-10001',
-                'site_code' => 'SITE-10001',
+                'customer_alias' => 'metrobuild',
+                'site_alias' => 'metrobuild_makati_corporate_center',
                 'title' => 'Tower A sprinkler retrofit',
                 'project_type' => 'Retrofit / Installation',
                 'start_date' => '2026-02-05',
@@ -66,8 +64,8 @@ class DemoProjectsSeeder extends Seeder
             [
                 'project_no' => 'PRJ-2026-0002',
                 'quotation_no' => null,
-                'customer_code' => 'CUST-10002',
-                'site_code' => 'SITE-10003',
+                'customer_alias' => 'harbor_view',
+                'site_alias' => 'harbor_view_pasig_east_tower',
                 'title' => 'East Tower pump room upgrade',
                 'project_type' => 'Corrective Work',
                 'start_date' => '2026-04-12',
@@ -103,8 +101,8 @@ class DemoProjectsSeeder extends Seeder
             [
                 'project_no' => 'PRJ-2026-0003',
                 'quotation_no' => null,
-                'customer_code' => 'CUST-10004',
-                'site_code' => 'SITE-10006',
+                'customer_alias' => 'northpoint_foods',
+                'site_alias' => 'northpoint_bulacan_cold_storage_plant',
                 'title' => 'Cold storage detection panel replacement',
                 'project_type' => 'Upgrade',
                 'start_date' => '2026-04-25',
@@ -129,8 +127,8 @@ class DemoProjectsSeeder extends Seeder
             [
                 'project_no' => 'PRJ-2026-0004',
                 'quotation_no' => null,
-                'customer_code' => 'CUST-10003',
-                'site_code' => 'SITE-10004',
+                'customer_alias' => 'san_isidro_medical',
+                'site_alias' => 'san_isidro_main_hospital_campus',
                 'title' => 'Main campus alarm device audit and rectification',
                 'project_type' => 'Contract Job',
                 'start_date' => '2026-01-12',
@@ -180,8 +178,8 @@ class DemoProjectsSeeder extends Seeder
                 ['project_no' => $demoProject['project_no']],
                 [
                     'quotation_id' => $quotationId,
-                    'customer_id' => $this->customerId($demoProject['customer_code']),
-                    'customer_site_id' => $this->siteId($demoProject['site_code']),
+                    'customer_id' => $this->customerId($demoProject['customer_alias']),
+                    'customer_site_id' => $this->siteId($demoProject['site_alias']),
                     'title' => $demoProject['title'],
                     'project_type' => $demoProject['project_type'],
                     'start_date' => $demoProject['start_date'],
@@ -230,30 +228,14 @@ class DemoProjectsSeeder extends Seeder
         }
     }
 
-    private function customerId(string $customerCode): int
+    private function customerId(string $customerAlias): int
     {
-        $customerId = Customer::query()
-            ->where('customer_code', $customerCode)
-            ->value('id');
-
-        if ($customerId === null) {
-            throw new RuntimeException("Customer [{$customerCode}] was not found while seeding projects.");
-        }
-
-        return (int) $customerId;
+        return DemoCustomersAndSitesSeeder::customerId($customerAlias);
     }
 
-    private function siteId(string $siteCode): int
+    private function siteId(string $siteAlias): int
     {
-        $siteId = CustomerSite::query()
-            ->where('site_code', $siteCode)
-            ->value('id');
-
-        if ($siteId === null) {
-            throw new RuntimeException("Site [{$siteCode}] was not found while seeding projects.");
-        }
-
-        return (int) $siteId;
+        return DemoCustomersAndSitesSeeder::siteId($siteAlias);
     }
 
     private function quotationId(string $quotationNo): int

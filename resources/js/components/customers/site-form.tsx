@@ -114,13 +114,13 @@ export function SiteForm({
             <form
                 onSubmit={submit}
                 className="grid gap-6 lg:grid-cols-[2fr_1fr]"
+                autoComplete="off"
             >
                 <Card>
                     <CardHeader>
                         <CardTitle>Site details</CardTitle>
                         <CardDescription>
-                            Keep each project or service location linked to the
-                            right customer record.
+                            Keep each project or service location linked to the right customer record.
                         </CardDescription>
                     </CardHeader>
 
@@ -164,6 +164,7 @@ export function SiteForm({
                                     readOnly
                                     aria-readonly="true"
                                     className="bg-muted/30"
+                                    autoComplete="off"
                                 />
                             </div>
                         ) : null}
@@ -208,6 +209,7 @@ export function SiteForm({
                                     )
                                 }
                                 placeholder="Main office, warehouse, branch site, etc."
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.site_name} />
                         </div>
@@ -229,6 +231,7 @@ export function SiteForm({
                                     )
                                 }
                                 placeholder="On-site coordinator"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.contact_person} />
                         </div>
@@ -246,6 +249,7 @@ export function SiteForm({
                                     )
                                 }
                                 placeholder="0917 000 0000"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.contact_no} />
                         </div>
@@ -261,6 +265,7 @@ export function SiteForm({
                                     setField('email', event.currentTarget.value)
                                 }
                                 placeholder="site.contact@example.com"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.email} />
                         </div>
@@ -282,6 +287,7 @@ export function SiteForm({
                                     )
                                 }
                                 placeholder="Full service or project site address"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.address} />
                         </div>
@@ -296,6 +302,7 @@ export function SiteForm({
                                     setField('city', event.currentTarget.value)
                                 }
                                 placeholder="Quezon City"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.city} />
                         </div>
@@ -313,6 +320,7 @@ export function SiteForm({
                                     )
                                 }
                                 placeholder="Metro Manila"
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.province} />
                         </div>
@@ -327,6 +335,7 @@ export function SiteForm({
                                     setField('notes', event.currentTarget.value)
                                 }
                                 placeholder="Access instructions, billing notes, schedule reminders, etc."
+                                autoComplete="off"
                             />
                             <InputError message={form.errors.notes} />
                         </div>

@@ -60,23 +60,16 @@ test('database seeder provisions core ERP demo data', function () {
         'ceo@example.com',
     ])->count())->toBe(11);
 
-    expect(Customer::query()->whereIn('customer_code', [
-        'CUST-10001',
-        'CUST-10002',
-        'CUST-10003',
-        'CUST-10004',
-        'CUST-10005',
-    ])->count())->toBe(5);
+    $salesUser = User::query()
+        ->where('email', 'sales@example.com')
+        ->firstOrFail();
 
-    expect(CustomerSite::query()->whereIn('site_code', [
-        'SITE-10001',
-        'SITE-10002',
-        'SITE-10003',
-        'SITE-10004',
-        'SITE-10005',
-        'SITE-10006',
-        'SITE-10007',
-    ])->count())->toBe(7);
+    expect(Customer::query()->count())->toBe(5);
+    expect(Customer::query()->where('customer_code', 'like', 'CUST-0626-%')->count())->toBe(5);
+    expect(Customer::query()->where('created_by', $salesUser->getKey())->count())->toBe(5);
+
+    expect(CustomerSite::query()->count())->toBe(7);
+    expect(CustomerSite::query()->where('site_code', 'like', 'SITE-0626-%')->count())->toBe(7);
 
     expect(Department::query()->count())->toBe(4);
     expect(Position::query()->count())->toBe(5);

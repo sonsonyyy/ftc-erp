@@ -79,6 +79,22 @@ test('site list supports custom page size', function () {
         );
 });
 
+test('site create form can preselect the customer from the query string', function () {
+    actingAsSiteRole('Sales Admin / Business Development');
+
+    $customer = Customer::factory()->create();
+
+    $this->get(route('sites.create', [
+        'customer' => $customer->getKey(),
+    ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('sites/create')
+            ->where('defaults.customer_id', $customer->getKey())
+            ->where('defaults.is_active', true),
+        );
+});
+
 test('site list can be filtered by search and status', function () {
     actingAsSiteRole('Sales Admin / Business Development');
 

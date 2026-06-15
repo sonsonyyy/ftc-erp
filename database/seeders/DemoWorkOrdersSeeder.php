@@ -6,8 +6,6 @@ use App\Enums\WorkOrderLogType;
 use App\Enums\WorkOrderPriority;
 use App\Enums\WorkOrderServiceType;
 use App\Enums\WorkOrderStatus;
-use App\Models\Customer;
-use App\Models\CustomerSite;
 use App\Models\Project;
 use App\Models\Quotation;
 use App\Models\User;
@@ -30,8 +28,8 @@ class DemoWorkOrdersSeeder extends Seeder
                 'work_order_no' => 'WO-2026-0001',
                 'quotation_no' => 'QTN-2026-0001',
                 'project_no' => 'PRJ-2026-0001',
-                'customer_code' => 'CUST-10001',
-                'site_code' => 'SITE-10001',
+                'customer_alias' => 'metrobuild',
+                'site_alias' => 'metrobuild_makati_corporate_center',
                 'service_type' => WorkOrderServiceType::InstallationSupport,
                 'scheduled_date' => '2026-02-10',
                 'priority' => WorkOrderPriority::High,
@@ -96,8 +94,8 @@ class DemoWorkOrdersSeeder extends Seeder
                 'work_order_no' => 'WO-2026-0002',
                 'quotation_no' => 'QTN-2026-0001',
                 'project_no' => 'PRJ-2026-0001',
-                'customer_code' => 'CUST-10001',
-                'site_code' => 'SITE-10001',
+                'customer_alias' => 'metrobuild',
+                'site_alias' => 'metrobuild_makati_corporate_center',
                 'service_type' => WorkOrderServiceType::InspectionRelatedWork,
                 'scheduled_date' => '2026-02-24',
                 'priority' => WorkOrderPriority::Normal,
@@ -146,8 +144,8 @@ class DemoWorkOrdersSeeder extends Seeder
                 'work_order_no' => 'WO-2026-0003',
                 'quotation_no' => 'QTN-2026-0006',
                 'project_no' => null,
-                'customer_code' => 'CUST-10003',
-                'site_code' => 'SITE-10005',
+                'customer_alias' => 'san_isidro_medical',
+                'site_alias' => 'san_isidro_annex_diagnostic_wing',
                 'service_type' => WorkOrderServiceType::PreventiveMaintenance,
                 'scheduled_date' => '2026-03-15',
                 'priority' => WorkOrderPriority::Normal,
@@ -210,8 +208,8 @@ class DemoWorkOrdersSeeder extends Seeder
                 'work_order_no' => 'WO-2026-0004',
                 'quotation_no' => null,
                 'project_no' => null,
-                'customer_code' => 'CUST-10004',
-                'site_code' => 'SITE-10006',
+                'customer_alias' => 'northpoint_foods',
+                'site_alias' => 'northpoint_bulacan_cold_storage_plant',
                 'service_type' => WorkOrderServiceType::CorrectiveService,
                 'scheduled_date' => '2026-04-05',
                 'priority' => WorkOrderPriority::Urgent,
@@ -264,8 +262,8 @@ class DemoWorkOrdersSeeder extends Seeder
                 'work_order_no' => 'WO-2026-0005',
                 'quotation_no' => null,
                 'project_no' => 'PRJ-2026-0002',
-                'customer_code' => 'CUST-10002',
-                'site_code' => 'SITE-10003',
+                'customer_alias' => 'harbor_view',
+                'site_alias' => 'harbor_view_pasig_east_tower',
                 'service_type' => WorkOrderServiceType::InstallationSupport,
                 'scheduled_date' => '2026-04-22',
                 'priority' => WorkOrderPriority::High,
@@ -298,8 +296,8 @@ class DemoWorkOrdersSeeder extends Seeder
                 'work_order_no' => 'WO-2026-0006',
                 'quotation_no' => null,
                 'project_no' => null,
-                'customer_code' => 'CUST-10001',
-                'site_code' => 'SITE-10002',
+                'customer_alias' => 'metrobuild',
+                'site_alias' => 'metrobuild_laguna_fabrication_yard',
                 'service_type' => WorkOrderServiceType::OtherServiceJob,
                 'scheduled_date' => null,
                 'priority' => WorkOrderPriority::Low,
@@ -332,8 +330,8 @@ class DemoWorkOrdersSeeder extends Seeder
                 [
                     'quotation_id' => $quotationId,
                     'project_id' => $projectId,
-                    'customer_id' => $this->customerId($demoWorkOrder['customer_code']),
-                    'customer_site_id' => $this->siteId($demoWorkOrder['site_code']),
+                    'customer_id' => $this->customerId($demoWorkOrder['customer_alias']),
+                    'customer_site_id' => $this->siteId($demoWorkOrder['site_alias']),
                     'service_type' => $demoWorkOrder['service_type']->value,
                     'scheduled_date' => $demoWorkOrder['scheduled_date'],
                     'priority' => $demoWorkOrder['priority']->value,
@@ -407,30 +405,14 @@ class DemoWorkOrdersSeeder extends Seeder
         }
     }
 
-    private function customerId(string $customerCode): int
+    private function customerId(string $customerAlias): int
     {
-        $customerId = Customer::query()
-            ->where('customer_code', $customerCode)
-            ->value('id');
-
-        if ($customerId === null) {
-            throw new RuntimeException("Customer [{$customerCode}] was not found while seeding work orders.");
-        }
-
-        return (int) $customerId;
+        return DemoCustomersAndSitesSeeder::customerId($customerAlias);
     }
 
-    private function siteId(string $siteCode): int
+    private function siteId(string $siteAlias): int
     {
-        $siteId = CustomerSite::query()
-            ->where('site_code', $siteCode)
-            ->value('id');
-
-        if ($siteId === null) {
-            throw new RuntimeException("Site [{$siteCode}] was not found while seeding work orders.");
-        }
-
-        return (int) $siteId;
+        return DemoCustomersAndSitesSeeder::siteId($siteAlias);
     }
 
     private function quotationId(string $quotationNo): int

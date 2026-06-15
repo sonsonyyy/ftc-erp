@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Actions\Billing\RecalculateInvoiceTotalsAction;
 use App\Actions\Billing\RecordPaymentAction;
 use App\Enums\InvoiceStatus;
-use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
@@ -36,7 +35,7 @@ class DemoBillingSeeder extends Seeder
         $invoices = [
             [
                 'invoice_no' => 'INV-2026-0001',
-                'customer_code' => 'CUST-10001',
+                'customer_alias' => 'metrobuild',
                 'quotation_no' => 'QTN-2026-0001',
                 'project_no' => 'PRJ-2026-0001',
                 'work_order_no' => 'WO-2026-0001',
@@ -64,7 +63,7 @@ class DemoBillingSeeder extends Seeder
             ],
             [
                 'invoice_no' => 'INV-2026-0002',
-                'customer_code' => 'CUST-10002',
+                'customer_alias' => 'harbor_view',
                 'quotation_no' => null,
                 'project_no' => 'PRJ-2026-0002',
                 'work_order_no' => 'WO-2026-0005',
@@ -92,7 +91,7 @@ class DemoBillingSeeder extends Seeder
             ],
             [
                 'invoice_no' => 'INV-2026-0003',
-                'customer_code' => 'CUST-10002',
+                'customer_alias' => 'harbor_view',
                 'quotation_no' => null,
                 'project_no' => null,
                 'work_order_no' => null,
@@ -120,7 +119,7 @@ class DemoBillingSeeder extends Seeder
             ],
             [
                 'invoice_no' => 'INV-2026-0004',
-                'customer_code' => 'CUST-10003',
+                'customer_alias' => 'san_isidro_medical',
                 'quotation_no' => null,
                 'project_no' => null,
                 'work_order_no' => null,
@@ -148,7 +147,7 @@ class DemoBillingSeeder extends Seeder
             ],
             [
                 'invoice_no' => 'INV-2026-0005',
-                'customer_code' => 'CUST-10005',
+                'customer_alias' => 'blue_horizon',
                 'quotation_no' => null,
                 'project_no' => null,
                 'work_order_no' => null,
@@ -184,7 +183,7 @@ class DemoBillingSeeder extends Seeder
                 'quotation_id' => $invoiceData['quotation_no'] === null
                     ? null
                     : $this->quotationId($invoiceData['quotation_no']),
-                'customer_id' => $this->customerId($invoiceData['customer_code']),
+                'customer_id' => $this->customerId($invoiceData['customer_alias']),
                 'project_id' => $invoiceData['project_no'] === null
                     ? null
                     : $this->projectId($invoiceData['project_no']),
@@ -219,7 +218,7 @@ class DemoBillingSeeder extends Seeder
         $payments = [
             [
                 'payment_no' => 'PAY-2026-0001',
-                'customer_code' => 'CUST-10001',
+                'customer_alias' => 'metrobuild',
                 'payment_date' => '2026-03-12',
                 'amount' => '120000.00',
                 'payment_method' => 'Bank Transfer',
@@ -234,7 +233,7 @@ class DemoBillingSeeder extends Seeder
             ],
             [
                 'payment_no' => 'PAY-2026-0002',
-                'customer_code' => 'CUST-10002',
+                'customer_alias' => 'harbor_view',
                 'payment_date' => '2026-04-18',
                 'amount' => '60000.00',
                 'payment_method' => 'Check',
@@ -256,7 +255,7 @@ class DemoBillingSeeder extends Seeder
         foreach ($payments as $paymentData) {
             $recordPaymentAction->handle([
                 'payment_no' => $paymentData['payment_no'],
-                'customer_id' => $this->customerId($paymentData['customer_code']),
+                'customer_id' => $this->customerId($paymentData['customer_alias']),
                 'payment_date' => $paymentData['payment_date'],
                 'amount' => $paymentData['amount'],
                 'payment_method' => $paymentData['payment_method'],
@@ -273,19 +272,11 @@ class DemoBillingSeeder extends Seeder
     }
 
     /**
-     * Resolve the customer identifier for the given customer code.
+     * Resolve the customer identifier for the given customer alias.
      */
-    private function customerId(string $customerCode): int
+    private function customerId(string $customerAlias): int
     {
-        $customerId = Customer::query()
-            ->where('customer_code', $customerCode)
-            ->value('id');
-
-        if ($customerId === null) {
-            throw new RuntimeException("Customer [{$customerCode}] was not found while seeding billing.");
-        }
-
-        return (int) $customerId;
+        return DemoCustomersAndSitesSeeder::customerId($customerAlias);
     }
 
     /**

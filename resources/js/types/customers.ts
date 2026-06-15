@@ -22,8 +22,8 @@ export type CustomerListItem = {
     tin: string | null;
     phone: string | null;
     email: string | null;
-    status: string;
-    status_label: string;
+    created_by: string | null;
+    date_created: string | null;
     site_count: number;
     attachment_count: number;
     can: {
@@ -56,8 +56,8 @@ export type CustomerDetail = {
     phone: string | null;
     email: string | null;
     billing_address: string | null;
-    status: string;
-    status_label: string;
+    created_by: string | null;
+    date_created: string | null;
     notes: string | null;
     site_count: number;
     attachment_count: number;

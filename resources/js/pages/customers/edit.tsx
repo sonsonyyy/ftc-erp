@@ -5,14 +5,13 @@ import {
     show as customersShow,
 } from '@/routes/customers';
 import { CustomerForm } from '@/components/customers/customer-form';
-import type { CustomerDetail, SelectOption } from '@/types';
+import type { CustomerDetail } from '@/types';
 
 type Props = {
     customer: CustomerDetail;
-    statusOptions: SelectOption[];
 };
 
-export default function CustomersEdit({ customer, statusOptions }: Props) {
+export default function CustomersEdit({ customer }: Props) {
     return (
         <>
             <Head title={`Edit ${customer.company_name}`} />
@@ -20,7 +19,6 @@ export default function CustomersEdit({ customer, statusOptions }: Props) {
             <div className="app-page flex flex-1 flex-col gap-6">
                 <CustomerForm
                     customer={customer}
-                    statusOptions={statusOptions}
                     title="Edit customer"
                     description="Update the master record details used across sales, operations, and billing."
                     cancelHref={customersShow(customer.id)}

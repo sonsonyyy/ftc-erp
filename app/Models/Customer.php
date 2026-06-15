@@ -3,39 +3,30 @@
 namespace App\Models;
 
 use App\Concerns\HasAttachments;
-use App\Enums\CustomerStatus;
 use Database\Factories\CustomerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'customer_code',
+    'created_by',
     'company_name',
     'trade_name',
     'tin',
     'phone',
     'email',
     'billing_address',
-    'status',
     'notes',
 ])]
 class Customer extends Model
 {
     /** @use HasFactory<CustomerFactory> */
     use HasAttachments, HasFactory, SoftDeletes;
-
-    /**
-     * The model's default values.
-     *
-     * @var array<string, mixed>
-     */
-    protected $attributes = [
-        'status' => CustomerStatus::Active->value,
-    ];
 
     /**
      * Get the customer sites for the customer.
@@ -45,6 +36,16 @@ class Customer extends Model
     public function customerSites(): HasMany
     {
         return $this->hasMany(CustomerSite::class);
+    }
+
+    /**
+     * Get the user that created the customer record.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**
@@ -74,30 +75,5 @@ class Customer extends Model
                 ->orWhere('phone', $operator, "%{$term}%")
                 ->orWhere('email', $operator, "%{$term}%");
         });
-    }
-
-    /**
-     * Scope a query to filter by status.
-     *
-     * @param  Builder<Customer>  $query
-     * @return Builder<Customer>
-     */
-    public function scopeStatus(Builder $query, ?string $status): Builder
-    {
-        return filled($status)
-            ? $query->where('status', $status)
-            : $query;
-    }
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'status' => CustomerStatus::class,
-        ];
     }
 }

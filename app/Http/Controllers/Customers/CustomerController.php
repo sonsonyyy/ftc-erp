@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Customers;
 
 use App\Actions\Documents\GenerateDocumentNumberAction;
 use App\Actions\Exports\StreamCsvExportAction;
-use App\Enums\CustomerStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customers\StoreCustomerRequest;
 use App\Http\Requests\Customers\UpdateCustomerRequest;
@@ -34,13 +33,12 @@ class CustomerController extends Controller
         $this->authorize('viewAny', Customer::class);
 
         $search = $request->string('search')->toString();
-        $status = $request->string('status')->toString();
         $perPage = $this->resolvePerPage($request);
 
         $query = Customer::query()
+            ->with('createdBy:id,name')
             ->withCount(['customerSites', 'attachments'])
             ->search($search)
-            ->status($status)
             ->orderBy('company_name')
             ->orderBy('id');
 
@@ -55,13 +53,10 @@ class CustomerController extends Controller
 
         return Inertia::render('customers/index', [
             'customers' => $customers,
-            'summary' => $this->customerSummary(),
             'filters' => [
                 'search' => $search,
-                'status' => $status,
                 'per_page' => $perPage,
             ],
-            'statusOptions' => $this->statusOptions(),
             'can' => [
                 'create' => $request->user()?->can('create', Customer::class) ?? false,
             ],
@@ -75,9 +70,7 @@ class CustomerController extends Controller
     {
         $this->authorize('create', Customer::class);
 
-        return Inertia::render('customers/create', [
-            'statusOptions' => $this->statusOptions(),
-        ]);
+        return Inertia::render('customers/create');
     }
 
     /**
@@ -92,6 +85,7 @@ class CustomerController extends Controller
         $customer = Customer::query()->create([
             ...$request->validated(),
             'customer_code' => $generateDocumentNumberAction->forCustomer(),
+            'created_by' => $request->user()?->getKey(),
         ]);
 
         Inertia::flash('toast', [
@@ -99,7 +93,9 @@ class CustomerController extends Controller
             'message' => __('Customer created.'),
         ]);
 
-        return to_route('customers.show', $customer);
+        return to_route('sites.create', [
+            'customer' => $customer->getKey(),
+        ]);
     }
 
     /**
@@ -110,6 +106,7 @@ class CustomerController extends Controller
         $this->authorize('view', $customer);
 
         $customer->load([
+            'createdBy:id,name',
             'attachments.uploadedBy',
             'customerSites' => fn ($query) => $query->withCount('attachments')->orderBy('site_name'),
         ])->loadCount(['customerSites', 'attachments']);
@@ -126,11 +123,10 @@ class CustomerController extends Controller
     {
         $this->authorize('update', $customer);
 
-        $customer->loadCount(['customerSites', 'attachments']);
+        $customer->load('createdBy:id,name')->loadCount(['customerSites', 'attachments']);
 
         return Inertia::render('customers/edit', [
             'customer' => $this->customerDetail($request, $customer, includeRelations: false),
-            'statusOptions' => $this->statusOptions(),
         ]);
     }
 
@@ -185,7 +181,8 @@ class CustomerController extends Controller
                 'TIN',
                 'Phone',
                 'Email',
-                'Status',
+                'Created By',
+                'Date Created',
                 'Sites',
                 'Attachments',
             ],
@@ -199,7 +196,8 @@ class CustomerController extends Controller
                     $row['tin'],
                     $row['phone'],
                     $row['email'],
-                    $row['status_label'],
+                    $row['created_by'],
+                    $row['date_created'],
                     $row['site_count'],
                     $row['attachment_count'],
                 ];
@@ -222,8 +220,8 @@ class CustomerController extends Controller
             'tin' => $customer->tin,
             'phone' => $customer->phone,
             'email' => $customer->email,
-            'status' => $customer->status->value,
-            'status_label' => $customer->status->label(),
+            'created_by' => $customer->createdBy?->name,
+            'date_created' => $customer->created_at?->format('M d, Y'),
             'site_count' => (int) $customer->getAttribute('customer_sites_count'),
             'attachment_count' => (int) $customer->getAttribute('attachments_count'),
             'can' => [
@@ -231,25 +229,6 @@ class CustomerController extends Controller
                 'update' => $request->user()?->can('update', $customer) ?? false,
                 'delete' => $request->user()?->can('delete', $customer) ?? false,
             ],
-        ];
-    }
-
-    /**
-     * Build the top-line customer summary cards.
-     *
-     * @return array<string, int>
-     */
-    private function customerSummary(): array
-    {
-        return [
-            'total_customers' => Customer::query()->count(),
-            'active_customers' => Customer::query()
-                ->where('status', CustomerStatus::Active->value)
-                ->count(),
-            'inactive_customers' => Customer::query()
-                ->where('status', CustomerStatus::Inactive->value)
-                ->count(),
-            'total_sites' => CustomerSite::query()->count(),
         ];
     }
 
@@ -269,8 +248,6 @@ class CustomerController extends Controller
             'phone' => $customer->phone,
             'email' => $customer->email,
             'billing_address' => $customer->billing_address,
-            'status' => $customer->status->value,
-            'status_label' => $customer->status->label(),
             'notes' => $customer->notes,
             'site_count' => (int) ($customer->getAttribute('customer_sites_count') ?? 0),
             'attachment_count' => (int) ($customer->getAttribute('attachments_count') ?? 0),
@@ -309,20 +286,6 @@ class CustomerController extends Controller
                     ],
                 ])->all(),
         ];
-    }
-
-    /**
-     * Build the status dropdown options.
-     *
-     * @return array<int, array<string, string>>
-     */
-    private function statusOptions(): array
-    {
-        return collect(CustomerStatus::cases())
-            ->map(fn (CustomerStatus $status) => [
-                'value' => $status->value,
-                'label' => $status->label(),
-            ])->all();
     }
 
     /**

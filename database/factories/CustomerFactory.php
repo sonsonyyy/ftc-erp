@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Enums\CustomerStatus;
 use App\Models\Customer;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,13 +20,13 @@ class CustomerFactory extends Factory
     {
         return [
             'customer_code' => 'CUST-'.fake()->unique()->numerify('#####'),
+            'created_by' => User::factory(),
             'company_name' => fake()->company(),
             'trade_name' => fake()->boolean(60) ? fake()->companySuffix() : null,
             'tin' => fake()->boolean(70) ? fake()->numerify('###-###-###-###') : null,
             'phone' => fake()->boolean(80) ? fake()->phoneNumber() : null,
             'email' => fake()->boolean(70) ? fake()->companyEmail() : null,
             'billing_address' => fake()->boolean(75) ? fake()->address() : null,
-            'status' => fake()->randomElement(CustomerStatus::cases()),
             'notes' => fake()->boolean(30) ? fake()->sentence() : null,
         ];
     }
