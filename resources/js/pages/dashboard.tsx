@@ -27,7 +27,6 @@ import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
-    CardDescription,
     CardFooter,
     CardHeader,
     CardTitle,
@@ -227,7 +226,6 @@ function SectionAction({ href, label }: { href: LinkHref; label: string }) {
 function CompactCard({
     icon: Icon,
     title,
-    description,
     children,
     className,
     iconWrapperClassName,
@@ -237,7 +235,6 @@ function CompactCard({
 }: {
     icon: LucideIcon;
     title: string;
-    description: string;
     children: ReactNode;
     className?: string;
     iconWrapperClassName?: string;
@@ -270,7 +267,7 @@ function CompactCard({
             ) : null}
 
             <CardHeader className="space-y-1.5 px-4 pt-1 pb-0">
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                     <div
                         className={cn(
                             'flex size-9 shrink-0 items-center justify-center rounded-lg border border-transparent bg-foreground shadow-[0_16px_32px_-20px_rgba(15,23,42,0.28)]',
@@ -284,11 +281,8 @@ function CompactCard({
                             )}
                         />
                     </div>
-                    <div className="min-w-0 space-y-1">
+                    <div className="min-w-0">
                         <CardTitle className="text-[15px]">{title}</CardTitle>
-                        <CardDescription className="text-[12px] leading-5">
-                            {description}
-                        </CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -300,21 +294,19 @@ function CompactCard({
 function DashboardSectionHeader({
     icon: Icon,
     title,
-    description,
     action,
     iconWrapperClassName,
     iconClassName,
 }: {
     icon: LucideIcon;
     title: string;
-    description: string;
     action?: ReactNode;
     iconWrapperClassName?: string;
     iconClassName?: string;
 }) {
     return (
-        <CardHeader className="flex flex-row items-start justify-between gap-3 px-4 pb-0">
-            <div className="flex min-w-0 items-start gap-3">
+        <CardHeader className="flex flex-row items-center justify-between gap-3 px-4 pb-0">
+            <div className="flex min-w-0 items-center gap-3">
                 <div
                     className={cn(
                         'flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background/92 shadow-[0_12px_24px_-20px_rgba(15,23,42,0.18)]',
@@ -328,11 +320,8 @@ function DashboardSectionHeader({
                         )}
                     />
                 </div>
-                <div className="min-w-0 space-y-1">
+                <div className="min-w-0">
                     <CardTitle className="text-[15px]">{title}</CardTitle>
-                    <CardDescription className="text-[12px] leading-5">
-                        {description}
-                    </CardDescription>
                 </div>
             </div>
             {action}
@@ -417,7 +406,6 @@ export default function Dashboard({ dashboard }: Props) {
                     <CompactCard
                         icon={Package}
                         title="Inventory"
-                        description="Warehouse stock and movement overview."
                         className="shadow-[0_22px_48px_-34px_rgba(4,120,87,0.26)]"
                         accentClassName="bg-linear-to-r from-emerald-700 via-emerald-600 to-emerald-500"
                         glowClassName="bg-emerald-200/55"
@@ -470,7 +458,6 @@ export default function Dashboard({ dashboard }: Props) {
                     <CompactCard
                         icon={FileText}
                         title="Quotations"
-                        description="Pipeline volume and follow-ups."
                         className="shadow-[0_22px_48px_-34px_rgba(13,148,136,0.26)]"
                         accentClassName="bg-linear-to-r from-teal-700 via-teal-600 to-cyan-500"
                         glowClassName="bg-teal-200/55"
@@ -479,52 +466,23 @@ export default function Dashboard({ dashboard }: Props) {
                     >
                         {dashboard.can.view_quotations ? (
                             <>
-                                <div className="flex items-start justify-between gap-3 rounded-lg bg-background/94 px-3 py-2.5 shadow-[0_12px_24px_-18px_rgba(15,23,42,0.14)]">
-                                    <div>
-                                        <p className="text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
-                                            This month
-                                        </p>
-                                        <p className="mt-1 text-2xl font-semibold tracking-tight">
-                                            {formatNumber(
-                                                dashboard.quotations
-                                                    .total_quotations,
-                                            )}
-                                        </p>
-                                    </div>
-                                    <Badge
-                                        variant="outline"
-                                        className="rounded-md border-transparent bg-teal-50 px-2.5 py-1 text-[10px] font-medium text-teal-800"
-                                    >
-                                        {dashboard.quotations.conversion_rate}%
-                                    </Badge>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-1.5">
-                                    {dashboard.quotations.breakdown.map(
-                                        (item) => (
-                                            <StatusTile
-                                                key={item.key}
-                                                label={item.label}
-                                                value={String(item.count)}
-                                                className="bg-background/94"
-                                            />
-                                        ),
-                                    )}
-                                </div>
-
-                                <div className="flex items-center justify-between border-t pt-2 text-[11px]">
-                                    <span className="text-muted-foreground">
-                                        Pipeline value
-                                    </span>
-                                    <span className="font-medium">
-                                        {formatCurrency(
-                                            dashboard.quotations.total_value,
-                                            0,
+                                <div className="grid grid-cols-2 gap-2">
+                                    <StatBox
+                                        className="bg-background/94"
+                                        label="This month"
+                                        value={formatNumber(
+                                            dashboard.quotations
+                                                .total_quotations,
                                         )}
-                                    </span>
+                                    />
+                                    <StatBox
+                                        className="bg-background/94"
+                                        label="Conversion"
+                                        value={`${dashboard.quotations.conversion_rate}%`}
+                                    />
                                 </div>
 
-                                <div className="flex flex-wrap gap-1.5">
+                                <div className="flex flex-wrap gap-1.5 border-t pt-2">
                                     <SectionAction
                                         href={quotationsIndex()}
                                         label="Open quotations"
@@ -541,7 +499,6 @@ export default function Dashboard({ dashboard }: Props) {
                     <CompactCard
                         icon={FolderKanban}
                         title="Projects"
-                        description="Awarded work and delivery status."
                         className="shadow-[0_22px_48px_-34px_rgba(8,145,178,0.24)]"
                         accentClassName="bg-linear-to-r from-cyan-700 via-sky-600 to-sky-500"
                         glowClassName="bg-cyan-200/55"
@@ -550,43 +507,27 @@ export default function Dashboard({ dashboard }: Props) {
                     >
                         {dashboard.can.view_projects ? (
                             <>
-                                <div className="flex items-start justify-between gap-3 rounded-lg bg-background/94 px-3 py-2.5 shadow-[0_12px_24px_-18px_rgba(15,23,42,0.14)]">
-                                    <div>
-                                        <p className="text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
-                                            Active
-                                        </p>
-                                        <p className="mt-1 text-2xl font-semibold tracking-tight">
-                                            {formatNumber(
-                                                dashboard.projects
-                                                    .active_projects,
-                                            )}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
-                                            Value
-                                        </p>
-                                        <p className="mt-1 text-sm font-semibold tracking-tight">
-                                            {dashboard.projects
+                                <div className="grid grid-cols-2 gap-2">
+                                    <StatBox
+                                        className="bg-background/94"
+                                        label="Active"
+                                        value={formatNumber(
+                                            dashboard.projects.active_projects,
+                                        )}
+                                    />
+                                    <StatBox
+                                        className="bg-background/94"
+                                        label="Value"
+                                        value={
+                                            dashboard.projects
                                                 .total_project_value === null
                                                 ? 'Restricted'
                                                 : formatCompactCurrency(
                                                       dashboard.projects
                                                           .total_project_value,
-                                                  )}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-1.5">
-                                    {dashboard.projects.statuses.map((item) => (
-                                        <StatusTile
-                                            key={item.key}
-                                            label={item.label}
-                                            value={String(item.count)}
-                                            className="bg-background/94"
-                                        />
-                                    ))}
+                                                  )
+                                        }
+                                    />
                                 </div>
 
                                 <div className="flex flex-wrap gap-1.5 border-t pt-2">
@@ -606,7 +547,6 @@ export default function Dashboard({ dashboard }: Props) {
                     <CompactCard
                         icon={ClipboardList}
                         title="Work orders"
-                        description="Execution load and review queue."
                         className="shadow-[0_22px_48px_-34px_rgba(217,119,6,0.24)]"
                         accentClassName="bg-linear-to-r from-amber-700 via-amber-600 to-orange-500"
                         glowClassName="bg-amber-200/55"
@@ -634,21 +574,6 @@ export default function Dashboard({ dashboard }: Props) {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-1.5">
-                                    {dashboard.work_orders.statuses
-                                        .filter(
-                                            (item) => item.key !== 'cancelled',
-                                        )
-                                        .map((item) => (
-                                            <StatusTile
-                                                key={item.key}
-                                                label={item.label}
-                                                value={String(item.count)}
-                                                className="bg-background/94"
-                                            />
-                                        ))}
-                                </div>
-
                                 <div className="flex flex-wrap gap-1.5 border-t pt-2">
                                     <SectionAction
                                         href={workOrdersIndex()}
@@ -668,7 +593,6 @@ export default function Dashboard({ dashboard }: Props) {
                     <DashboardSectionHeader
                         icon={Wallet}
                         title="Monthly Billing / Revenue"
-                        description="Billed amount per month (₱)"
                         iconWrapperClassName="border-emerald-100/80 bg-emerald-50 text-emerald-700"
                         iconClassName="text-emerald-700"
                         action={
@@ -762,7 +686,6 @@ export default function Dashboard({ dashboard }: Props) {
                         <DashboardSectionHeader
                             icon={Wallet}
                             title="AR Aging Summary"
-                            description="Outstanding receivables by aging (₱)"
                             iconWrapperClassName="border-rose-100/80 bg-rose-50 text-rose-700"
                             iconClassName="text-rose-700"
                             action={
@@ -860,7 +783,6 @@ export default function Dashboard({ dashboard }: Props) {
                         <DashboardSectionHeader
                             icon={ShieldCheck}
                             title="Compliance watch"
-                            description="Deadlines building in the next 30 days."
                             iconWrapperClassName="border-amber-100/80 bg-amber-50 text-amber-700"
                             iconClassName="text-amber-700"
                             action={
@@ -978,7 +900,6 @@ export default function Dashboard({ dashboard }: Props) {
                     <DashboardSectionHeader
                         icon={FileText}
                         title="Pending Follow-ups"
-                        description="Quotations needing the next sales touch."
                         iconWrapperClassName="border-teal-100/80 bg-teal-50 text-teal-700"
                         iconClassName="text-teal-700"
                         action={
@@ -1085,7 +1006,6 @@ export default function Dashboard({ dashboard }: Props) {
                     <DashboardSectionHeader
                         icon={AlertTriangle}
                         title="Low stock"
-                        description="Items to replenish or transfer."
                         iconWrapperClassName="border-amber-100/80 bg-amber-50 text-amber-700"
                         iconClassName="text-amber-700"
                         action={

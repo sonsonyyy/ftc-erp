@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customers;
 
+use App\Actions\Documents\GenerateDocumentNumberAction;
 use App\Actions\Exports\StreamCsvExportAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customers\StoreCustomerSiteRequest;
@@ -87,11 +88,16 @@ class CustomerSiteController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCustomerSiteRequest $request): RedirectResponse
-    {
+    public function store(
+        StoreCustomerSiteRequest $request,
+        GenerateDocumentNumberAction $generateDocumentNumberAction,
+    ): RedirectResponse {
         $this->authorize('create', CustomerSite::class);
 
-        $site = CustomerSite::query()->create($request->validated());
+        $site = CustomerSite::query()->create([
+            ...$request->validated(),
+            'site_code' => $generateDocumentNumberAction->forSite(),
+        ]);
 
         Inertia::flash('toast', [
             'type' => 'success',

@@ -10,6 +10,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -18,6 +19,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->withoutVite();
+    Carbon::setTestNow();
 });
 
 function actingAsRole(string $roleName): User
@@ -141,9 +143,9 @@ test('customer export respects the active filters', function () {
 
 test('authorized users can create customers', function () {
     actingAsRole('Sales Admin / Business Development');
+    Carbon::setTestNow('2026-06-14 09:00:00');
 
     $response = $this->post(route('customers.store'), [
-        'customer_code' => 'CUST-00001',
         'company_name' => 'Prime Fire Solutions',
         'trade_name' => 'Prime Fire',
         'tin' => '123-456-789-000',
@@ -160,7 +162,7 @@ test('authorized users can create customers', function () {
 
     $this->assertDatabaseHas('customers', [
         'id' => $customer->getKey(),
-        'customer_code' => 'CUST-00001',
+        'customer_code' => 'CUST-0626-0001',
         'company_name' => 'Prime Fire Solutions',
         'status' => CustomerStatus::Active->value,
     ]);
@@ -169,19 +171,13 @@ test('authorized users can create customers', function () {
 test('customer validation errors are returned', function () {
     actingAsRole('Sales Admin / Business Development');
 
-    Customer::factory()->create([
-        'customer_code' => 'CUST-00001',
-    ]);
-
     $this->from(route('customers.create'))
         ->post(route('customers.store'), [
-            'customer_code' => 'CUST-00001',
             'company_name' => '',
             'status' => 'invalid-status',
         ])
         ->assertRedirect(route('customers.create'))
         ->assertSessionHasErrors([
-            'customer_code',
             'company_name',
             'status',
         ]);
@@ -192,7 +188,6 @@ test('users without permissions cannot create customers', function () {
 
     $this->actingAs($user)
         ->post(route('customers.store'), [
-            'customer_code' => 'CUST-UNAUTH',
             'company_name' => 'Unauthorized Customer',
             'status' => CustomerStatus::Active->value,
         ])
@@ -205,7 +200,7 @@ test('authorized users can update customers', function () {
     $customer = Customer::factory()->create();
 
     $this->put(route('customers.update', $customer), [
-        'customer_code' => $customer->customer_code,
+        'customer_code' => 'CUST-9999-OVERRIDE',
         'company_name' => 'Updated Fire Protection',
         'trade_name' => null,
         'tin' => null,
@@ -219,6 +214,7 @@ test('authorized users can update customers', function () {
 
     expect($customer->refresh()->company_name)->toBe('Updated Fire Protection');
     expect($customer->status)->toBe(CustomerStatus::Inactive);
+    expect($customer->customer_code)->not->toBe('CUST-9999-OVERRIDE');
 });
 
 test('authorized users can archive customers without linked sites', function () {

@@ -17,6 +17,17 @@ import { Textarea } from '@/components/ui/textarea';
 import type { CustomerDetail, SelectOption } from '@/types';
 import { SelectInput } from '@/components/ui/select-input';
 
+type CustomerFormData = {
+    company_name: string;
+    trade_name: string;
+    tin: string;
+    phone: string;
+    email: string;
+    billing_address: string;
+    status: string;
+    notes: string;
+};
+
 type Props = {
     customer?: CustomerDetail;
     statusOptions: SelectOption[];
@@ -32,8 +43,9 @@ export function CustomerForm({
     description,
     cancelHref,
 }: Props) {
-    const form = useForm({
-        customer_code: customer?.customer_code ?? '',
+    const isEditing = customer !== undefined;
+
+    const form = useForm<CustomerFormData>({
         company_name: customer?.company_name ?? '',
         trade_name: customer?.trade_name ?? '',
         tin: customer?.tin ?? '',
@@ -43,6 +55,14 @@ export function CustomerForm({
         status: customer?.status ?? String(statusOptions[0]?.value ?? 'active'),
         notes: customer?.notes ?? '',
     });
+
+    function setField<K extends keyof CustomerFormData>(
+        field: K,
+        value: CustomerFormData[K],
+    ): void {
+        form.setData(field, value as never);
+        form.clearErrors(field);
+    }
 
     function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -82,40 +102,43 @@ export function CustomerForm({
                     <CardHeader>
                         <CardTitle>Customer details</CardTitle>
                         <CardDescription>
-                            Maintain the customer masterfile used by future
-                            quotations, projects, and service work.
+                            Capture the primary customer record used across
+                            sales and operations.
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent className="grid gap-5 md:grid-cols-2">
-                        <div className="grid gap-2">
-                            <Label htmlFor="customer_code">Customer code</Label>
-                            <Input
-                                id="customer_code"
-                                value={form.data.customer_code}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'customer_code',
-                                        event.currentTarget.value,
-                                    )
-                                }
-                                placeholder="CUST-00001"
-                            />
-                            <InputError message={form.errors.customer_code} />
-                        </div>
+                        {isEditing ? (
+                            <div className="grid gap-2">
+                                <Label htmlFor="customer_code">
+                                    Customer code
+                                </Label>
+                                <Input
+                                    id="customer_code"
+                                    value={customer?.customer_code ?? ''}
+                                    readOnly
+                                    aria-readonly="true"
+                                    className="bg-muted/30"
+                                />
+                            </div>
+                        ) : null}
 
                         <div className="grid gap-2">
-                            <Label htmlFor="status">Status</Label>
+                            <Label htmlFor="status">
+                                Status{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
                             <SelectInput
                                 id="status"
                                 value={form.data.status}
+                                required
+                                aria-invalid={Boolean(form.errors.status)}
                                 onChange={(event) =>
-                                    form.setData(
+                                    setField(
                                         'status',
                                         event.currentTarget.value,
                                     )
                                 }
-                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 {statusOptions.map((option) => (
                                     <option
@@ -130,12 +153,17 @@ export function CustomerForm({
                         </div>
 
                         <div className="grid gap-2 md:col-span-2">
-                            <Label htmlFor="company_name">Company name</Label>
+                            <Label htmlFor="company_name">
+                                Company name{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
                             <Input
                                 id="company_name"
+                                required
+                                aria-invalid={Boolean(form.errors.company_name)}
                                 value={form.data.company_name}
                                 onChange={(event) =>
-                                    form.setData(
+                                    setField(
                                         'company_name',
                                         event.currentTarget.value,
                                     )
@@ -149,9 +177,10 @@ export function CustomerForm({
                             <Label htmlFor="trade_name">Trade name</Label>
                             <Input
                                 id="trade_name"
+                                aria-invalid={Boolean(form.errors.trade_name)}
                                 value={form.data.trade_name}
                                 onChange={(event) =>
-                                    form.setData(
+                                    setField(
                                         'trade_name',
                                         event.currentTarget.value,
                                     )
@@ -165,12 +194,10 @@ export function CustomerForm({
                             <Label htmlFor="tin">TIN</Label>
                             <Input
                                 id="tin"
+                                aria-invalid={Boolean(form.errors.tin)}
                                 value={form.data.tin}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'tin',
-                                        event.currentTarget.value,
-                                    )
+                                    setField('tin', event.currentTarget.value)
                                 }
                                 placeholder="000-000-000-000"
                             />
@@ -181,12 +208,10 @@ export function CustomerForm({
                             <Label htmlFor="phone">Phone</Label>
                             <Input
                                 id="phone"
+                                aria-invalid={Boolean(form.errors.phone)}
                                 value={form.data.phone}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'phone',
-                                        event.currentTarget.value,
-                                    )
+                                    setField('phone', event.currentTarget.value)
                                 }
                                 placeholder="(02) 8123 4567"
                             />
@@ -198,12 +223,10 @@ export function CustomerForm({
                             <Input
                                 id="email"
                                 type="email"
+                                aria-invalid={Boolean(form.errors.email)}
                                 value={form.data.email}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'email',
-                                        event.currentTarget.value,
-                                    )
+                                    setField('email', event.currentTarget.value)
                                 }
                                 placeholder="billing@example.com"
                             />
@@ -216,9 +239,12 @@ export function CustomerForm({
                             </Label>
                             <Textarea
                                 id="billing_address"
+                                aria-invalid={Boolean(
+                                    form.errors.billing_address,
+                                )}
                                 value={form.data.billing_address}
                                 onChange={(event) =>
-                                    form.setData(
+                                    setField(
                                         'billing_address',
                                         event.currentTarget.value,
                                     )
@@ -232,12 +258,10 @@ export function CustomerForm({
                             <Label htmlFor="notes">Notes</Label>
                             <Textarea
                                 id="notes"
+                                aria-invalid={Boolean(form.errors.notes)}
                                 value={form.data.notes}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'notes',
-                                        event.currentTarget.value,
-                                    )
+                                    setField('notes', event.currentTarget.value)
                                 }
                                 placeholder="Internal notes about this customer"
                             />
@@ -250,8 +274,8 @@ export function CustomerForm({
                     <CardHeader>
                         <CardTitle>Actions</CardTitle>
                         <CardDescription>
-                            Save the customer record now and manage sites and
-                            attachments from the detail page.
+                            Save now and manage sites or attachments from the
+                            detail page.
                         </CardDescription>
                     </CardHeader>
 

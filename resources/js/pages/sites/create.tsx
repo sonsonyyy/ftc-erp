@@ -23,7 +23,7 @@ export default function SitesCreate({ customerOptions, defaults }: Props) {
                     customerOptions={customerOptions}
                     defaults={defaults}
                     title="New site"
-                    description="Create the site record and manage linked attachments from the detail page after saving."
+                    description="Create the site record first, then manage linked attachments from the detail page."
                     cancelHref={sitesIndex()}
                 />
             </div>

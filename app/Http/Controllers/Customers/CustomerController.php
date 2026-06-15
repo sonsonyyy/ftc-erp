@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customers;
 
+use App\Actions\Documents\GenerateDocumentNumberAction;
 use App\Actions\Exports\StreamCsvExportAction;
 use App\Enums\CustomerStatus;
 use App\Http\Controllers\Controller;
@@ -82,11 +83,16 @@ class CustomerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCustomerRequest $request): RedirectResponse
-    {
+    public function store(
+        StoreCustomerRequest $request,
+        GenerateDocumentNumberAction $generateDocumentNumberAction,
+    ): RedirectResponse {
         $this->authorize('create', Customer::class);
 
-        $customer = Customer::query()->create($request->validated());
+        $customer = Customer::query()->create([
+            ...$request->validated(),
+            'customer_code' => $generateDocumentNumberAction->forCustomer(),
+        ]);
 
         Inertia::flash('toast', [
             'type' => 'success',

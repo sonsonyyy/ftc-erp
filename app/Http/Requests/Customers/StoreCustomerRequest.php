@@ -25,12 +25,6 @@ class StoreCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_code' => [
-                'required',
-                'string',
-                'max:50',
-                Rule::unique('customers', 'customer_code')->withoutTrashed(),
-            ],
             'company_name' => ['required', 'string', 'max:255'],
             'trade_name' => ['nullable', 'string', 'max:255'],
             'tin' => ['nullable', 'string', 'max:32'],

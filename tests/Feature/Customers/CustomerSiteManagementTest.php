@@ -8,6 +8,7 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -16,6 +17,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     $this->withoutVite();
+    Carbon::setTestNow();
 });
 
 function actingAsSiteRole(string $roleName): User
@@ -179,12 +181,12 @@ test('site export respects the active filters', function () {
 
 test('authorized users can create sites', function () {
     actingAsSiteRole('Sales Admin / Business Development');
+    Carbon::setTestNow('2026-06-14 09:00:00');
 
     $customer = Customer::factory()->create();
 
     $response = $this->post(route('sites.store'), [
         'customer_id' => $customer->getKey(),
-        'site_code' => 'SITE-00001',
         'site_name' => 'Main Office',
         'contact_person' => 'Jane Doe',
         'contact_no' => '09170000002',
@@ -203,6 +205,7 @@ test('authorized users can create sites', function () {
     $this->assertDatabaseHas('customer_sites', [
         'id' => $site->getKey(),
         'customer_id' => $customer->getKey(),
+        'site_code' => 'SITE-0626-0001',
         'site_name' => 'Main Office',
         'is_active' => true,
     ]);
@@ -250,7 +253,7 @@ test('authorized users can update sites', function () {
 
     $this->put(route('sites.update', $site), [
         'customer_id' => $site->customer_id,
-        'site_code' => $site->site_code,
+        'site_code' => 'SITE-9999-OVERRIDE',
         'site_name' => 'Updated Site',
         'contact_person' => 'Updated Contact',
         'contact_no' => '09179999999',
@@ -265,6 +268,7 @@ test('authorized users can update sites', function () {
 
     expect($site->refresh()->site_name)->toBe('Updated Site');
     expect($site->is_active)->toBeFalse();
+    expect($site->site_code)->not->toBe('SITE-9999-OVERRIDE');
 });
 
 test('authorized users can archive sites', function () {

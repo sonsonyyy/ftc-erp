@@ -30,12 +30,6 @@ class StoreCustomerSiteRequest extends FormRequest
                     fn ($query) => $query->whereNull('deleted_at'),
                 ),
             ],
-            'site_code' => [
-                'nullable',
-                'string',
-                'max:50',
-                Rule::unique('customer_sites', 'site_code')->withoutTrashed(),
-            ],
             'site_name' => ['required', 'string', 'max:255'],
             'contact_person' => ['nullable', 'string', 'max:255'],
             'contact_no' => ['nullable', 'string', 'max:50'],

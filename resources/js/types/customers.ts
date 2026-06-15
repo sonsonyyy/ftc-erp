@@ -35,7 +35,7 @@ export type CustomerListItem = {
 
 export type CustomerSiteSnippet = {
     id: number;
-    site_code: string | null;
+    site_code: string;
     site_name: string;
     city: string | null;
     province: string | null;
@@ -74,7 +74,7 @@ export type CustomerDetail = {
 
 export type SiteListItem = {
     id: number;
-    site_code: string | null;
+    site_code: string;
     site_name: string;
     contact_person: string | null;
     contact_no: string | null;
@@ -98,7 +98,7 @@ export type SiteListItem = {
 export type SiteDetail = {
     id: number;
     customer_id: number;
-    site_code: string | null;
+    site_code: string;
     site_name: string;
     contact_person: string | null;
     contact_no: string | null;
