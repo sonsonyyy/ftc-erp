@@ -480,17 +480,19 @@ test('compliance alert generation command creates reminder and overdue alerts', 
         '--sync' => true,
     ])->assertExitCode(0);
 
-    $this->assertDatabaseHas('compliance_alerts', [
-        'alert_type' => ComplianceAlertType::DueReminder->value,
-        'scheduled_for' => '2026-04-20',
-        'reference_date' => '2026-05-05',
-    ]);
+    $dueReminderAlert = ComplianceAlert::query()
+        ->where('alert_type', ComplianceAlertType::DueReminder)
+        ->firstOrFail();
 
-    $this->assertDatabaseHas('compliance_alerts', [
-        'alert_type' => ComplianceAlertType::DueOverdue->value,
-        'scheduled_for' => '2026-04-20',
-        'reference_date' => '2026-04-18',
-    ]);
+    expect($dueReminderAlert->scheduled_for->toDateString())->toBe('2026-04-20')
+        ->and($dueReminderAlert->reference_date->toDateString())->toBe('2026-05-05');
+
+    $dueOverdueAlert = ComplianceAlert::query()
+        ->where('alert_type', ComplianceAlertType::DueOverdue)
+        ->firstOrFail();
+
+    expect($dueOverdueAlert->scheduled_for->toDateString())->toBe('2026-04-20')
+        ->and($dueOverdueAlert->reference_date->toDateString())->toBe('2026-04-18');
 });
 
 test('compliance alert generation command exits cleanly when tables are not available yet', function () {

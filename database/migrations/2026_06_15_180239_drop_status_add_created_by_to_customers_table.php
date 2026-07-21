@@ -12,6 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('customers', function (Blueprint $table) {
+            $table->dropIndex(['status']);
+            $table->dropIndex(['company_name', 'status']);
+        });
+
+        Schema::table('customers', function (Blueprint $table) {
             $table->foreignId('created_by')
                 ->nullable()
                 ->after('customer_code')
@@ -28,7 +33,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->string('status')->default('active');
+            $table->string('status')->default('active')->index();
+            $table->index(['company_name', 'status']);
             $table->dropConstrainedForeignId('created_by');
         });
     }

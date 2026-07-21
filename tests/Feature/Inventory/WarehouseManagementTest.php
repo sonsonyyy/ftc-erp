@@ -64,13 +64,21 @@ test('warehouse list can be filtered by search', function () {
     Warehouse::factory()->create([
         'warehouse_code' => 'WH-ACTIVE',
         'warehouse_name' => 'Main Active Warehouse',
+        'address' => 'North Operations Compound',
+        'contact_person' => 'Carla Gomez',
+        'contact_no' => '09170000001',
         'is_active' => true,
+        'notes' => 'Primary storage location',
     ]);
 
     Warehouse::factory()->create([
         'warehouse_code' => 'WH-INACTIVE',
         'warehouse_name' => 'Dormant Warehouse',
+        'address' => 'South Storage Yard',
+        'contact_person' => 'Ramon Cruz',
+        'contact_no' => '09170000002',
         'is_active' => false,
+        'notes' => 'Closed reserve location',
     ]);
 
     $this->get(route('warehouses.index', [
