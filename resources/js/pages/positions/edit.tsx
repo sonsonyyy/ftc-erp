@@ -1,12 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
 import PositionController from '@/actions/App/Http/Controllers/Payroll/PositionController';
+import { PositionForm } from '@/components/payroll/position-form';
+import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import {
     edit as positionsEdit,
     index as positionsIndex,
 } from '@/routes/positions';
-import { PositionForm } from '@/components/payroll/position-form';
-import { Button } from '@/components/ui/button';
 import type { PositionDetail, SelectOption } from '@/types';
 
 type Props = {

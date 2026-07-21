@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SelectInput } from '@/components/ui/select-input';
 import { Textarea } from '@/components/ui/textarea';
 import type {
     EmployeeDetail,
@@ -20,7 +21,6 @@ import type {
     PositionOption,
     SelectOption,
 } from '@/types';
-import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     employee?: EmployeeDetail;

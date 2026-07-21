@@ -2,7 +2,6 @@ import { Link, usePage } from '@inertiajs/react';
 import { Building2, LayoutGrid, MapPinned, Menu, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { Breadcrumbs } from '@/components/breadcrumbs';
-import { UserAccountDropdown } from '@/components/user-account-dropdown';
 import { Button } from '@/components/ui/button';
 import {
     NavigationMenu,
@@ -17,6 +16,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { UserAccountDropdown } from '@/components/user-account-dropdown';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';

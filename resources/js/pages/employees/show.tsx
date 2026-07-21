@@ -1,11 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import EmployeeController from '@/actions/App/Http/Controllers/Payroll/EmployeeController';
-import { dashboard } from '@/routes';
-import {
-    edit as employeesEdit,
-    index as employeesIndex,
-    show as employeesShow,
-} from '@/routes/employees';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +9,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import {
+    edit as employeesEdit,
+    index as employeesIndex,
+    show as employeesShow,
+} from '@/routes/employees';
 import type { EmployeeDetail } from '@/types';
 
 type Props = {

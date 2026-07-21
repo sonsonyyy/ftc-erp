@@ -114,8 +114,14 @@ export function RecordAttachmentsCard({
                             <InputError message={form.errors.file} />
                         </div>
 
-                        <Button disabled={form.processing || form.data.file === null}>
-                            {form.processing ? 'Uploading...' : 'Upload attachment'}
+                        <Button
+                            disabled={
+                                form.processing || form.data.file === null
+                            }
+                        >
+                            {form.processing
+                                ? 'Uploading...'
+                                : 'Upload attachment'}
                         </Button>
                     </form>
                 )}
@@ -145,7 +151,9 @@ export function RecordAttachmentsCard({
 
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button variant="outline" size="sm" asChild>
-                                    <a href={attachment.download_url}>Download</a>
+                                    <a href={attachment.download_url}>
+                                        Download
+                                    </a>
                                 </Button>
 
                                 {canUnlink && (

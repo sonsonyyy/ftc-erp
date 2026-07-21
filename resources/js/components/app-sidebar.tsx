@@ -32,14 +32,15 @@ import { index as inventoryIndex } from '@/routes/inventory';
 import { lowStock as inventoryLowStock } from '@/routes/inventory';
 import { index as inventoryCategoriesIndex } from '@/routes/inventory-categories';
 import { index as invoicesIndex } from '@/routes/invoices';
+import { index as paymentsIndex } from '@/routes/payments';
 import { index as payrollRunsIndex } from '@/routes/payroll-runs';
 import { index as positionsIndex } from '@/routes/positions';
+import { index as projectsIndex } from '@/routes/projects';
 import { index as purchaseOrdersIndex } from '@/routes/purchase-orders';
 import { index as purchaseReceiptsIndex } from '@/routes/purchase-receipts';
 import { index as purchaseRequestsIndex } from '@/routes/purchase-requests';
-import { index as paymentsIndex } from '@/routes/payments';
-import { index as projectsIndex } from '@/routes/projects';
 import { index as quotationsIndex } from '@/routes/quotations';
+import { kpi as quotationsKpi } from '@/routes/quotations';
 import { index as sitesIndex } from '@/routes/sites';
 import { index as stockIssuancesIndex } from '@/routes/stock-issuances';
 import { index as stockMovementsIndex } from '@/routes/stock-movements';
@@ -51,7 +52,6 @@ import { index as vatRecordsIndex } from '@/routes/vat-records';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import { index as withholdingRecordsIndex } from '@/routes/withholding-records';
 import { index as workOrdersIndex } from '@/routes/work-orders';
-import { kpi as quotationsKpi } from '@/routes/quotations';
 import type { Auth, NavItem, NavSection } from '@/types';
 
 const primaryNavItems: NavItem[] = [

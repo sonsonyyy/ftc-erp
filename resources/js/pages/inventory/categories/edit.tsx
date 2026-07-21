@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { InventoryCategoryForm } from '@/components/inventory/inventory-category-form';
 import { dashboard } from '@/routes';
 import { index as inventoryCategoriesIndex } from '@/routes/inventory-categories';
-import { InventoryCategoryForm } from '@/components/inventory/inventory-category-form';
 import type { InventoryCategoryFormData } from '@/types';
 
 type Props = {

@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { SupplierForm } from '@/components/purchasing/supplier-form';
 import { dashboard } from '@/routes';
 import {
     index as suppliersIndex,
     show as suppliersShow,
 } from '@/routes/suppliers';
-import { SupplierForm } from '@/components/purchasing/supplier-form';
 import type { SupplierDetail } from '@/types';
 
 type Props = {

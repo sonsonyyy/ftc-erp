@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { BellRing, Eye, Search } from 'lucide-react';
+import { BellRing, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -7,7 +7,6 @@ import { DataTablePaginationFooter } from '@/components/data-table-pagination-fo
 import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -71,23 +70,27 @@ export default function ComplianceAlertsIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                type: filters.type,
-                acknowledged: filters.acknowledged,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    type: filters.type,
+                    acknowledged: filters.acknowledged,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.type === nextFilters.type &&
-                currentFilters.acknowledged === nextFilters.acknowledged &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.type === nextFilters.type &&
+                    currentFilters.acknowledged === nextFilters.acknowledged &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.acknowledged, filters.per_page, filters.type]);
 
     useEffect(() => {

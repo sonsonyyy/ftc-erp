@@ -1,8 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import CustomerSiteController from '@/actions/App/Http/Controllers/Customers/CustomerSiteController';
-import { dashboard } from '@/routes';
-import { show as customersShow } from '@/routes/customers';
-import { index as sitesIndex, edit as sitesEdit } from '@/routes/sites';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +10,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import { show as customersShow } from '@/routes/customers';
+import { index as sitesIndex, edit as sitesEdit } from '@/routes/sites';
 import type { SiteDetail } from '@/types';
 
 type Props = {

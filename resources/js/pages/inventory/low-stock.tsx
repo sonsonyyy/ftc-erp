@@ -1,12 +1,11 @@
 import { Head, router } from '@inertiajs/react';
-import { Eye, Search } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { FilterSelect } from '@/components/filter-select';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -59,25 +58,33 @@ export default function InventoryLowStock({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                category:
-                    filters.category === null ? '' : String(filters.category),
-                warehouse:
-                    filters.warehouse === null ? '' : String(filters.warehouse),
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    category:
+                        filters.category === null
+                            ? ''
+                            : String(filters.category),
+                    warehouse:
+                        filters.warehouse === null
+                            ? ''
+                            : String(filters.warehouse),
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.category === nextFilters.category &&
-                currentFilters.warehouse === nextFilters.warehouse &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.category === nextFilters.category &&
+                    currentFilters.warehouse === nextFilters.warehouse &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.category, filters.per_page, filters.warehouse]);
 
     useEffect(() => {

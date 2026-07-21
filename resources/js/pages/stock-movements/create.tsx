@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { StockMovementForm } from '@/components/inventory/stock-movement-form';
 import { dashboard } from '@/routes';
 import { index as stockMovementsIndex } from '@/routes/stock-movements';
-import { StockMovementForm } from '@/components/inventory/stock-movement-form';
 import type { SelectOption, StockMovementFormDefaults } from '@/types';
 
 type Props = {

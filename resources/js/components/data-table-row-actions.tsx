@@ -1,6 +1,8 @@
+import { Link } from '@inertiajs/react';
+import type { InertiaLinkProps } from '@inertiajs/react';
+import { MoreHorizontal } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Fragment } from 'react';
-import { Link, type InertiaLinkProps } from '@inertiajs/react';
-import { MoreHorizontal, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,

@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { ComplianceRecordForm } from '@/components/compliance/compliance-record-form';
 import { dashboard } from '@/routes';
 import { index as complianceRecordsIndex } from '@/routes/compliance-records';
-import { ComplianceRecordForm } from '@/components/compliance/compliance-record-form';
 import type {
     ComplianceRecordFormDefaults,
     ComplianceTemplateOption,

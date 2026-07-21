@@ -1,6 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { dashboard } from '@/routes';
-import { index as stockReturnsIndex } from '@/routes/stock-returns';
 import {
     Card,
     CardContent,
@@ -8,6 +6,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import { index as stockReturnsIndex } from '@/routes/stock-returns';
 import type { StockReturnDetail } from '@/types';
 
 type Props = {

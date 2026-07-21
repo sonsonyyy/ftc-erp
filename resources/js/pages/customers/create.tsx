@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { CustomerForm } from '@/components/customers/customer-form';
 import { dashboard } from '@/routes';
 import {
     create as customersCreate,
     index as customersIndex,
 } from '@/routes/customers';
-import { CustomerForm } from '@/components/customers/customer-form';
 
 export default function CustomersCreate() {
     return (

@@ -6,7 +6,6 @@ import {
     Eye,
     Pencil,
     Plus,
-    Search,
     UserMinus,
     Users,
 } from 'lucide-react';
@@ -24,7 +23,6 @@ import {
     CardDescription,
     CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -114,32 +112,38 @@ export default function EmployeesIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                department:
-                    filters.department === null
-                        ? ''
-                        : String(filters.department),
-                position:
-                    filters.position === null ? '' : String(filters.position),
-                employment_status: filters.employment_status,
-                state: filters.state,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    department:
+                        filters.department === null
+                            ? ''
+                            : String(filters.department),
+                    position:
+                        filters.position === null
+                            ? ''
+                            : String(filters.position),
+                    employment_status: filters.employment_status,
+                    state: filters.state,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.department === nextFilters.department &&
-                currentFilters.position === nextFilters.position &&
-                currentFilters.employment_status ===
-                    nextFilters.employment_status &&
-                currentFilters.state === nextFilters.state &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.department === nextFilters.department &&
+                    currentFilters.position === nextFilters.position &&
+                    currentFilters.employment_status ===
+                        nextFilters.employment_status &&
+                    currentFilters.state === nextFilters.state &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [
         filters.department,
         filters.employment_status,

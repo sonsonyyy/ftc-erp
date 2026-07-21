@@ -103,7 +103,6 @@ export function FilterCombobox({
     defaultValue,
     name,
     disabled = false,
-    required = false,
     className,
     placeholder,
     children,

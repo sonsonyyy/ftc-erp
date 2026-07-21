@@ -3,13 +3,6 @@ import ComplianceAlertController from '@/actions/App/Http/Controllers/Compliance
 import ComplianceRecordController from '@/actions/App/Http/Controllers/Compliance/ComplianceRecordController';
 import ComplianceSubmissionController from '@/actions/App/Http/Controllers/Compliance/ComplianceSubmissionController';
 import ComplianceTaskController from '@/actions/App/Http/Controllers/Compliance/ComplianceTaskController';
-import { dashboard } from '@/routes';
-import {
-    calendar as complianceRecordsCalendar,
-    edit as complianceRecordsEdit,
-    index as complianceRecordsIndex,
-} from '@/routes/compliance-records';
-import { index as complianceAlertsIndex } from '@/routes/compliance-alerts';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -23,9 +16,16 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import type { ComplianceRecordDetail, SelectOption } from '@/types';
 import { SelectInput } from '@/components/ui/select-input';
+import { Textarea } from '@/components/ui/textarea';
+import { dashboard } from '@/routes';
+import { index as complianceAlertsIndex } from '@/routes/compliance-alerts';
+import {
+    calendar as complianceRecordsCalendar,
+    edit as complianceRecordsEdit,
+    index as complianceRecordsIndex,
+} from '@/routes/compliance-records';
+import type { ComplianceRecordDetail, SelectOption } from '@/types';
 
 type Props = {
     complianceRecord: ComplianceRecordDetail;

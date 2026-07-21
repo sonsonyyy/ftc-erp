@@ -1,12 +1,5 @@
-import { Link, router, type InertiaLinkProps } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { cn, cleanQueryParams, countActiveFilters, toUrl } from '@/lib/utils';
+import { Link, router } from '@inertiajs/react';
+import type { InertiaLinkProps } from '@inertiajs/react';
 import {
     Download,
     Ellipsis,
@@ -21,10 +14,16 @@ import {
     useEffect,
     useMemo,
     useState,
-    type ChangeEvent,
-    type ReactElement,
-    type ReactNode,
 } from 'react';
+import type { ChangeEvent, ReactElement, ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { cn, cleanQueryParams, countActiveFilters, toUrl } from '@/lib/utils';
 
 type FilterValues = Record<
     string,

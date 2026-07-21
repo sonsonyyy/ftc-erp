@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { PurchaseRequestForm } from '@/components/purchasing/purchase-request-form';
 import { dashboard } from '@/routes';
 import { index as purchaseRequestsIndex } from '@/routes/purchase-requests';
-import { PurchaseRequestForm } from '@/components/purchasing/purchase-request-form';
 import type {
     PurchaseRequestFormDefaults,
     PurchasingItemOption,

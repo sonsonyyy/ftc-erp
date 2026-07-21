@@ -1,11 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
-import { dashboard } from '@/routes';
-import {
-    index as invoicesIndex,
-    show as invoicesShow,
-} from '@/routes/invoices';
-import { index as paymentsIndex } from '@/routes/payments';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -13,7 +8,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { dashboard } from '@/routes';
+import {
+    index as invoicesIndex,
+    show as invoicesShow,
+} from '@/routes/invoices';
+import { index as paymentsIndex } from '@/routes/payments';
 import type { PaymentDetail } from '@/types';
 
 type Props = {

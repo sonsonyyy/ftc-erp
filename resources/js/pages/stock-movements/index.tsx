@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -7,7 +7,6 @@ import { DataTablePaginationFooter } from '@/components/data-table-pagination-fo
 import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -59,24 +58,30 @@ export default function StockMovementsIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                warehouse:
-                    filters.warehouse === null ? '' : String(filters.warehouse),
-                type: filters.type,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    warehouse:
+                        filters.warehouse === null
+                            ? ''
+                            : String(filters.warehouse),
+                    type: filters.type,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.warehouse === nextFilters.warehouse &&
-                currentFilters.type === nextFilters.type &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.warehouse === nextFilters.warehouse &&
+                    currentFilters.type === nextFilters.type &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.per_page, filters.type, filters.warehouse]);
 
     useEffect(() => {

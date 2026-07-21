@@ -1,6 +1,6 @@
+import { PaymentForm } from '@/components/billing/payment-form';
 import { dashboard } from '@/routes';
 import { index as paymentsIndex } from '@/routes/payments';
-import { PaymentForm } from '@/components/billing/payment-form';
 import type {
     PaymentFormDefaults,
     PaymentInvoiceOption,

@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { SiteForm } from '@/components/customers/site-form';
 import { dashboard } from '@/routes';
 import { create as sitesCreate, index as sitesIndex } from '@/routes/sites';
-import { SiteForm } from '@/components/customers/site-form';
 import type { SelectOption } from '@/types';
 
 type Props = {

@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { WarehouseForm } from '@/components/inventory/warehouse-form';
 import { dashboard } from '@/routes';
 import {
     index as warehousesIndex,
     show as warehousesShow,
 } from '@/routes/warehouses';
-import { WarehouseForm } from '@/components/inventory/warehouse-form';
 import type { WarehouseFormData } from '@/types';
 
 type Props = {

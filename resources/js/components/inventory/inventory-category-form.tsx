@@ -4,7 +4,13 @@ import InventoryCategoryController from '@/actions/App/Http/Controllers/Inventor
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,7 +23,12 @@ type Props = {
     cancelHref: NonNullable<InertiaLinkProps['href']>;
 };
 
-export function InventoryCategoryForm({ inventoryCategory, title, description, cancelHref }: Props) {
+export function InventoryCategoryForm({
+    inventoryCategory,
+    title,
+    description,
+    cancelHref,
+}: Props) {
     const form = useForm({
         name: inventoryCategory?.name ?? '',
         description: inventoryCategory?.description ?? '',
@@ -32,9 +43,12 @@ export function InventoryCategoryForm({ inventoryCategory, title, description, c
         }));
 
         if (inventoryCategory?.id) {
-            form.submit(InventoryCategoryController.update(inventoryCategory.id), {
-                preserveScroll: true,
-            });
+            form.submit(
+                InventoryCategoryController.update(inventoryCategory.id),
+                {
+                    preserveScroll: true,
+                },
+            );
 
             return;
         }
@@ -48,12 +62,16 @@ export function InventoryCategoryForm({ inventoryCategory, title, description, c
         <div className="space-y-6">
             <Heading title={title} description={description} />
 
-            <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+            <form
+                onSubmit={submit}
+                className="grid gap-6 lg:grid-cols-[2fr_1fr]"
+            >
                 <Card>
                     <CardHeader>
                         <CardTitle>Category details</CardTitle>
                         <CardDescription>
-                            Keep category labels simple so warehouse users can classify stock consistently.
+                            Keep category labels simple so warehouse users can
+                            classify stock consistently.
                         </CardDescription>
                     </CardHeader>
 
@@ -63,7 +81,12 @@ export function InventoryCategoryForm({ inventoryCategory, title, description, c
                             <Input
                                 id="name"
                                 value={form.data.name}
-                                onChange={(event) => form.setData('name', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'name',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 placeholder="Sprinkler Components"
                             />
                             <InputError message={form.errors.name} />
@@ -74,7 +97,12 @@ export function InventoryCategoryForm({ inventoryCategory, title, description, c
                             <Textarea
                                 id="description"
                                 value={form.data.description}
-                                onChange={(event) => form.setData('description', event.currentTarget.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'description',
+                                        event.currentTarget.value,
+                                    )
+                                }
                                 rows={5}
                                 placeholder="Optional notes about which inventory items belong in this category."
                             />
@@ -87,7 +115,8 @@ export function InventoryCategoryForm({ inventoryCategory, title, description, c
                     <CardHeader>
                         <CardTitle>Actions</CardTitle>
                         <CardDescription>
-                            Categories are used by filters and low-stock views across the module.
+                            Categories are used by filters and low-stock views
+                            across the module.
                         </CardDescription>
                     </CardHeader>
 

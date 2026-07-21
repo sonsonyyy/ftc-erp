@@ -1,11 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { dashboard } from '@/routes';
-import { create as stockMovementsCreate } from '@/routes/stock-movements';
-import {
-    edit as inventoryEdit,
-    index as inventoryIndex,
-    lowStock as inventoryLowStock,
-} from '@/routes/inventory';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +8,13 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import {
+    edit as inventoryEdit,
+    index as inventoryIndex,
+    lowStock as inventoryLowStock,
+} from '@/routes/inventory';
+import { create as stockMovementsCreate } from '@/routes/stock-movements';
 import type { InventoryDetail } from '@/types';
 
 type Props = {

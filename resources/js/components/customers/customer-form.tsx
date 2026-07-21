@@ -1,8 +1,8 @@
 import type { InertiaLinkProps } from '@inertiajs/react';
 import { Link, useForm } from '@inertiajs/react';
 import CustomerController from '@/actions/App/Http/Controllers/Customers/CustomerController';
-import InputError from '@/components/input-error';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -98,7 +98,8 @@ export function CustomerForm({
                     <CardHeader>
                         <CardTitle>Customer details</CardTitle>
                         <CardDescription>
-                            Capture the primary customer record used across sales and operations.
+                            Capture the primary customer record used across
+                            sales and operations.
                         </CardDescription>
                     </CardHeader>
 

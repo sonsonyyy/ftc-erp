@@ -99,23 +99,27 @@ export default function WorkOrdersIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                status: filters.status,
-                priority: filters.priority,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    status: filters.status,
+                    priority: filters.priority,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.status === nextFilters.status &&
-                currentFilters.priority === nextFilters.priority &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.status === nextFilters.status &&
+                    currentFilters.priority === nextFilters.priority &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.per_page, filters.priority, filters.status]);
 
     useEffect(() => {
@@ -160,14 +164,6 @@ export default function WorkOrdersIndex({
         searchInput,
         tableFilters,
     ]);
-    const exportHref = workOrdersIndex({
-        query: cleanQueryParams({
-            search: searchInput.trim(),
-            status: tableFilters.status,
-            priority: tableFilters.priority,
-            export: 'csv',
-        }),
-    });
 
     return (
         <>

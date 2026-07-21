@@ -1,12 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
 import DepartmentController from '@/actions/App/Http/Controllers/Payroll/DepartmentController';
+import { DepartmentForm } from '@/components/payroll/department-form';
+import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import {
     edit as departmentsEdit,
     index as departmentsIndex,
 } from '@/routes/departments';
-import { DepartmentForm } from '@/components/payroll/department-form';
-import { Button } from '@/components/ui/button';
 import type { DepartmentDetail } from '@/types';
 
 type Props = {

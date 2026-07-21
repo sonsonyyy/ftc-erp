@@ -2,10 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     Archive,
     BellRing,
-    ChevronDown,
     Clock3,
-    Download,
-    Ellipsis,
     Eye,
     Pencil,
     Plus,
@@ -27,12 +24,6 @@ import {
     CardDescription,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -117,21 +108,25 @@ export default function ComplianceRecordsIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                status: filters.status,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    status: filters.status,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.status === nextFilters.status &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.status === nextFilters.status &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.per_page, filters.status]);
 
     useEffect(() => {
@@ -173,14 +168,6 @@ export default function ComplianceRecordsIndex({
         searchInput,
         tableFilters,
     ]);
-
-    const exportHref = complianceRecordsIndex({
-        query: cleanQueryParams({
-            search: searchInput.trim(),
-            status: tableFilters.status,
-            export: 'csv',
-        }),
-    });
 
     const summaryCards = [
         {

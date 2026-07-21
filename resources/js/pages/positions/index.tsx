@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Archive, Pencil, Plus, Search } from 'lucide-react';
+import { Archive, Pencil, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -8,7 +8,6 @@ import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -58,26 +57,30 @@ export default function PositionsIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                department:
-                    filters.department === null
-                        ? ''
-                        : String(filters.department),
-                status: filters.status,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    department:
+                        filters.department === null
+                            ? ''
+                            : String(filters.department),
+                    status: filters.status,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.department === nextFilters.department &&
-                currentFilters.status === nextFilters.status &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.department === nextFilters.department &&
+                    currentFilters.status === nextFilters.status &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.department, filters.per_page, filters.status]);
 
     useEffect(() => {

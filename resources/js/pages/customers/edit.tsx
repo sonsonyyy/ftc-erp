@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { CustomerForm } from '@/components/customers/customer-form';
 import { dashboard } from '@/routes';
 import {
     index as customersIndex,
     show as customersShow,
 } from '@/routes/customers';
-import { CustomerForm } from '@/components/customers/customer-form';
 import type { CustomerDetail } from '@/types';
 
 type Props = {

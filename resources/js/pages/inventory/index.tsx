@@ -100,24 +100,30 @@ export default function InventoryIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                category:
-                    filters.category === null ? '' : String(filters.category),
-                status: filters.status,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    category:
+                        filters.category === null
+                            ? ''
+                            : String(filters.category),
+                    status: filters.status,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.category === nextFilters.category &&
-                currentFilters.status === nextFilters.status &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.category === nextFilters.category &&
+                    currentFilters.status === nextFilters.status &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.category, filters.per_page, filters.status]);
 
     useEffect(() => {
@@ -167,18 +173,6 @@ export default function InventoryIndex({
         searchInput,
         tableFilters,
     ]);
-
-    const exportHref = inventoryIndex({
-        query: cleanQueryParams({
-            search: searchInput.trim(),
-            category:
-                tableFilters.category === ''
-                    ? undefined
-                    : Number(tableFilters.category),
-            status: tableFilters.status,
-            export: 'csv',
-        }),
-    });
     const summaryCards = [
         {
             title: 'Items',

@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { PositionForm } from '@/components/payroll/position-form';
 import { dashboard } from '@/routes';
 import {
     create as positionsCreate,
     index as positionsIndex,
 } from '@/routes/positions';
-import { PositionForm } from '@/components/payroll/position-form';
 import type { SelectOption } from '@/types';
 
 type Props = {

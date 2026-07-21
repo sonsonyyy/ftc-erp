@@ -1,18 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import SupplierController from '@/actions/App/Http/Controllers/Purchasing/SupplierController';
-import { dashboard } from '@/routes';
-import {
-    create as purchaseRequestsCreate,
-    show as purchaseRequestsShow,
-} from '@/routes/purchase-requests';
-import {
-    create as purchaseOrdersCreate,
-    show as purchaseOrdersShow,
-} from '@/routes/purchase-orders';
-import {
-    edit as suppliersEdit,
-    index as suppliersIndex,
-} from '@/routes/suppliers';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +10,19 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import {
+    create as purchaseOrdersCreate,
+    show as purchaseOrdersShow,
+} from '@/routes/purchase-orders';
+import {
+    create as purchaseRequestsCreate,
+    show as purchaseRequestsShow,
+} from '@/routes/purchase-requests';
+import {
+    edit as suppliersEdit,
+    index as suppliersIndex,
+} from '@/routes/suppliers';
 import type { SupplierDetail } from '@/types';
 
 type Props = {

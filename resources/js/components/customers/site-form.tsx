@@ -1,8 +1,8 @@
 import type { InertiaLinkProps } from '@inertiajs/react';
 import { Link, useForm } from '@inertiajs/react';
 import CustomerSiteController from '@/actions/App/Http/Controllers/Customers/CustomerSiteController';
-import InputError from '@/components/input-error';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -13,9 +13,9 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SelectInput } from '@/components/ui/select-input';
 import { Textarea } from '@/components/ui/textarea';
 import type { SelectOption, SiteDetail } from '@/types';
-import { SelectInput } from '@/components/ui/select-input';
 
 type SiteFormData = {
     customer_id: string;
@@ -120,7 +120,8 @@ export function SiteForm({
                     <CardHeader>
                         <CardTitle>Site details</CardTitle>
                         <CardDescription>
-                            Keep each project or service location linked to the right customer record.
+                            Keep each project or service location linked to the
+                            right customer record.
                         </CardDescription>
                     </CardHeader>
 

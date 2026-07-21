@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { InventoryItemForm } from '@/components/inventory/inventory-item-form';
 import { dashboard } from '@/routes';
 import {
     index as inventoryIndex,
     show as inventoryShow,
 } from '@/routes/inventory';
-import { InventoryItemForm } from '@/components/inventory/inventory-item-form';
 import type { InventoryFormData, SelectOption } from '@/types';
 
 type Props = {

@@ -1,14 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import InvoiceController from '@/actions/App/Http/Controllers/Billing/InvoiceController';
-import { dashboard } from '@/routes';
-import {
-    create as paymentsCreate,
-    show as paymentsShow,
-} from '@/routes/payments';
-import {
-    edit as invoicesEdit,
-    index as invoicesIndex,
-} from '@/routes/invoices';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +10,15 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import {
+    edit as invoicesEdit,
+    index as invoicesIndex,
+} from '@/routes/invoices';
+import {
+    create as paymentsCreate,
+    show as paymentsShow,
+} from '@/routes/payments';
 import type { InvoiceDetail } from '@/types';
 
 type Props = {

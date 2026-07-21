@@ -1,5 +1,5 @@
-import { FtcLogoImage } from '@/components/ftc-logo-image';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { FtcLogoImage } from '@/components/ftc-logo-image';
 import { cn } from '@/lib/utils';
 
 export default function AppLogo({

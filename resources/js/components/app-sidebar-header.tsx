@@ -1,6 +1,6 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
-import { UserAccountDropdown } from '@/components/user-account-dropdown';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { UserAccountDropdown } from '@/components/user-account-dropdown';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
 export function AppSidebarHeader({

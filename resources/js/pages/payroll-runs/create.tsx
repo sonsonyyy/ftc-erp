@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { PayrollRunForm } from '@/components/payroll/payroll-run-form';
 import { dashboard } from '@/routes';
 import {
     create as payrollRunsCreate,
     index as payrollRunsIndex,
 } from '@/routes/payroll-runs';
-import { PayrollRunForm } from '@/components/payroll/payroll-run-form';
 import type {
     PayrollEmployeeOption,
     PayrollRunFormDefaults,

@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { WarehouseForm } from '@/components/inventory/warehouse-form';
 import { dashboard } from '@/routes';
 import { index as warehousesIndex } from '@/routes/warehouses';
-import { WarehouseForm } from '@/components/inventory/warehouse-form';
 
 export default function WarehousesCreate() {
     return (

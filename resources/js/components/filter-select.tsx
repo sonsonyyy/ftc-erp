@@ -1,8 +1,6 @@
 import * as React from 'react';
-import {
-    FilterCombobox,
-    type FilterComboboxChangeEvent,
-} from '@/components/filter-combobox';
+import { FilterCombobox } from '@/components/filter-combobox';
+import type { FilterComboboxChangeEvent } from '@/components/filter-combobox';
 
 type FilterSelectProps = {
     id?: string;

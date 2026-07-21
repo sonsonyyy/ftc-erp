@@ -1,13 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    ChevronDown,
-    CreditCard,
-    Download,
-    Ellipsis,
-    Eye,
-    Pencil,
-    Plus,
-} from 'lucide-react';
+import { CreditCard, Eye, Pencil, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -103,25 +95,29 @@ export default function InvoicesIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                status: filters.status,
-                from: filters.from ?? '',
-                to: filters.to ?? '',
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    status: filters.status,
+                    from: filters.from ?? '',
+                    to: filters.to ?? '',
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.status === nextFilters.status &&
-                currentFilters.from === nextFilters.from &&
-                currentFilters.to === nextFilters.to &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.status === nextFilters.status &&
+                    currentFilters.from === nextFilters.from &&
+                    currentFilters.to === nextFilters.to &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.from, filters.per_page, filters.status, filters.to]);
 
     useEffect(() => {
@@ -169,15 +165,6 @@ export default function InvoicesIndex({
         searchInput,
         tableFilters,
     ]);
-    const exportHref = invoicesIndex({
-        query: cleanQueryParams({
-            search: searchInput.trim(),
-            status: tableFilters.status,
-            from: tableFilters.from,
-            to: tableFilters.to,
-            export: 'csv',
-        }),
-    });
 
     return (
         <>

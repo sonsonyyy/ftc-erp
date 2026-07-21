@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { StockReturnForm } from '@/components/inventory/stock-return-form';
 import { dashboard } from '@/routes';
 import { index as stockReturnsIndex } from '@/routes/stock-returns';
-import { StockReturnForm } from '@/components/inventory/stock-return-form';
 import type {
     SelectOption,
     StockReturnDefaults,

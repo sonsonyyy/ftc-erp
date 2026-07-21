@@ -1,7 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import UserController from '@/actions/App/Http/Controllers/Users/UserController';
-import { dashboard } from '@/routes';
-import { edit as usersEdit, index as usersIndex } from '@/routes/users';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +9,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import { edit as usersEdit, index as usersIndex } from '@/routes/users';
 import type { UserDetail } from '@/types';
 
 type Props = {

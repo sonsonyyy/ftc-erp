@@ -15,6 +15,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SelectInput } from '@/components/ui/select-input';
 import { Textarea } from '@/components/ui/textarea';
 import type {
     ComplianceRecordDetail,
@@ -22,7 +23,6 @@ import type {
     ComplianceTemplateOption,
     SelectOption,
 } from '@/types';
-import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     complianceRecord?: ComplianceRecordDetail;

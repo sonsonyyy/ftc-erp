@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Archive, Pencil, Plus, Search } from 'lucide-react';
+import { Archive, Pencil, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -8,7 +8,6 @@ import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -53,21 +52,25 @@ export default function DepartmentsIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                status: filters.status,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    status: filters.status,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.status === nextFilters.status &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.status === nextFilters.status &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.per_page, filters.status]);
 
     useEffect(() => {

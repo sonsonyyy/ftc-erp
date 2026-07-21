@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Eye, FileSpreadsheet, Plus, Search } from 'lucide-react';
+import { Eye, FileSpreadsheet, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -9,15 +9,11 @@ import { DateRangeFilter } from '@/components/date-range-filter';
 import { FilterSelect } from '@/components/filter-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { show as customersShow } from '@/routes/customers';
 import { show as invoicesShow } from '@/routes/invoices';
-import {
-    create as taxReportRunsCreate,
-    index as taxReportRunsIndex,
-} from '@/routes/tax-report-runs';
+import { create as taxReportRunsCreate } from '@/routes/tax-report-runs';
 import { index as vatRecordsIndex } from '@/routes/vat-records';
 import type {
     PaginatedData,
@@ -81,25 +77,29 @@ export default function VatRecordsIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                type: filters.type,
-                from: filters.from ?? '',
-                to: filters.to ?? '',
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    type: filters.type,
+                    from: filters.from ?? '',
+                    to: filters.to ?? '',
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.type === nextFilters.type &&
-                currentFilters.from === nextFilters.from &&
-                currentFilters.to === nextFilters.to &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.type === nextFilters.type &&
+                    currentFilters.from === nextFilters.from &&
+                    currentFilters.to === nextFilters.to &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.from, filters.per_page, filters.to, filters.type]);
 
     useEffect(() => {

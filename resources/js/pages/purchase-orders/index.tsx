@@ -1,12 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    ChevronDown,
-    Download,
-    Ellipsis,
-    Eye,
-    Pencil,
-    Plus,
-} from 'lucide-react';
+import { Eye, Pencil, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -78,21 +71,25 @@ export default function PurchaseOrdersIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                status: filters.status,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    status: filters.status,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.status === nextFilters.status &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.status === nextFilters.status &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.per_page, filters.status]);
 
     useEffect(() => {
@@ -134,13 +131,6 @@ export default function PurchaseOrdersIndex({
         searchInput,
         tableFilters,
     ]);
-    const exportHref = purchaseOrdersIndex({
-        query: cleanQueryParams({
-            search: searchInput.trim(),
-            status: tableFilters.status,
-            export: 'csv',
-        }),
-    });
 
     return (
         <>

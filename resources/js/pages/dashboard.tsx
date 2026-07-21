@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import type { ComponentProps, ReactNode } from 'react';
 import {
     AlertTriangle,
     ArrowUpRight,
@@ -7,11 +6,12 @@ import {
     ClipboardList,
     FileText,
     FolderKanban,
-    type LucideIcon,
     Package,
     ShieldCheck,
     Wallet,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { ComponentProps, ReactNode } from 'react';
 import {
     Bar,
     BarChart,
@@ -35,8 +35,8 @@ import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
-    type ChartConfig,
 } from '@/components/ui/chart';
+import type { ChartConfig } from '@/components/ui/chart';
 import {
     Table,
     TableBody,

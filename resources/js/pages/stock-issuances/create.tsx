@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { StockIssuanceForm } from '@/components/inventory/stock-issuance-form';
 import { dashboard } from '@/routes';
 import { index as stockIssuancesIndex } from '@/routes/stock-issuances';
-import { StockIssuanceForm } from '@/components/inventory/stock-issuance-form';
 import type {
     SelectOption,
     StockIssuanceDefaults,

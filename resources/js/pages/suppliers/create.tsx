@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { SupplierForm } from '@/components/purchasing/supplier-form';
 import { dashboard } from '@/routes';
 import { index as suppliersIndex } from '@/routes/suppliers';
-import { SupplierForm } from '@/components/purchasing/supplier-form';
 
 export default function SuppliersCreate() {
     return (

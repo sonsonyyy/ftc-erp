@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { QuotationForm } from '@/components/quotations/quotation-form';
 import { dashboard } from '@/routes';
 import { index as quotationsIndex } from '@/routes/quotations';
-import { QuotationForm } from '@/components/quotations/quotation-form';
 import type {
     QuotationFormDefaults,
     QuotationSiteOption,

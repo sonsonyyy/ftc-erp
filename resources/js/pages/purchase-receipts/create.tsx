@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { PurchaseReceiptForm } from '@/components/purchasing/purchase-receipt-form';
 import { dashboard } from '@/routes';
 import { show as purchaseOrdersShow } from '@/routes/purchase-orders';
-import { PurchaseReceiptForm } from '@/components/purchasing/purchase-receipt-form';
 import type {
     PurchaseReceiptFormDefaults,
     PurchaseReceiptSourceOrder,

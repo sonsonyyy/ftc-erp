@@ -1,7 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { dashboard } from '@/routes';
-import { show as purchaseOrdersShow } from '@/routes/purchase-orders';
-import { index as purchaseReceiptsIndex } from '@/routes/purchase-receipts';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +8,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import { show as purchaseOrdersShow } from '@/routes/purchase-orders';
+import { index as purchaseReceiptsIndex } from '@/routes/purchase-receipts';
 import type { PurchaseReceiptDetail } from '@/types';
 
 type Props = {

@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { DepartmentForm } from '@/components/payroll/department-form';
 import { dashboard } from '@/routes';
 import {
     create as departmentsCreate,
     index as departmentsIndex,
 } from '@/routes/departments';
-import { DepartmentForm } from '@/components/payroll/department-form';
 
 type Props = {
     defaults: {

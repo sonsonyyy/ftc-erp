@@ -48,17 +48,21 @@ export default function CustomersIndex({ customers, filters, can }: Props) {
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    per_page: String(filters.per_page),
+                };
 
-            if (currentFilters.per_page === nextFilters.per_page) {
-                return currentFilters;
-            }
+                if (currentFilters.per_page === nextFilters.per_page) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.per_page]);
 
     useEffect(() => {
@@ -92,13 +96,6 @@ export default function CustomersIndex({ customers, filters, can }: Props) {
 
         return () => window.clearTimeout(timeout);
     }, [filters.per_page, filters.search, searchInput, tableFilters]);
-
-    const exportHref = customersIndex({
-        query: cleanQueryParams({
-            search: searchInput.trim(),
-            export: 'csv',
-        }),
-    });
 
     return (
         <>

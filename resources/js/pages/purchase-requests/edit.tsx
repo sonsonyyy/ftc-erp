@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { PurchaseRequestForm } from '@/components/purchasing/purchase-request-form';
 import { dashboard } from '@/routes';
 import {
     index as purchaseRequestsIndex,
     show as purchaseRequestsShow,
 } from '@/routes/purchase-requests';
-import { PurchaseRequestForm } from '@/components/purchasing/purchase-request-form';
 import type {
     PurchaseRequestDetail,
     PurchasingItemOption,

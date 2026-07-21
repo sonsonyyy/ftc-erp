@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { ProjectForm } from '@/components/projects/project-form';
 import { dashboard } from '@/routes';
 import {
     index as projectsIndex,
     show as projectsShow,
 } from '@/routes/projects';
-import { ProjectForm } from '@/components/projects/project-form';
 import type {
     ProjectDetail,
     ProjectQuotationOption,

@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Archive, Eye, PencilRuler, Plus, Search } from 'lucide-react';
+import { Archive, Eye, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
@@ -8,7 +8,6 @@ import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { DateRangeFilter } from '@/components/date-range-filter';
 import { FilterSelect } from '@/components/filter-select';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -84,25 +83,29 @@ export default function TaxReportRunsIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                type: filters.type,
-                from: filters.from ?? '',
-                to: filters.to ?? '',
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    type: filters.type,
+                    from: filters.from ?? '',
+                    to: filters.to ?? '',
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.type === nextFilters.type &&
-                currentFilters.from === nextFilters.from &&
-                currentFilters.to === nextFilters.to &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.type === nextFilters.type &&
+                    currentFilters.from === nextFilters.from &&
+                    currentFilters.to === nextFilters.to &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.from, filters.per_page, filters.to, filters.type]);
 
     useEffect(() => {

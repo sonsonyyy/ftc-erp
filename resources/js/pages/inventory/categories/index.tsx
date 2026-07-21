@@ -1,12 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Archive, Pencil, Plus, Search } from 'lucide-react';
+import { Archive, Pencil, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ClearableSearchInput } from '@/components/clearable-search-input';
 import { CompactDataTable } from '@/components/compact-data-table';
 import { DataTablePaginationFooter } from '@/components/data-table-pagination-footer';
 import { DataTableRowActions } from '@/components/data-table-row-actions';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -51,11 +50,15 @@ export default function InventoryCategoriesIndex({
     const [perPage, setPerPage] = useState(String(filters.per_page));
 
     useEffect(() => {
-        const nextPerPage = String(filters.per_page);
+        const syncFilters = window.setTimeout(() => {
+            const nextPerPage = String(filters.per_page);
 
-        setPerPage((currentPerPage) =>
-            currentPerPage === nextPerPage ? currentPerPage : nextPerPage,
-        );
+            setPerPage((currentPerPage) =>
+                currentPerPage === nextPerPage ? currentPerPage : nextPerPage,
+            );
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.per_page]);
 
     useEffect(() => {

@@ -1,14 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import PurchaseRequestController from '@/actions/App/Http/Controllers/Purchasing/PurchaseRequestController';
-import { dashboard } from '@/routes';
-import {
-    create as purchaseOrdersCreate,
-    show as purchaseOrdersShow,
-} from '@/routes/purchase-orders';
-import {
-    edit as purchaseRequestsEdit,
-    index as purchaseRequestsIndex,
-} from '@/routes/purchase-requests';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +10,15 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import {
+    create as purchaseOrdersCreate,
+    show as purchaseOrdersShow,
+} from '@/routes/purchase-orders';
+import {
+    edit as purchaseRequestsEdit,
+    index as purchaseRequestsIndex,
+} from '@/routes/purchase-requests';
 import type { PurchaseRequestDetail } from '@/types';
 
 type Props = {

@@ -1,10 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { dashboard } from '@/routes';
-import { create as stockMovementsCreate } from '@/routes/stock-movements';
-import {
-    edit as warehousesEdit,
-    index as warehousesIndex,
-} from '@/routes/warehouses';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -13,6 +7,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import { create as stockMovementsCreate } from '@/routes/stock-movements';
+import {
+    edit as warehousesEdit,
+    index as warehousesIndex,
+} from '@/routes/warehouses';
 import type { WarehouseDetail } from '@/types';
 
 type Props = {

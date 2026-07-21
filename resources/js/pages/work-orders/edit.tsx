@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { WorkOrderForm } from '@/components/work-orders/work-order-form';
 import { dashboard } from '@/routes';
 import {
     index as workOrdersIndex,
     show as workOrdersShow,
 } from '@/routes/work-orders';
-import { WorkOrderForm } from '@/components/work-orders/work-order-form';
 import type {
     SelectOption,
     WorkOrderDetail,

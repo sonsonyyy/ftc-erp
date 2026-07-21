@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
+import { UserForm } from '@/components/users/user-form';
 import { dashboard } from '@/routes';
 import { index as usersIndex, show as usersShow } from '@/routes/users';
-import { UserForm } from '@/components/users/user-form';
 import type { SelectOption, UserDetail } from '@/types';
 
 type Props = {

@@ -5,7 +5,6 @@ import {
     Eye,
     Pencil,
     Plus,
-    Search,
     Shield,
     UserMinus,
     Users,
@@ -24,7 +23,6 @@ import {
     CardDescription,
     CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import {
@@ -93,23 +91,27 @@ export default function UsersIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                role: filters.role === null ? '' : String(filters.role),
-                active: filters.active,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    role: filters.role === null ? '' : String(filters.role),
+                    active: filters.active,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.role === nextFilters.role &&
-                currentFilters.active === nextFilters.active &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.role === nextFilters.role &&
+                    currentFilters.active === nextFilters.active &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.active, filters.per_page, filters.role]);
 
     useEffect(() => {

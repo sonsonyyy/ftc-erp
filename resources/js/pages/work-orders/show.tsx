@@ -1,5 +1,20 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import WorkOrderController from '@/actions/App/Http/Controllers/WorkOrders/WorkOrderController';
+import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
+import InputError from '@/components/input-error';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { SelectInput } from '@/components/ui/select-input';
+import { Textarea } from '@/components/ui/textarea';
 import { dashboard } from '@/routes';
 import { show as customersShow } from '@/routes/customers';
 import { show as projectsShow } from '@/routes/projects';
@@ -11,22 +26,7 @@ import {
     edit as workOrdersEdit,
     index as workOrdersIndex,
 } from '@/routes/work-orders';
-import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import InputError from '@/components/input-error';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import type { SelectOption, WorkOrderDetail } from '@/types';
-import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     workOrder: WorkOrderDetail;

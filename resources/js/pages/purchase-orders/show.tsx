@@ -1,12 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import PurchaseOrderController from '@/actions/App/Http/Controllers/Purchasing/PurchaseOrderController';
 import PurchaseReceiptController from '@/actions/App/Http/Controllers/Purchasing/PurchaseReceiptController';
-import { dashboard } from '@/routes';
-import { show as purchaseReceiptsShow } from '@/routes/purchase-receipts';
-import {
-    edit as purchaseOrdersEdit,
-    index as purchaseOrdersIndex,
-} from '@/routes/purchase-orders';
 import { RecordAttachmentsCard } from '@/components/attachments/record-attachments-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +11,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { dashboard } from '@/routes';
+import {
+    edit as purchaseOrdersEdit,
+    index as purchaseOrdersIndex,
+} from '@/routes/purchase-orders';
+import { show as purchaseReceiptsShow } from '@/routes/purchase-receipts';
 import type { PurchaseOrderDetail } from '@/types';
 
 type Props = {

@@ -65,21 +65,25 @@ export default function SitesIndex({
     });
 
     useEffect(() => {
-        setTableFilters((currentFilters) => {
-            const nextFilters = {
-                status: filters.status,
-                per_page: String(filters.per_page),
-            };
+        const syncFilters = window.setTimeout(() => {
+            setTableFilters((currentFilters) => {
+                const nextFilters = {
+                    status: filters.status,
+                    per_page: String(filters.per_page),
+                };
 
-            if (
-                currentFilters.status === nextFilters.status &&
-                currentFilters.per_page === nextFilters.per_page
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.status === nextFilters.status &&
+                    currentFilters.per_page === nextFilters.per_page
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [filters.per_page, filters.status]);
 
     useEffect(() => {
@@ -121,13 +125,6 @@ export default function SitesIndex({
         searchInput,
         tableFilters,
     ]);
-    const exportHref = sitesIndex({
-        query: cleanQueryParams({
-            search: searchInput.trim(),
-            status: tableFilters.status,
-            export: 'csv',
-        }),
-    });
 
     return (
         <>

@@ -1,11 +1,5 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import { dashboard } from '@/routes';
-import {
-    calendar as complianceRecordsCalendar,
-    index as complianceRecordsIndex,
-    show as complianceRecordsShow,
-} from '@/routes/compliance-records';
-import { index as complianceAlertsIndex } from '@/routes/compliance-alerts';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -15,7 +9,14 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { SelectInput } from '@/components/ui/select-input';
+import { dashboard } from '@/routes';
+import { index as complianceAlertsIndex } from '@/routes/compliance-alerts';
+import {
+    calendar as complianceRecordsCalendar,
+    index as complianceRecordsIndex,
+    show as complianceRecordsShow,
+} from '@/routes/compliance-records';
 import type {
     ComplianceCalendarEvent,
     ComplianceCalendarFilters,
@@ -24,7 +25,6 @@ import type {
     ComplianceSummary,
     SelectOption,
 } from '@/types';
-import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     filters: ComplianceCalendarFilters;

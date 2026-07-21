@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { EmployeeForm } from '@/components/payroll/employee-form';
 import { dashboard } from '@/routes';
 import {
     create as employeesCreate,
     index as employeesIndex,
 } from '@/routes/employees';
-import { EmployeeForm } from '@/components/payroll/employee-form';
 import type {
     EmployeeFormDefaults,
     PositionOption,

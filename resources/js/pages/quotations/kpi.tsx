@@ -1,10 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { dashboard } from '@/routes';
-import {
-    index as quotationsIndex,
-    kpi as quotationsKpi,
-} from '@/routes/quotations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +10,13 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { SelectInput } from '@/components/ui/select-input';
 import { cleanQueryParams, toUrl } from '@/lib/utils';
+import { dashboard } from '@/routes';
+import {
+    index as quotationsIndex,
+    kpi as quotationsKpi,
+} from '@/routes/quotations';
 import type {
     QuotationCustomerKpiItem,
     QuotationKpiFilters,
@@ -24,7 +25,6 @@ import type {
     QuotationStatusBreakdownItem,
     SelectOption,
 } from '@/types';
-import { SelectInput } from '@/components/ui/select-input';
 
 type Props = {
     filters: QuotationKpiFilters;
@@ -71,28 +71,34 @@ export default function QuotationsKpi({
     const showCustomRange = kpiFilters.range === 'custom';
 
     useEffect(() => {
-        setKpiFilters((currentFilters) => {
-            const nextFilters = {
-                customer:
-                    filters.customer === null ? '' : String(filters.customer),
-                status: filters.status,
-                range: filters.range,
-                from: filters.from ?? '',
-                to: filters.to ?? '',
-            };
+        const syncFilters = window.setTimeout(() => {
+            setKpiFilters((currentFilters) => {
+                const nextFilters = {
+                    customer:
+                        filters.customer === null
+                            ? ''
+                            : String(filters.customer),
+                    status: filters.status,
+                    range: filters.range,
+                    from: filters.from ?? '',
+                    to: filters.to ?? '',
+                };
 
-            if (
-                currentFilters.customer === nextFilters.customer &&
-                currentFilters.status === nextFilters.status &&
-                currentFilters.range === nextFilters.range &&
-                currentFilters.from === nextFilters.from &&
-                currentFilters.to === nextFilters.to
-            ) {
-                return currentFilters;
-            }
+                if (
+                    currentFilters.customer === nextFilters.customer &&
+                    currentFilters.status === nextFilters.status &&
+                    currentFilters.range === nextFilters.range &&
+                    currentFilters.from === nextFilters.from &&
+                    currentFilters.to === nextFilters.to
+                ) {
+                    return currentFilters;
+                }
 
-            return nextFilters;
-        });
+                return nextFilters;
+            });
+        }, 0);
+
+        return () => window.clearTimeout(syncFilters);
     }, [
         filters.customer,
         filters.from,
