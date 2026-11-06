@@ -31,5 +31,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="FEATURE_COMPLIANCE_TAX_ENABLED" value="true"/>
+        <env name="FEATURE_PAYROLL_RUNS_ENABLED" value="true"/>
     </php>
 </phpunit>

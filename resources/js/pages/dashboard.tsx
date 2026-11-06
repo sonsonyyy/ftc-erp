@@ -779,121 +779,125 @@ export default function Dashboard({ dashboard }: Props) {
                         </CardContent>
                     </Card>
 
-                    <Card className="gap-3 border-transparent bg-white/95 py-4">
-                        <DashboardSectionHeader
-                            icon={ShieldCheck}
-                            title="Compliance watch"
-                            iconWrapperClassName="border-amber-100/80 bg-amber-50 text-amber-700"
-                            iconClassName="text-amber-700"
-                            action={
-                                dashboard.can.view_compliance ? (
-                                    <SectionAction
-                                        href={complianceRecordsIndex()}
-                                        label="Open registry"
-                                    />
-                                ) : undefined
-                            }
-                        />
+                    {dashboard.can.view_compliance && (
+                        <Card className="gap-3 border-transparent bg-white/95 py-4">
+                            <DashboardSectionHeader
+                                icon={ShieldCheck}
+                                title="Compliance watch"
+                                iconWrapperClassName="border-amber-100/80 bg-amber-50 text-amber-700"
+                                iconClassName="text-amber-700"
+                                action={
+                                    dashboard.can.view_compliance ? (
+                                        <SectionAction
+                                            href={complianceRecordsIndex()}
+                                            label="Open registry"
+                                        />
+                                    ) : undefined
+                                }
+                            />
 
-                        <CardContent className="grid gap-3 px-4">
-                            {dashboard.can.view_compliance ? (
-                                <>
-                                    {complianceHasTrendData ? (
-                                        <ChartContainer
-                                            config={complianceChartConfig}
-                                            className="h-[110px] w-full"
-                                        >
-                                            <LineChart
-                                                accessibilityLayer
-                                                data={
-                                                    dashboard.compliance
-                                                        .due_items_trend
-                                                }
-                                                margin={{
-                                                    left: 2,
-                                                    right: 2,
-                                                    top: 8,
-                                                    bottom: 0,
-                                                }}
+                            <CardContent className="grid gap-3 px-4">
+                                {dashboard.can.view_compliance ? (
+                                    <>
+                                        {complianceHasTrendData ? (
+                                            <ChartContainer
+                                                config={complianceChartConfig}
+                                                className="h-[110px] w-full"
                                             >
-                                                <CartesianGrid
-                                                    vertical={false}
-                                                    strokeDasharray="3 3"
-                                                />
-                                                <XAxis
-                                                    dataKey="label"
-                                                    tickLine={false}
-                                                    axisLine={false}
-                                                    tickMargin={8}
-                                                    tick={{ fontSize: 10 }}
-                                                />
-                                                <YAxis hide />
-                                                <ChartTooltip
-                                                    content={
-                                                        <ChartTooltipContent
-                                                            formatter={(
-                                                                value,
-                                                            ) =>
-                                                                formatNumber(
-                                                                    toNumericValue(
-                                                                        value,
-                                                                    ),
-                                                                )
-                                                            }
-                                                        />
+                                                <LineChart
+                                                    accessibilityLayer
+                                                    data={
+                                                        dashboard.compliance
+                                                            .due_items_trend
                                                     }
-                                                />
-                                                <Line
-                                                    type="monotone"
-                                                    dataKey="count"
-                                                    stroke="var(--color-count)"
-                                                    strokeWidth={2}
-                                                    dot={false}
-                                                />
-                                            </LineChart>
-                                        </ChartContainer>
-                                    ) : (
-                                        <AccessRestrictedPanel
-                                            className="min-h-[110px]"
-                                            message="No deadlines in the next 30 days."
-                                        />
-                                    )}
+                                                    margin={{
+                                                        left: 2,
+                                                        right: 2,
+                                                        top: 8,
+                                                        bottom: 0,
+                                                    }}
+                                                >
+                                                    <CartesianGrid
+                                                        vertical={false}
+                                                        strokeDasharray="3 3"
+                                                    />
+                                                    <XAxis
+                                                        dataKey="label"
+                                                        tickLine={false}
+                                                        axisLine={false}
+                                                        tickMargin={8}
+                                                        tick={{ fontSize: 10 }}
+                                                    />
+                                                    <YAxis hide />
+                                                    <ChartTooltip
+                                                        content={
+                                                            <ChartTooltipContent
+                                                                formatter={(
+                                                                    value,
+                                                                ) =>
+                                                                    formatNumber(
+                                                                        toNumericValue(
+                                                                            value,
+                                                                        ),
+                                                                    )
+                                                                }
+                                                            />
+                                                        }
+                                                    />
+                                                    <Line
+                                                        type="monotone"
+                                                        dataKey="count"
+                                                        stroke="var(--color-count)"
+                                                        strokeWidth={2}
+                                                        dot={false}
+                                                    />
+                                                </LineChart>
+                                            </ChartContainer>
+                                        ) : (
+                                            <AccessRestrictedPanel
+                                                className="min-h-[110px]"
+                                                message="No deadlines in the next 30 days."
+                                            />
+                                        )}
 
-                                    <div className="grid grid-cols-3 gap-1.5">
-                                        <StatusTile
-                                            label="Renewal"
-                                            value={formatNumber(
-                                                dashboard.compliance
-                                                    .for_renewal_count,
-                                            )}
-                                            className="bg-muted/50"
-                                        />
-                                        <StatusTile
-                                            label="Overdue"
-                                            value={formatNumber(
-                                                dashboard.compliance
-                                                    .overdue_count,
-                                            )}
-                                            className="bg-muted/50"
-                                        />
-                                        <StatusTile
-                                            label="Expired"
-                                            value={formatNumber(
-                                                dashboard.compliance
-                                                    .expired_count,
-                                            )}
-                                            className="bg-muted/50"
-                                        />
-                                    </div>
-                                </>
-                            ) : (
-                                <AccessRestrictedPanel
-                                    className="min-h-[180px]"
-                                    message={restrictedMessage('compliance')}
-                                />
-                            )}
-                        </CardContent>
-                    </Card>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            <StatusTile
+                                                label="Renewal"
+                                                value={formatNumber(
+                                                    dashboard.compliance
+                                                        .for_renewal_count,
+                                                )}
+                                                className="bg-muted/50"
+                                            />
+                                            <StatusTile
+                                                label="Overdue"
+                                                value={formatNumber(
+                                                    dashboard.compliance
+                                                        .overdue_count,
+                                                )}
+                                                className="bg-muted/50"
+                                            />
+                                            <StatusTile
+                                                label="Expired"
+                                                value={formatNumber(
+                                                    dashboard.compliance
+                                                        .expired_count,
+                                                )}
+                                                className="bg-muted/50"
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <AccessRestrictedPanel
+                                        className="min-h-[180px]"
+                                        message={restrictedMessage(
+                                            'compliance',
+                                        )}
+                                    />
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 <Card className="gap-3 overflow-hidden border-transparent bg-white/95 py-4">

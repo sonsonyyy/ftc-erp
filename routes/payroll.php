@@ -10,5 +10,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('departments', DepartmentController::class)->except(['show']);
     Route::resource('positions', PositionController::class)->except(['show']);
     Route::resource('employees', EmployeeController::class);
-    Route::resource('payroll-runs', PayrollRunController::class);
+    Route::middleware('feature:payroll_runs_enabled')->group(function () {
+        Route::resource('payroll-runs', PayrollRunController::class);
+    });
 });

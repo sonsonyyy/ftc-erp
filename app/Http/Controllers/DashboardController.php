@@ -55,7 +55,8 @@ class DashboardController extends Controller
             403,
         );
 
-        $complianceModuleReady = $this->complianceModuleReady();
+        $complianceModuleReady = config('features.compliance_tax_enabled')
+            && $this->complianceModuleReady();
 
         $can = [
             'view_low_stock' => $user?->hasPermissionTo('inventory.view') ?? false,

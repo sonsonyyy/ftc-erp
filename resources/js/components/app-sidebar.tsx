@@ -7,7 +7,6 @@ import {
     LayoutGrid,
     Package,
     Settings,
-    ShieldCheck,
     Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -22,9 +21,6 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as accountsReceivableIndex } from '@/routes/accounts-receivable';
-import { index as complianceAlertsIndex } from '@/routes/compliance-alerts';
-import { index as complianceRecordsIndex } from '@/routes/compliance-records';
-import { calendar as complianceCalendar } from '@/routes/compliance-records';
 import { index as customersIndex } from '@/routes/customers';
 import { index as departmentsIndex } from '@/routes/departments';
 import { index as employeesIndex } from '@/routes/employees';
@@ -33,7 +29,6 @@ import { lowStock as inventoryLowStock } from '@/routes/inventory';
 import { index as inventoryCategoriesIndex } from '@/routes/inventory-categories';
 import { index as invoicesIndex } from '@/routes/invoices';
 import { index as paymentsIndex } from '@/routes/payments';
-import { index as payrollRunsIndex } from '@/routes/payroll-runs';
 import { index as positionsIndex } from '@/routes/positions';
 import { index as projectsIndex } from '@/routes/projects';
 import { index as purchaseOrdersIndex } from '@/routes/purchase-orders';
@@ -46,11 +41,8 @@ import { index as stockIssuancesIndex } from '@/routes/stock-issuances';
 import { index as stockMovementsIndex } from '@/routes/stock-movements';
 import { index as stockReturnsIndex } from '@/routes/stock-returns';
 import { index as suppliersIndex } from '@/routes/suppliers';
-import { index as taxReportRunsIndex } from '@/routes/tax-report-runs';
 import { index as usersIndex } from '@/routes/users';
-import { index as vatRecordsIndex } from '@/routes/vat-records';
 import { index as warehousesIndex } from '@/routes/warehouses';
-import { index as withholdingRecordsIndex } from '@/routes/withholding-records';
 import { index as workOrdersIndex } from '@/routes/work-orders';
 import type { Auth, NavItem, NavSection } from '@/types';
 
@@ -204,11 +196,6 @@ const navSections: NavSection[] = [
                 permission: 'employees.view',
             },
             {
-                title: 'Payroll Runs',
-                href: payrollRunsIndex(),
-                permission: 'payroll_runs.view',
-            },
-            {
                 title: 'Departments',
                 href: departmentsIndex(),
                 permission: 'departments.view',
@@ -217,42 +204,6 @@ const navSections: NavSection[] = [
                 title: 'Positions',
                 href: positionsIndex(),
                 permission: 'positions.view',
-            },
-        ],
-    },
-    {
-        title: 'Compliance & Tax',
-        icon: ShieldCheck,
-        items: [
-            {
-                title: 'Compliance Records',
-                href: complianceRecordsIndex(),
-                permission: 'compliance_records.view',
-            },
-            {
-                title: 'Compliance Alerts',
-                href: complianceAlertsIndex(),
-                permission: 'compliance_alerts.view',
-            },
-            {
-                title: 'Compliance Calendar',
-                href: complianceCalendar(),
-                permission: 'compliance_records.view',
-            },
-            {
-                title: 'Tax Reports',
-                href: taxReportRunsIndex(),
-                permission: 'tax_report_runs.view',
-            },
-            {
-                title: 'VAT Records',
-                href: vatRecordsIndex(),
-                permission: 'vat_records.view',
-            },
-            {
-                title: 'Withholding Records',
-                href: withholdingRecordsIndex(),
-                permission: 'withholding_records.view',
             },
         ],
     },

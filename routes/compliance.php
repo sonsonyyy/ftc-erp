@@ -8,7 +8,12 @@ use App\Http\Controllers\Compliance\ComplianceTaskController;
 use App\Http\Middleware\EnsureComplianceModuleIsReady;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', EnsureComplianceModuleIsReady::class])->group(function () {
+Route::middleware([
+    'auth',
+    'verified',
+    'feature:compliance_tax_enabled',
+    EnsureComplianceModuleIsReady::class,
+])->group(function () {
     Route::get('compliance-records/calendar', ComplianceCalendarController::class)
         ->name('compliance-records.calendar');
     Route::get('compliance-alerts', [ComplianceAlertController::class, 'index'])

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureComplianceModuleIsReady;
+use App\Http\Middleware\EnsureFeatureIsEnabled;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -18,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'feature' => EnsureFeatureIsEnabled::class,
+        ]);
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
         $middleware->redirectGuestsTo(fn (Request $request) => route('login'));
         $middleware->prependToPriorityList(
